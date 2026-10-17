@@ -62,6 +62,8 @@ CREATE TABLE IF NOT EXISTS music(id TEXT PRIMARY KEY, user_id INTEGER, title TEX
 CREATE TABLE IF NOT EXISTS playlist(qid INTEGER PRIMARY KEY, music_id TEXT, user_id INTEGER, k INTEGER, pin INTEGER DEFAULT 0, added INTEGER);
 CREATE TABLE IF NOT EXISTS settings(k TEXT PRIMARY KEY, v TEXT);
 `);
+// v0.10 升级：歌单里可以放网易云的歌（不占个人音乐仓库）。music_id 写成 'ne:<歌曲id>'，歌名等信息直接存在歌单里
+for (const [c, d] of [['src', 'TEXT'], ['ntitle', 'TEXT'], ['nartist', 'TEXT'], ['ncover', 'TEXT'], ['ndur', 'REAL']]) addCol('playlist', c, d);
 
 // ---------- 等级规则：升到第 N+1 级需要 20 * N² 经验 ----------
 const XP_MESSAGE = 2;      // 发消息（每 5 秒最多算一次）
@@ -627,8 +629,12 @@ app.put('/api/group', (req, res) => {
 const LEAD = 1200;    // 切歌后留 1.2 秒给大家缓冲
 const GRACE = 600;
 const PL = { cur: null, lastKey: new Map(), curKey: 0 };   // cur: { qid, startedAt, timer }
-const plRows = () => db.prepare('SELECT p.*, m.title, m.dur, u.name uname, u.nick unick FROM playlist p JOIN music m ON m.id=p.music_id JOIN users u ON u.id=p.user_id ORDER BY p.pin DESC, p.k, p.qid').all();
-const plItem = r => ({ qid: r.qid, id: r.music_id, title: r.title, dur: r.dur, by: { name: r.uname, nick: r.unick || r.uname } });
+const plRows = () => db.prepare("SELECT p.*, COALESCE(m.title, p.ntitle) title, COALESCE(m.dur, p.ndur) dur, u.name uname, u.nick unick FROM playlist p LEFT JOIN music m ON m.id=p.music_id JOIN users u ON u.id=p.user_id WHERE m.id IS NOT NULL OR p.src='netease' ORDER BY p.pin DESC, p.k, p.qid").all();
+const plItem = r => {
+  const o = { qid: r.qid, id: r.music_id, title: r.title, dur: r.dur, by: { name: r.uname, nick: r.unick || r.uname } };
+  if (r.src === 'netease') { const nid = r.music_id.slice(3); Object.assign(o, { src: 'netease', nid, artist: r.nartist || '', cover: r.ncover || '', url: NE_MEDIA.replace('{id}', nid) }); }
+  return o;
+};
 function musicState() {
   const rows = plRows(), g = groupSettings();
   const cur = PL.cur && rows.find(r => r.qid === PL.cur.qid);
@@ -641,11 +647,17 @@ function plStart() {
   db.prepare('UPDATE playlist SET pin=1 WHERE qid=?').run(r.qid);
   const startedAt = Date.now() + LEAD;
   PL.cur = { qid: r.qid, startedAt, timer: setTimeout(() => { plNext(r.qid); }, r.dur * 1000 + LEAD + GRACE) };
+  if (r.src === 'netease') {
+    // 网易云的歌可能因为地区 / 版权 / VIP 放不了：有人在加载、但过了 NE_WAIT 还没有任何人加载成功，就自动跳过
+    PL.cur.ne = { ok: false, tries: new Set(), fail: null };
+    PL.cur.watch = setTimeout(() => { const c = PL.cur; if (c && c.qid === r.qid && c.ne && !c.ne.ok && c.ne.tries.size) neSkip(r.qid, 'timeout'); }, LEAD + NE_WAIT);
+  }
 }
-function plStop() { if (PL.cur) { clearTimeout(PL.cur.timer); PL.cur = null; } }
+function plClear() { if (PL.cur) { clearTimeout(PL.cur.timer); clearTimeout(PL.cur.watch); if (PL.cur.ne) clearTimeout(PL.cur.ne.fail); } }
+function plStop() { if (PL.cur) { plClear(); PL.cur = null; } }
 function plNext(qid) {   // 当前歌曲播完 / 被切掉
   if (!PL.cur || (qid && PL.cur.qid !== qid)) return;
-  clearTimeout(PL.cur.timer);
+  plClear();
   const row = db.prepare('SELECT * FROM playlist WHERE qid=?').get(PL.cur.qid);
   if (row) { PL.lastKey.set(row.user_id, Math.max(PL.lastKey.get(row.user_id) || 0, row.k)); PL.curKey = row.k; db.prepare('DELETE FROM playlist WHERE qid=?').run(row.qid); }
   PL.cur = null; plStart(); pushMusic();
@@ -676,6 +688,112 @@ function plAdd(u, mid) {
   io.emit('msg', msgOut(msgRow.get(Number(r.lastInsertRowid))));
   plStart(); pushMusic();
   return null;
+}
+// ================= v0.10：网易云音乐（只搜索 + 点歌，不需要登录网易云） =================
+// 搜索由服务器代为请求（浏览器直接请求会被跨域拦住），播放则由每个人的浏览器直接从网易云加载，不经过这台电脑。
+const NE_API = 'https://music.163.com/api/cloudsearch/pc';
+const NE_DETAIL = 'https://music.163.com/api/song/detail';
+const NE_MEDIA = process.env.NETEASE_MEDIA || 'https://music.163.com/song/media/outer/url?id={id}.mp3';
+const NE_WAIT = Number(process.env.NETEASE_WAIT_MS) || 20000;   // 开播后多久还没人加载成功就跳过
+const NE_FAIL_GRACE = 2500;   // 有人报“放不了”后再等一会儿，看看别人能不能放（大家所在地区可能不同）
+const NE_HDR = { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130 Safari/537.36', Referer: 'https://music.163.com/', Accept: 'application/json' };
+const neCache = new Map();   // 搜索结果缓存：关键词 -> { t, items }
+const neSongs = new Map();   // 搜到过的歌：id -> 歌曲信息（点歌时直接用，不相信浏览器传来的歌名）
+const neHits = new Map();    // 每人每分钟最多搜 NE_RATE 次
+const NE_RATE = 20;
+const neCover = u => { u = String(u || '').replace(/^http:/, 'https:'); return /^https:\/\/p\d+\.music\.126\.net\/[\w\-=\/.]+\.(jpg|jpeg|png|webp)$/i.test(u) ? u + '?param=120y120' : ''; };
+function neSong(s) {
+  const p = s.privilege || {}, fee = Number(s.fee) || 0;
+  const o = {
+    id: String(s.id), title: clean(s.name, 80) || '未知歌曲',
+    artist: clean((s.ar || s.artists || []).map(a => a && a.name).filter(Boolean).join(' / '), 80),
+    album: clean((s.al || s.album || {}).name, 80), cover: neCover((s.al || s.album || {}).picUrl),
+    dur: Math.round((Number(s.dt || s.duration) || 0) / 10) / 100,
+    vip: fee === 1 || fee === 4,                                   // VIP / 付费专辑：外链放不了
+    blocked: s.privilege ? (p.st < 0 || p.pl === 0) : false        // 服务器所在地区没有版权（大家所在地区不同，结果可能不一样）
+  };
+  if (/^\d{1,12}$/.test(o.id) && o.dur > 0) { neSongs.set(o.id, o); if (neSongs.size > 2000) neSongs.delete(neSongs.keys().next().value); }
+  return o;
+}
+async function neFetch(url) {
+  const r = await fetch(url, { headers: NE_HDR, signal: AbortSignal.timeout(6000) });
+  if (!r.ok) throw new Error('HTTP ' + r.status);
+  return r.json();
+}
+app.get('/api/netease/search', async (req, res) => {
+  const u = userOf(req); if (!u) return res.status(401).json({ error: '请先登录' });
+  const q = clean(req.query.q, 60).replace(/\s+/g, ' '), key = q.toLowerCase();
+  if (!q) return res.status(400).json({ error: '请输入歌名或歌手' });
+  res.set('Cache-Control', 'no-store');
+  const hit = neCache.get(key);
+  if (hit && Date.now() - hit.t < 10 * 60e3) return res.json({ q, items: hit.items, cached: true });
+  const now = Date.now(), h = (neHits.get(u.id) || []).filter(t => now - t < 60e3);
+  if (h.length >= NE_RATE) return res.status(429).json({ error: '搜得太快了，休息一下再试' });
+  h.push(now); neHits.set(u.id, h);
+  try {
+    const j = await neFetch(NE_API + '?type=1&limit=20&offset=0&s=' + encodeURIComponent(q));
+    if (j.code !== 200) throw new Error('code ' + j.code);
+    const rank = s => s.vip ? 2 : s.blocked ? 1 : 0;   // 能放的排前面（原唱经常因为版权放不了，翻唱 / 其他版本反而能放）
+    const items = ((j.result && j.result.songs) || []).map(neSong).filter(s => s.dur > 0).map((s, i) => [s, i]).sort((a, b) => rank(a[0]) - rank(b[0]) || a[1] - b[1]).map(x => x[0]);
+    neCache.set(key, { t: Date.now(), items }); if (neCache.size > 300) neCache.delete(neCache.keys().next().value);
+    res.json({ q, items });
+  } catch (e) {
+    res.status(502).json({ error: '网易云暂时连不上，稍后再试' });
+  }
+});
+// 播放地址：网易云外链会 302 到 http:// 的 CDN 地址，https 页面里可能被拦（手机 Safari 尤其）。
+// 服务器只请求一次跳转（不下载音乐），换成 https 地址交给浏览器直接播放；查不到就让浏览器自己用外链试试。
+const neSrcs = new Map();   // id -> { t, p: Promise<url|null> }
+function neResolve(id) {
+  const h = neSrcs.get(id); if (h && Date.now() - h.t < 5 * 60e3) return h.p;
+  const p = (async () => {
+    try {
+      const u = NE_MEDIA.replace('{id}', id), r = await fetch(u, { redirect: 'manual', headers: { 'User-Agent': NE_HDR['User-Agent'] }, signal: AbortSignal.timeout(6000) });
+      if (r.body) r.body.cancel().catch(() => {});
+      if (r.status === 200) return u;
+      const loc = r.headers.get('location') || '';
+      if (r.status < 300 || r.status > 399 || !loc || /\/404(\b|$)/.test(loc)) return null;
+      const abs = new URL(loc, u).href.replace(/^http:\/\/([\w.-]+\.(126|163)\.net|music\.163\.com)\//, 'https://$1/');
+      return process.env.NETEASE_MEDIA || /^https:\/\/[\w.-]+\.(126\.net|163\.com)\//.test(abs) ? abs : null;
+    } catch (_) { neSrcs.delete(id); return null; }
+  })();
+  neSrcs.set(id, { t: Date.now(), p }); if (neSrcs.size > 500) neSrcs.delete(neSrcs.keys().next().value);
+  return p;
+}
+app.get('/api/netease/:id/src', async (req, res) => {
+  if (!userOf(req)) return res.status(401).json({ error: '请先登录' });
+  const id = String(req.params.id); if (!/^\d{1,12}$/.test(id)) return res.status(400).json({ error: '歌曲不存在' });
+  res.set('Cache-Control', 'no-store').json({ url: await neResolve(id) });
+});
+async function neInfo(id) {
+  if (neSongs.has(id)) return neSongs.get(id);
+  try { const j = await neFetch(NE_DETAIL + '?ids=' + encodeURIComponent('[' + id + ']')); const s = j.songs && j.songs[0]; return s && String(s.id) === id ? neSong(s) : null; } catch (_) { return null; }
+}
+async function plAddNe(u, nid) {
+  const g = groupSettings();
+  if (!g.music) return '群聊音乐还没有开启';
+  nid = String(nid || ''); if (!/^\d{1,12}$/.test(nid)) return '歌曲不存在';
+  const s = await neInfo(nid);
+  if (!s || !(s.dur > 0)) return '找不到这首歌';
+  if (s.vip) return '这首是 VIP / 付费歌曲，放不了';
+  const mid = 'ne:' + nid;
+  if (db.prepare('SELECT 1 FROM playlist WHERE music_id=?').get(mid)) return '这首歌已经在歌单里了';
+  const rows = plRows(), mine = rows.filter(r => r.user_id === u.id);
+  if (mine.length >= g.per) return `每人最多同时点 ${g.per} 首，等你的歌播完再来`;
+  const pin = rows.find(r => r.pin), K = pin ? pin.k : rows.length ? Math.min(...rows.map(r => r.k)) : PL.curKey;
+  const last = Math.max(PL.lastKey.get(u.id) || 0, ...mine.map(r => r.k));
+  const k = Math.max(K, last + 1, 1), ts = Date.now();
+  db.prepare("INSERT INTO playlist(music_id,user_id,k,added,src,ntitle,nartist,ncover,ndur) VALUES(?,?,?,?,'netease',?,?,?,?)").run(mid, u.id, k, ts, s.title, s.artist, s.cover, s.dur);
+  const r = db.prepare("INSERT INTO messages(user_id,text,ts,kind) VALUES(?,?,?,'song')").run(u.id, s.title, ts);
+  io.emit('msg', msgOut(msgRow.get(Number(r.lastInsertRowid))));
+  plStart(); pushMusic();
+  return null;
+}
+function neSkip(qid, reason) {
+  const c = PL.cur; if (!c || c.qid !== qid || !c.ne || c.ne.ok) return;
+  const row = plRows().find(r => r.qid === qid);
+  io.emit('music:skipped', { qid, title: row ? row.title : '', reason });
+  plNext(qid);
 }
 setTimeout(() => { plStart(); }, 0);   // 重启后：歌单还在、音乐开着，就从第一首重新开始
 
@@ -932,6 +1050,17 @@ io.on('connection', socket => {
   const ack = (cb, v) => { if (typeof cb === 'function') cb(v); };
   socket.on('music:ping', (_, cb) => ack(cb, Date.now()));   // 对时：客户端据此算出和服务器的时间差
   socket.on('music:add', (id, cb) => { const e = plAdd(userById.get(uid), id); ack(cb, e ? { error: e } : { ok: true }); });
+  // v0.10：网易云
+  socket.on('music:addne', async (id, cb) => { const e = await plAddNe(userById.get(uid), id); ack(cb, e ? { error: e } : { ok: true }); });
+  const neCur = qid => { const c = PL.cur; return c && c.ne && c.qid === parseInt(qid) ? c : null; };
+  socket.on('music:try', qid => { const c = neCur(qid); if (c) c.ne.tries.add(socket.id); });
+  socket.on('music:ok', qid => { const c = neCur(qid); if (c) { c.ne.ok = true; clearTimeout(c.ne.fail); clearTimeout(c.watch); } });
+  socket.on('music:fail', (qid, cb) => {
+    const c = neCur(qid); if (!c) return ack(cb, { gone: true });
+    if (c.ne.ok) return ack(cb, { kept: true });   // 别人放得了：只有你这里放不了，不替大家跳过
+    if (!c.ne.fail) c.ne.fail = setTimeout(() => neSkip(c.qid, 'error'), NE_FAIL_GRACE);
+    ack(cb, { skipping: true });
+  });
   socket.on('music:remove', (qid, cb) => {
     const r = db.prepare('SELECT * FROM playlist WHERE qid=?').get(parseInt(qid) || 0), u = userById.get(uid);
     if (!r) return ack(cb, { error: '这首歌已经不在歌单里了' });

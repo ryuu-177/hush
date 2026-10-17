@@ -508,6 +508,46 @@ aside h4{margin:22px 0 6px;font-size:12px;font-weight:600;letter-spacing:.02em}
   #f button.primary{padding:10px 18px}
 }
 @media(prefers-reduced-motion:reduce){#auth .card{animation:none}#f button:active{transform:none}}
+/* ===== v0.10：网易云音乐搜索（只在歌单里点放大镜才出现） ===== */
+.mhr{display:inline-flex;align-items:center;gap:8px}
+.nesb{width:28px;height:28px;padding:0;border:0;border-radius:50%;display:grid;place-items:center;background:none;color:var(--mut)}
+.nesb svg{width:15px;height:15px}
+.nesb:hover{background:var(--bg);color:var(--fg)}
+.nesb.on{background:color-mix(in srgb,var(--ac) 13%,transparent);color:var(--ac)}
+.nes{margin:2px 0 10px;animation:pop .22s cubic-bezier(.2,.8,.2,1)}
+.nesf{display:flex;align-items:center;gap:8px;height:40px;margin:4px 4px 0;padding:0 6px 0 13px;border:1px solid var(--line);border-radius:999px;background:var(--bg);color:var(--mut);cursor:text;transition:border-color .15s,box-shadow .15s,background-color .15s}
+.nesf:focus-within{border-color:var(--ac);box-shadow:0 0 0 3px color-mix(in srgb,var(--ac) 16%,transparent);background:var(--card)}
+.nesf>svg{width:15px;height:15px;flex:none}
+.nesf input{flex:1;min-width:0;height:100%;padding:0;border:0;border-radius:0;background:none;font-size:14px;color:var(--fg)}
+.nesf input:focus{border:0;box-shadow:none}
+.nesf input::-webkit-search-cancel-button{display:none}
+.nesf input::placeholder{color:color-mix(in srgb,var(--mut) 80%,transparent)}
+.nesx{width:28px;height:28px;padding:0;border:0;border-radius:50%;display:grid;place-items:center;background:none;color:var(--mut);flex:none}
+.nesx:hover{background:color-mix(in srgb,var(--mut) 14%,transparent);color:var(--fg)}
+.nesx svg{width:13px;height:13px}
+.ner{margin-top:6px;transition:opacity .2s}
+.ner.busy{opacity:.55}
+/* 封面：加载成功才盖住渐变色；正在播放时上面叠一层淡淡的暗色和跳动的音柱 */
+.art{position:relative;overflow:hidden}
+.art img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .25s}
+.art.cv img{opacity:1}
+.art.cv>svg{visibility:hidden}
+.art.cv .eq{position:relative;z-index:1;filter:drop-shadow(0 1px 2px #0006)}
+.art.cv:has(.eq)::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,#0000,#00000059)}
+.npc .ar{font-size:12px;color:var(--mut);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.npc.bad .art{filter:grayscale(1);opacity:.55}
+.npc.bad .tt{color:var(--mut)}
+/* 搜索结果：VIP 放不了（变淡、锁），服务器所在地区可能放不了（稍微淡一点，仍然可以点） */
+.qi.ne.vip .art,.qi.ne.vip .tx{opacity:.4;filter:grayscale(.7)}
+.qi.ne.blk .art{filter:saturate(.35);opacity:.6}
+.qi.ne.blk .tx{opacity:.6}
+.qa .lk{color:var(--mut);opacity:.7}
+.qa button.wait svg{animation:pulse 1s ease-in-out infinite}
+.qi.sk .art{background:color-mix(in srgb,var(--mut) 13%,transparent);box-shadow:none}
+.qi.sk .tx i{display:block;height:9px;margin:6px 0;border-radius:5px;background:color-mix(in srgb,var(--mut) 13%,transparent);width:58%;animation:pulse 1.3s ease-in-out infinite}
+.qi.sk .tx i+i{width:34%;animation-delay:.15s}
+@media(prefers-reduced-motion:reduce){.nes{animation:none}.qi.sk .tx i,.qa button.wait svg{animation:none}}
+@media(max-width:640px){.nesf{height:42px}.nesf input{font-size:16px}}
 </style>
 </head>
 <body>
@@ -2048,11 +2088,20 @@ const MICON = {
   ok: '<path d="m5 12.5 4.5 4.5L19 7"/>',
   edit: '<path d="M4 20h4L19 9l-4-4L4 16z"/><path d="m13.5 6.5 4 4"/>',
   del: '<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/>',
-  up: '<path d="M12 16V4M7 9l5-5 5 5M5 20h14"/>'
+  up: '<path d="M12 16V4M7 9l5-5 5 5M5 20h14"/>',
+  lock: '<rect x="5" y="11" width="14" height="9" rx="2.2"/><path d="M8.5 11V8a3.5 3.5 0 0 1 7 0v3"/>',
+  search: '<circle cx="11" cy="11" r="6.5"/><path d="m20 20-4.2-4.2"/>'
 };
 const svg = (k, sw) => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="' + (sw || 1.8) + '" stroke-linecap="round" stroke-linejoin="round">' + MICON[k] + '</svg>';
 function mBtn(cls, k, title, fn) { const b = el('button', cls); b.type = 'button'; b.title = title; b.setAttribute('aria-label', title); b.innerHTML = svg(k); b.onclick = e => { e.stopPropagation(); fn(b); }; return b; }   // 图标来自固定常量
-function artEl(title, playing) { const a = el('div', 'art'); a.style.setProperty('--h', hueOf(title)); a.innerHTML = playing ? '<span class="eq"><i></i><i></i><i></i></span>' : NOTE; return a; }
+function artEl(title, playing, cover) {
+  const a = el('div', 'art'); a.style.setProperty('--h', hueOf(title)); a.innerHTML = playing ? '<span class="eq"><i></i><i></i><i></i></span>' : NOTE;
+  if (cover) {   // v0.10：网易云封面（加载失败就留着渐变色 + 音符）
+    const i = el('img'); i.alt = ''; i.loading = 'lazy'; i.decoding = 'async'; i.referrerPolicy = 'no-referrer';
+    i.onload = () => a.classList.add('cv'); i.onerror = () => i.remove(); i.src = cover; a.prepend(i);
+  }
+  return a;
+}
 // ----- 对时：取往返最快的一次 -----
 function mPing(n = 5) {
   let best = 1e9;
@@ -2076,7 +2125,15 @@ async function mApply() {
     return renderNP();
   }
   mus.volume = mVol(); mus.muted = false;
-  if (MS.src !== c.qid) {
+  if (MS.src !== c.qid && c.src === 'netease') {   // v0.10：网易云的歌由浏览器直接从网易云加载（服务器只帮忙查出 https 的真实地址）
+    const my = MS.src = c.qid; MS.loading = true;
+    const r = await fetch('/api/netease/' + c.nid + '/src', { headers: hdr() }).then(r => r.ok ? r.json() : null).catch(() => null);
+    MS.loading = false;
+    if (MS.src !== my) return;
+    mus.src = (r && r.url) || c.url; mus.playbackRate = 1; socket.emit('music:try', c.qid);
+    clearTimeout(MS.neT);
+    if (r && !r.url) MS.neT = setTimeout(() => { if (MS.src === my && mus.readyState < 1) mus.dispatchEvent(new Event('error')); }, 7000);   // 服务器那边已经放不了：7 秒还没加载出来就当失败
+  } else if (MS.src !== c.qid) {
     const my = MS.src = c.qid; MS.loading = true;
     const r = await fetch('/api/music/' + c.id + '/url', { headers: hdr() }).then(r => r.ok ? r.json() : null).catch(() => null);
     MS.loading = false;
@@ -2107,11 +2164,16 @@ function mTick() {
   else if (mus.playbackRate !== 1) mus.playbackRate = 1;
 }
 setInterval(mTick, 1000);
-mus.addEventListener('loadedmetadata', mTick);
+mus.addEventListener('loadedmetadata', () => { const c = mCur(); if (c && c.src === 'netease' && MS.src === c.qid) socket.emit('music:ok', c.qid); mTick(); });
 mus.addEventListener('playing', () => { MS.errs = 0; renderNP(); });
 mus.addEventListener('pause', renderNP);
 mus.addEventListener('error', () => {
   const c = mCur(); if (!c || !mus.getAttribute('src')) return;
+  if (c.src === 'netease') {   // 网易云：地区 / 版权 / VIP 放不了。告诉服务器，没人放得了就替大家跳过
+    if (MS.src !== c.qid || MS.unsup === c.qid) return;
+    MS.unsup = c.qid; renderNP();
+    return socket.emit('music:fail', c.qid, r => { if (r && r.kept) toast('这首歌在你这里放不了'); });
+  }
   if (++MS.errs >= 3) { MS.unsup = c.qid; renderNP(); return toast('这首歌在当前浏览器里播放不了'); }
   MS.src = null; setTimeout(mApply, 800 * MS.errs);   // 播放地址过期 / 网络抖动：换个新地址接着播
 });
@@ -2160,7 +2222,9 @@ function renderMusic() {
   if (MS.tab === 'pl') renderPl(); else renderLib();
 }
 function renderPl() {
-  const box = $('#mpl'), st = MS.st; box.innerHTML = '';
+  const box = $('#mpl'), st = MS.st;
+  const nf = document.activeElement === NE.inp, na = NE.inp.selectionStart, nb = NE.inp.selectionEnd;   // 重画前记住搜索框的焦点
+  box.innerHTML = '';
   if (!st) return;
   if (!st.music) {
     const e = el('div', 'mempty'); e.append(artEl('群聊音乐'), el('b', '', '群聊音乐还没有开启'), el('span', '', me && me.admin ? '开启后，大家可以从自己的音乐仓库点歌，一起听' : '管理员开启后，大家就能点歌一起听'));
@@ -2174,8 +2238,11 @@ function renderPl() {
     const card = el('div', 'npc' + (mMuted() || mus.paused ? ' still' : '')); card.id = 'npc';
     const top = el('div', 'top'), tx = el('div', 'tx'), s2 = el('div', 's2'), a = el('div', 'av s');
     avatar(a, people[c.by.name] || c.by, true); s2.append(a, c.by.nick + ' 点的歌');
-    tx.append(el('div', 'tt', c.title), s2); tx.firstChild.title = c.title;
-    top.append(artEl(c.title, true), tx);
+    tx.append(el('div', 'tt', c.title)); tx.firstChild.title = c.title;
+    if (c.artist) tx.append(el('div', 'ar', c.artist));
+    tx.append(s2);
+    top.append(artEl(c.title, true, c.cover), tx);
+    if (MS.unsup === c.qid) card.classList.add('bad');
     const pg = el('div', 'prog'), bar = el('div', 'bar'), bi = el('i'); bi.id = 'mprog'; bar.append(bi);
     const pt = el('span', '', '0:00'); pt.id = 'mpt'; pg.append(pt, bar, el('span', '', mmss(c.dur)));
     const ctl = el('div', 'mctl');
@@ -2195,15 +2262,21 @@ function renderPl() {
   st.queue.forEach((q, i) => {
     const r = el('div', 'qi' + (me && q.by.name === me.name ? ' me2' : '')); r.dataset.qid = q.qid;
     const tx = el('div', 'tx'), t2 = el('div', 't2');
-    if (me && q.by.name === me.name) t2.append(el('b', '', '我'), ' · ' + mmss(q.dur)); else t2.append(q.by.nick + ' · ' + mmss(q.dur));
+    const pre = q.artist ? q.artist + ' · ' : '';
+    if (me && q.by.name === me.name) t2.append(pre, el('b', '', '我'), ' · ' + mmss(q.dur)); else t2.append(pre + q.by.nick + ' · ' + mmss(q.dur));
     tx.append(el('div', 't1', q.title), t2); tx.firstChild.title = q.title;
     const qa = el('div', 'qa');
     if (me && (me.admin || q.by.name === me.name)) qa.append(mBtn('', 'x', q.by.name === me.name ? '移出歌单' : '移出歌单（管理员）', () => socket.emit('music:remove', q.qid, x => x && x.error && toast(x.error))));
-    r.append(el('span', 'n', String(i + 1)), artEl(q.title), tx, qa); box.append(r);
+    r.append(el('span', 'n', String(i + 1)), artEl(q.title, false, q.cover), tx, qa); box.append(r);
   });
   // 点歌：从我的音乐
   const mine = [c, ...st.queue].filter(x => x && me && x.by.name === me.name).length;
-  const h2 = el('div', 'mh'); h2.append(el('span', '', '点歌'), el('small', '', '已点 ' + mine + '/' + st.per)); box.append(h2);
+  const h2 = el('div', 'mh'), hr = el('span', 'mhr');
+  const sb = mBtn('nesb' + (NE.open ? ' on' : ''), 'search', NE.open ? '收起搜索' : '搜索网易云音乐', () => neToggle()); sb.id = 'nesb'; sb.setAttribute('aria-expanded', String(NE.open));
+  hr.append(el('small', '', '已点 ' + mine + '/' + st.per), sb);
+  h2.append(el('span', '', '点歌'), hr); box.append(h2);
+  NE.mine = mine; NE.per = st.per; NE.queued = new Set([c, ...st.queue].filter(Boolean).map(x => x.id));
+  if (NE.open) { box.append(NE.node); neRender(); if (nf) { NE.inp.focus({ preventScroll: true }); try { NE.inp.setSelectionRange(na, nb); } catch (_) {} } }
   const lib = MS.lib ? MS.lib.items : null;
   if (!lib) return box.append(el('div', 'mnote', '加载中…'));
   if (!lib.length) {
@@ -2218,6 +2291,64 @@ function renderPl() {
     const b = mBtn(inq ? 'done' : 'add', inq ? 'ok' : 'add', inq ? '已在歌单里' : mine >= st.per ? '每人最多同时点 ' + st.per + ' 首' : '点这首', bt => { bt.disabled = true; socket.emit('music:add', s.id, x => { if (x && x.error) { toast(x.error); bt.disabled = false; } }); });
     b.disabled = inq || mine >= st.per; b.dataset.add = s.id;
     qa.append(b); r.append(artEl(s.title), tx, qa); box.append(r);
+  });
+}
+// ================= v0.10：搜索网易云音乐，一键点歌 =================
+// 只在歌单面板里点放大镜才出现；搜索走服务器（/api/netease/search），播放由浏览器直接从网易云加载。
+const NE = { open: false, q: '', items: null, busy: false, err: '', seq: 0, t: 0, mine: 0, per: 2, queued: new Set(), adding: new Set() };
+NE.node = el('div', 'nes'); NE.node.id = 'nes';
+NE.node.innerHTML = '<label class="nesf"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="m20 20-4.2-4.2"/></svg><input id="nesq" type="search" enterkeyhint="search" autocomplete="off" maxlength="60" placeholder="搜索网易云：歌名 / 歌手"><button type="button" class="nesx" id="nesx" title="清空" aria-label="清空" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M7 7l10 10M17 7 7 17"/></svg></button></label><div class="ner" id="ner"></div>';
+NE.inp = NE.node.querySelector('#nesq'); NE.list = NE.node.querySelector('#ner'); NE.clr = NE.node.querySelector('#nesx');
+NE.inp.oninput = () => { NE.clr.hidden = !NE.inp.value; clearTimeout(NE.t); NE.t = setTimeout(() => neSearch(NE.inp.value), 380); };
+NE.inp.onkeydown = e => {
+  if (e.key === 'Enter') { e.preventDefault(); clearTimeout(NE.t); neSearch(NE.inp.value, true); }
+  else if (e.key === 'Escape') { e.stopPropagation(); if (NE.inp.value) { NE.inp.value = ''; NE.inp.oninput(); } else neToggle(false); }
+};
+NE.clr.onclick = () => { NE.inp.value = ''; NE.clr.hidden = true; NE.q = ''; NE.items = null; NE.err = ''; neRender(); NE.inp.focus(); };
+function neToggle(v) {
+  NE.open = typeof v === 'boolean' ? v : !NE.open;
+  renderMusic();
+  if (NE.open) { NE.inp.focus({ preventScroll: true }); NE.node.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }
+}
+async function neSearch(q, force) {
+  q = String(q || '').trim().replace(/\s+/g, ' ');
+  if (!q) { NE.q = ''; NE.items = null; NE.err = ''; NE.busy = false; return neRender(); }
+  if (q === NE.q && !force && (NE.items || NE.busy)) return;
+  const my = ++NE.seq; NE.q = q; NE.busy = true; NE.err = ''; neRender();
+  const r = await fetch('/api/netease/search?q=' + encodeURIComponent(q), { headers: hdr() }).then(async r => ({ ok: r.ok, j: await r.json().catch(() => ({})) })).catch(() => ({ ok: false, j: { error: '网络错误，搜索失败' } }));
+  if (my !== NE.seq) return;
+  NE.busy = false;
+  if (r.ok) { NE.items = r.j.items || []; NE.err = ''; } else { NE.items = null; NE.err = r.j.error || '搜索失败'; }
+  neRender();
+}
+function neRender() {
+  const box = NE.list; box.innerHTML = ''; box.classList.toggle('busy', NE.busy);
+  if (NE.busy && !NE.items) { for (let i = 0; i < 4; i++) { const r = el('div', 'qi sk'); r.append(el('div', 'art'), el('div', 'tx')); r.lastChild.append(el('i'), el('i')); box.append(r); } return; }
+  if (NE.err) return box.append(el('div', 'mnote', NE.err));
+  if (!NE.items) return;
+  if (!NE.items.length) return box.append(el('div', 'mnote', '没有找到“' + NE.q + '”'));
+  NE.items.forEach(s => {
+    const mid = 'ne:' + s.id, inq = NE.queued.has(mid), busy = NE.adding.has(s.id);
+    const r = el('div', 'qi ne' + (s.vip ? ' vip' : s.blocked ? ' blk' : '')); r.dataset.nid = s.id;
+    r.title = s.vip ? 'VIP / 付费歌曲，放不了' : s.blocked ? '这首歌在服务器所在地区可能放不了' : '';
+    const tx = el('div', 'tx'), t1 = el('div', 't1', s.title), t2 = el('div', 't2');
+    t1.title = s.title; t2.textContent = (s.artist || '未知歌手') + ' · ' + mmss(s.dur);
+    tx.append(t1, t2);
+    const qa = el('div', 'qa');
+    const full = NE.mine >= NE.per;
+    const b = mBtn(inq ? 'done' : s.vip ? 'lk' : 'add', inq ? 'ok' : s.vip ? 'lock' : 'add', inq ? '已在歌单里' : s.vip ? 'VIP 歌曲放不了' : full ? '每人最多同时点 ' + NE.per + ' 首' : '点这首', bt => neAdd(s, bt));
+    b.disabled = inq || s.vip || full || busy; b.dataset.addne = s.id;
+    qa.append(b); r.append(artEl(s.title, false, s.cover), tx, qa); box.append(r);
+  });
+  box.append(el('div', 'mnote', '来自网易云音乐 · 由每个人的浏览器直接播放\n地区或版权限制放不了的歌会自动跳过'));
+}
+function neAdd(s, bt) {
+  if (NE.adding.has(s.id)) return;
+  NE.adding.add(s.id); bt.disabled = true; bt.classList.add('wait');
+  socket.emit('music:addne', s.id, x => {
+    NE.adding.delete(s.id);
+    if (x && x.error) { toast(x.error); bt.disabled = false; bt.classList.remove('wait'); }
+    else { NE.queued.add('ne:' + s.id); NE.mine++; neRender(); }
   });
 }
 function renderLib() {
@@ -2339,6 +2470,7 @@ async function gsSet(patch) {
 $('#gper').onclick = e => { const b = e.target.closest('button'); if (b && !b.disabled) gsSet({ per: +b.dataset.n }); };
 function musicInit() {
   socket.on('music', onMusic);
+  socket.on('music:skipped', m => { if (m && m.title) toast('《' + m.title + '》放不了，已跳过'); });
   socket.on('connect', () => mPing());
   if (socket.connected) mPing();
   if (!MS.pingT) MS.pingT = setInterval(() => socket && socket.connected && mPing(3), 60000);
