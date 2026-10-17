@@ -548,6 +548,28 @@ aside h4{margin:22px 0 6px;font-size:12px;font-weight:600;letter-spacing:.02em}
 .qi.sk .tx i+i{width:34%;animation-delay:.15s}
 @media(prefers-reduced-motion:reduce){.nes{animation:none}.qi.sk .tx i,.qa button.wait svg{animation:none}}
 @media(max-width:640px){.nesf{height:42px}.nesf input{font-size:16px}}
+/* ===== v0.11：群聊音乐进度条（点歌的人 / 管理员可拖动、暂停，大家同步）+ 共享屏幕系统行 ===== */
+.prog .skb{flex:1;min-width:0;position:relative;height:16px;display:flex;align-items:center;cursor:pointer;touch-action:none;outline:none;-webkit-user-select:none;user-select:none}
+.prog .skb .bar{flex:1;height:3px;transition:height .15s cubic-bezier(.2,.8,.2,1)}
+.skb .skt{position:absolute;left:calc(var(--p,0) * 100%);top:50%;width:12px;height:12px;margin:-6px 0 0 -6px;border-radius:50%;background:var(--ac);box-shadow:0 0 0 3px color-mix(in srgb,var(--ac) 18%,transparent),0 1px 3px #0003;transform:scale(0);transition:transform .15s cubic-bezier(.2,.8,.2,1);pointer-events:none}
+.skb:not(.ro):hover .bar,.skb.drag .bar,.skb:focus-visible .bar{height:5px}
+.skb:not(.ro):hover .skt,.skb.drag .skt,.skb:focus-visible .skt{transform:scale(1)}
+.skb.drag .skt{transform:scale(1.15)}
+.skb.drag .bar i{transition:none}
+.skb.ro{cursor:default}
+.skb.ro .bar i{background:color-mix(in srgb,var(--ac) 45%,var(--mut))}
+.npc.paused .skb .bar i{opacity:.55}
+.npc.paused .prog #mpt{color:var(--fg)}
+.mctl .mpp{width:36px;height:36px;background:var(--ac);border-color:var(--ac);color:var(--on)}
+.mctl .mpp svg{width:14px;height:14px}
+.mctl .mpp:not(:disabled):hover{color:var(--on);border-color:var(--ac);filter:brightness(1.08)}
+.mctl .mpp:not(:disabled):active{transform:scale(.94)}
+.mctl .mpp:disabled{background:none;border-color:var(--line);color:var(--mut);opacity:.4}
+.np.paused::after{opacity:.4}
+.sys.lvs .ld{display:inline-block;width:6px;height:6px;margin-right:7px;border-radius:50%;vertical-align:1px;background:color-mix(in srgb,var(--mut) 45%,transparent)}
+.sys.lvs.on .ld{background:#f43f5e;box-shadow:0 0 0 3px #f43f5e22;animation:pulse 1.6s ease-in-out infinite}
+@media(hover:none){.skb:not(.ro) .skt{transform:scale(.8)}.prog .skb{height:24px}}
+@media(prefers-reduced-motion:reduce){.sys.lvs.on .ld{animation:none}}
 </style>
 </head>
 <body>
@@ -963,6 +985,15 @@ function sysLine(m) {
   const d = el('div', 'sys'); d.dataset.id = m.id; d.dataset.u = m.name;
   const who = m.nick || m.name;
   if (m.recalled) d.textContent = m.recalledBy ? m.recalledBy + ' 撤回了 ' + who + ' 的一条消息' : who + ' 撤回了一条消息';
+  else if (m.live) {   // v0.11：共享屏幕系统行；还在共享时前面的小点会轻轻闪，点“共享屏幕”直接观看
+    d.classList.add('lvs');
+    if (m.live.on) {
+      d.dataset.lu = m.name; d.classList.toggle('on', liveSet.has(m.name));
+      const a = el('a', '', '共享屏幕'); a.title = '观看';
+      a.onclick = () => { if (me && m.name === me.name) return; if (liveSet.has(m.name)) watch(m.name); else toast('屏幕共享已经结束'); };
+      d.append(el('i', 'ld'), who + ' 开始', a);
+    } else d.append(el('i', 'ld'), who + ' 结束了屏幕共享');
+  }
   else if (m.song) { d.dataset.song = '1'; const a = el('a', '', '《' + m.song.title + '》'); a.title = '打开群聊歌单'; a.onclick = () => openMusic('pl'); d.append(who + ' 点了', a); }
   else {
     d.dataset.fid = m.file.id; d.append(who + ' 发送了 ');
@@ -974,7 +1005,7 @@ function sysLine(m) {
 }
 function renderMsg(m) {
   people[m.name] = Object.assign(people[m.name] || {}, { name: m.name, nick: m.nick, avatar: m.avatar, color: m.color, level: m.level });
-  if (m.recalled || m.file || m.song) return sysLine(m);
+  if (m.recalled || m.file || m.song || m.live) return sysLine(m);
   const d = el('div', 'm' + (me && m.name === me.name ? ' own' : '')); d.dataset.id = m.id; d.dataset.ts = m.ts;
   if (me && m.mentions && m.mentions.includes(me.name) && m.name !== me.name) d.classList.add('hit');
   const a = el('div', 'av s'); a.dataset.u = m.name; avatar(a, m); a.style.cursor = 'pointer'; a.onclick = () => avClick(m.name);
@@ -1014,7 +1045,7 @@ function add(m, quiet) {
 }
 function onIncoming(m) {
   add(m);
-  if (m.song) return;   // v0.9：点歌系统行不算未读、不弹通知
+  if (m.song || m.live) return;   // v0.9：点歌 / 共享屏幕系统行不算未读、不弹通知
   bump(m); notify(m);   // v0.8：未读角标 + 系统通知（页面在后台时）
 }
 function applyRecall(m) {
@@ -1479,6 +1510,7 @@ const LIVE_ERR = { notlive: '对方已经不在直播了', self: '不能观看�
 const canLive = () => !!(navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia);
 function paintLive() {
   document.querySelectorAll('.av[data-lu]').forEach(el => el.classList.toggle('live', liveSet.has(el.dataset.lu)));
+  document.querySelectorAll('.sys.lvs[data-lu]').forEach(el => el.classList.toggle('on', liveSet.has(el.dataset.lu)));
   const pw = $('#pwatch'); if (pw && pw.dataset.u) pw.hidden = !liveSet.has(pw.dataset.u) || pw.dataset.u === me?.name;
 }
 function liveUi() {
@@ -1761,7 +1793,7 @@ function openSearch() { openDrawer('#sd'); setTimeout(() => $('#sq').focus(), 60
       list.forEach(m => {
         const d = el('div', 'sr'); d.dataset.id = m.id;
         d.append(el('div', 'sh', (m.nick || m.name) + ' · ' + tmFmt(m.ts)));
-        const st = el('div', 'st2'), txt = m.file ? '[文件] ' + m.file.name : m.song ? '点了《' + m.song.title + '》' : m.text, lo = txt.toLowerCase(), ql = q.toLowerCase();
+        const st = el('div', 'st2'), txt = m.file ? '[文件] ' + m.file.name : m.song ? '点了《' + m.song.title + '》' : m.live ? (m.live.on ? '开始共享屏幕' : '结束了屏幕共享') : m.text, lo = txt.toLowerCase(), ql = q.toLowerCase();
         let i = 0, k;
         while ((k = lo.indexOf(ql, i)) !== -1) { st.append(txt.slice(i, k), el('mark', '', txt.slice(k, k + q.length))); i = k + q.length; }
         st.append(txt.slice(i)); d.append(st);
@@ -2073,13 +2105,16 @@ const mVol = () => { const v = parseFloat(localStorage.hush_music_vol); return i
 const mMuted = () => localStorage.hush_music_mute === '1';
 const sNow = () => Date.now() + MS.off;
 const mCur = () => MS.st && MS.st.music && MS.st.current;
-const mPos = c => (sNow() - c.startedAt) / 1000;
+const mPos = c => c.paused ? c.pos : (sNow() - c.startedAt) / 1000;   // v0.11：暂停时位置固定
+const mCan = c => !!(me && c && (me.admin || c.by.name === me.name));   // 能暂停 / 拖进度：点歌的人 + 管理员
 const mmss = s => { s = Math.max(0, Math.floor(s || 0)); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); };
 const hueOf = t => { let h = 0; for (const ch of String(t)) h = (h * 31 + ch.codePointAt(0)) % 360; return h; };
 const NOTE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>';
 const MICON = {
   play: '<path d="M7 4.5v15l13-7.5z" fill="currentColor" stroke="none"/>',
   pause: '<path d="M8 5v14M16 5v14" stroke-width="3"/>',
+  play2: '<path d="M8 5.2v13.6a.8.8 0 0 0 1.2.7l10.6-6.8a.8.8 0 0 0 0-1.4L9.2 4.5a.8.8 0 0 0-1.2.7z" fill="currentColor" stroke="none"/>',
+  pause2: '<rect x="6.5" y="5" width="3.6" height="14" rx="1.1" fill="currentColor" stroke="none"/><rect x="13.9" y="5" width="3.6" height="14" rx="1.1" fill="currentColor" stroke="none"/>',
   skip: '<path d="M5 4.5v15l11-7.5z" fill="currentColor" stroke="none"/><path d="M19 5v14" stroke-width="2.4"/>',
   vol: '<path d="M11 5 6 9H2v6h4l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M19 5a10 10 0 0 1 0 14"/>',
   mute: '<path d="M11 5 6 9H2v6h4l5 4z"/><path d="m22 9-6 6M16 9l6 6"/>',
@@ -2113,8 +2148,9 @@ function onMusic(st) {
   if (MS.rtt === 1e9) MS.off = st.now - Date.now();
   MS.st = st;
   if ((st.current && st.current.qid) !== prev) { MS.errs = 0; }
+  if (MS.drag != null && !document.querySelector('#mskb.drag')) MS.drag = null;   // 拖完了，服务器的新位置到了
   mApply(); renderNP();
-  if ($('#md').classList.contains('open')) renderMusic();
+  if ($('#md').classList.contains('open')) { if (document.querySelector('#mskb.drag')) MS.dirty = true; else renderMusic(); }
   if (!$('#gsv').hidden) gsUi();
 }
 async function mApply() {
@@ -2154,6 +2190,7 @@ function mTick() {
   if (MS.src !== c.qid) { if (!MS.loading) mApply(); return; }
   if (mus.readyState < 1) return;
   const t = mPos(c);
+  if (c.paused) { if (!mus.paused) mus.pause(); if (Math.abs(mus.currentTime - t) > 0.25) mus.currentTime = Math.max(0, t); return; }   // v0.11：大家一起暂停
   if (t < 0) { if (!mus.paused) mus.pause(); if (mus.currentTime > 0.05) mus.currentTime = 0; MS.timer = setTimeout(mTick, Math.min(-t * 1000, 3000)); return; }
   if (t >= c.dur - 0.05) { if (!mus.paused) mus.pause(); return; }   // 播完了，等服务器切下一首
   if (MS.blocked) return;
@@ -2177,11 +2214,32 @@ mus.addEventListener('error', () => {
   if (++MS.errs >= 3) { MS.unsup = c.qid; renderNP(); return toast('这首歌在当前浏览器里播放不了'); }
   MS.src = null; setTimeout(mApply, 800 * MS.errs);   // 播放地址过期 / 网络抖动：换个新地址接着播
 });
-document.addEventListener('pointerdown', () => { if (MS.blocked && mCur() && !mMuted()) { mus.currentTime = Math.max(0, mPos(mCur())); mPlay(); } }, true);
+document.addEventListener('pointerdown', () => { if (MS.blocked && mCur() && !mCur().paused && !mMuted()) { mus.currentTime = Math.max(0, mPos(mCur())); mPlay(); } }, true);
 function mProgress() {
-  const c = mCur(), p = c ? Math.min(1, Math.max(0, mPos(c) / c.dur)) : 0;
+  const c = mCur(), pos = c ? (MS.drag != null ? MS.drag * c.dur : mPos(c)) : 0, p = c ? Math.min(1, Math.max(0, pos / c.dur)) : 0;
   $('#np').style.setProperty('--p', p.toFixed(4));
-  const b = $('#mprog'); if (b && c) { b.style.width = (p * 100).toFixed(2) + '%'; $('#mpt').textContent = mmss(Math.min(c.dur, Math.max(0, mPos(c)))); }
+  const b = $('#mprog'); if (b && c) { b.style.width = (p * 100).toFixed(2) + '%'; $('#mpt').textContent = mmss(Math.min(c.dur, Math.max(0, pos))); }
+  const k = $('#mskb'); if (k && c) { k.style.setProperty('--p', p.toFixed(4)); k.setAttribute('aria-valuenow', String(Math.round(Math.max(0, pos)))); k.setAttribute('aria-valuetext', mmss(pos) + ' / ' + mmss(c.dur)); }
+}
+// ----- v0.11：进度条（点 / 拖）和暂停，发给服务器，所有人一起跳 -----
+function mCtl(op, t) { const c = mCur(); if (!c) return; socket.emit('music:ctl', { qid: c.qid, op, t }, r => { if (r && r.error) { toast(r.error); MS.drag = null; mProgress(); } }); }
+function mSeekBar(sk, c) {
+  const frac = e => { const r = sk.getBoundingClientRect(); return Math.min(1, Math.max(0, (e.clientX - r.left) / r.width)); };
+  let id = null;
+  sk.onpointerdown = e => { if (!mCan(mCur()) || e.button > 0) return; e.preventDefault(); id = e.pointerId; sk.setPointerCapture(id); sk.classList.add('drag'); MS.drag = frac(e); mProgress(); };
+  sk.onpointermove = e => { if (id !== e.pointerId) return; MS.drag = frac(e); mProgress(); };
+  const end = (e, ok) => {
+    if (id !== e.pointerId) return; id = null; sk.classList.remove('drag');
+    const f = MS.drag; if (ok && f != null) { mCtl('seek', f * c.dur); setTimeout(() => { if (MS.drag === f) { MS.drag = null; mProgress(); } }, 1500); } else { MS.drag = null; mProgress(); }
+    if (MS.dirty) { MS.dirty = false; renderMusic(); }
+  };
+  sk.onpointerup = e => end(e, true); sk.onpointercancel = e => end(e, false);
+  sk.onkeydown = e => {
+    if (!mCan(mCur())) return;
+    const d = { ArrowLeft: -5, ArrowRight: 5, PageDown: -15, PageUp: 15 }[e.key];
+    if (d) { e.preventDefault(); mCtl('seek', Math.max(0, mPos(mCur()) + d)); }
+    else if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); mCtl(mCur().paused ? 'play' : 'pause'); }
+  };
 }
 function renderNP() {
   const np = $('#np'), c = mCur();
@@ -2189,12 +2247,13 @@ function renderNP() {
   if (!c) { np.title = '群聊歌单'; $('#npt').textContent = ''; $('#npb').textContent = ''; return; }
   $('#npt').textContent = MS.blocked && !mMuted() ? '点击收听' : c.title;
   $('#npb').textContent = c.by.nick;
-  np.title = '《' + c.title + '》 · ' + c.by.nick + ' 点的歌' + (mMuted() ? '（已静音）' : '');
-  const npc = $('#npc'); if (npc) npc.classList.toggle('still', mMuted() || mus.paused);
+  np.title = '《' + c.title + '》 · ' + c.by.nick + ' 点的歌' + (c.paused ? '（已暂停）' : mMuted() ? '（已静音）' : '');
+  np.classList.toggle('paused', !!c.paused); if (c.paused) np.classList.add('still');
+  const npc = $('#npc'); if (npc) { npc.classList.toggle('still', mMuted() || mus.paused || !!c.paused); npc.classList.toggle('paused', !!c.paused); }
   mProgress();
 }
 function npClick() {
-  if (MS.blocked && mCur() && !mMuted()) { MS.blocked = false; mus.currentTime = Math.max(0, mPos(mCur())); mPlay(); renderNP(); return; }
+  if (MS.blocked && mCur() && !mCur().paused && !mMuted()) { MS.blocked = false; mus.currentTime = Math.max(0, mPos(mCur())); mPlay(); renderNP(); return; }
   openMusic();
 }
 function setMute(m) { localStorage.hush_music_mute = m ? '1' : '0'; if (m) MS.blocked = false; mApply(); renderNP(); if ($('#md').classList.contains('open')) renderMusic(); }
@@ -2243,9 +2302,15 @@ function renderPl() {
     tx.append(s2);
     top.append(artEl(c.title, true, c.cover), tx);
     if (MS.unsup === c.qid) card.classList.add('bad');
-    const pg = el('div', 'prog'), bar = el('div', 'bar'), bi = el('i'); bi.id = 'mprog'; bar.append(bi);
-    const pt = el('span', '', '0:00'); pt.id = 'mpt'; pg.append(pt, bar, el('span', '', mmss(c.dur)));
+    const can = mCan(c);
+    const pg = el('div', 'prog'), skb = el('div', 'skb' + (can ? '' : ' ro')), bar = el('div', 'bar'), bi = el('i'); bi.id = 'mprog'; bar.append(bi); skb.append(bar, el('b', 'skt'));
+    skb.id = 'mskb'; skb.setAttribute('role', 'slider'); skb.setAttribute('aria-label', '播放进度'); skb.setAttribute('aria-valuemin', '0'); skb.setAttribute('aria-valuemax', String(Math.round(c.dur)));
+    if (can) { skb.tabIndex = 0; skb.title = '拖动或点击跳到这里（大家一起跳）'; mSeekBar(skb, c); } else skb.setAttribute('aria-disabled', 'true');
+    const pt = el('span', '', '0:00'); pt.id = 'mpt'; pg.append(pt, skb, el('span', '', mmss(c.dur)));
+    if (c.paused) card.classList.add('paused');
     const ctl = el('div', 'mctl');
+    const pp = mBtn('ib3 mpp', c.paused ? 'play2' : 'pause2', !can ? '只有点歌的人和管理员可以暂停' : c.paused ? '继续播放（大家一起）' : '暂停（大家一起）', () => mCtl(mCur().paused ? 'play' : 'pause'));
+    pp.id = 'mpp'; pp.disabled = !can; ctl.append(pp);
     const mb = mBtn('ib3' + (mMuted() ? ' on' : ''), mMuted() ? 'mute' : 'vol', mMuted() ? '取消静音（只影响你自己）' : '静音音乐（只影响你自己，不影响语音）', () => setMute(!mMuted())); mb.id = 'mmute';
     const vol = el('input'); vol.type = 'range'; vol.min = 0; vol.max = 1; vol.step = 0.01; vol.value = mMuted() ? 0 : mVol(); vol.id = 'mvol'; vol.title = '音乐音量（只影响你自己）';
     vol.oninput = () => { setVol(+vol.value); if (+vol.value === 0 && !mMuted()) setMute(true); };

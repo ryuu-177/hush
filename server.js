@@ -209,6 +209,7 @@ function snippet(r) {
   const base = { id: r.mid, name: r.name, nick: r.nick || r.name };
   if (r.recalled) return { ...base, recalled: true, text: '' };
   if (r.mkind === 'song') return { ...base, text: '点了《' + r.text + '》' };
+  if (r.mkind === 'live') return { ...base, text: r.text === '1' ? '开始共享屏幕' : '结束了屏幕共享' };
   if (r.file_id) { const f = fileById.get(r.file_id); return { ...base, text: '', file: f ? f.name : '文件' }; }
   return { ...base, text: [...r.text].slice(0, 80).join('') };
 }
@@ -219,6 +220,7 @@ function msgOut(r) {
     return { ...o, text: '', recalled: true, recalledBy: by ? (by.nick || by.name) : null };
   }
   if (r.mkind === 'song') { o.song = { title: r.text }; return o; }   // v0.9：点歌系统行
+  if (r.mkind === 'live') { o.text = ''; o.live = { on: r.text === '1' }; return o; }   // v0.11：共享屏幕系统行
   if (r.file_id) o.file = fileMeta(fileById.get(r.file_id)) || { id: r.file_id, name: '文件', size: 0, deleted: true };
   if (r.reply_to) o.reply = snippet(msgRow.get(r.reply_to)) || { id: r.reply_to, gone: true };
   if (r.mentions) { try { o.mentions = JSON.parse(r.mentions); } catch (_) {} }
@@ -358,7 +360,7 @@ app.get('/api/messages/search', (req, res) => {
   const q = String(req.query.q || '').trim().slice(0, 100);
   if (!q) return res.json([]);
   const like = '%' + q.replace(/[\\%_]/g, c => '\\' + c) + '%';
-  const rows = db.prepare(`${MSG_SQL} WHERE m.recalled=0 AND (m.text LIKE ? ESCAPE '\\' OR f.name LIKE ? ESCAPE '\\') ORDER BY m.id DESC LIMIT 50`).all(like, like);
+  const rows = db.prepare(`${MSG_SQL} WHERE m.recalled=0 AND (m.kind IS NULL OR m.kind<>'live') AND (m.text LIKE ? ESCAPE '\\' OR f.name LIKE ? ESCAPE '\\') ORDER BY m.id DESC LIMIT 50`).all(like, like);
   res.json(rows.map(msgOut));
 });
 
@@ -638,7 +640,7 @@ const plItem = r => {
 function musicState() {
   const rows = plRows(), g = groupSettings();
   const cur = PL.cur && rows.find(r => r.qid === PL.cur.qid);
-  return { ...g, now: Date.now(), current: cur ? { ...plItem(cur), startedAt: PL.cur.startedAt } : null, queue: rows.filter(r => !cur || r.qid !== cur.qid).map(plItem) };
+  return { ...g, now: Date.now(), current: cur ? { ...plItem(cur), startedAt: PL.cur.startedAt, paused: !!PL.cur.paused, pos: PL.cur.paused ? PL.cur.pos : null } : null, queue: rows.filter(r => !cur || r.qid !== cur.qid).map(plItem) };
 }
 const pushMusic = () => io.emit('music', musicState());
 function plStart() {
@@ -652,6 +654,28 @@ function plStart() {
     PL.cur.ne = { ok: false, tries: new Set(), fail: null };
     PL.cur.watch = setTimeout(() => { const c = PL.cur; if (c && c.qid === r.qid && c.ne && !c.ne.ok && c.ne.tries.size) neSkip(r.qid, 'timeout'); }, LEAD + NE_WAIT);
   }
+}
+// ----- v0.11：暂停 / 继续 / 拖进度（点歌的人和管理员可以操作，服务器说了算，所有人同步） -----
+// 播放中：位置 = (现在 - startedAt) / 1000；暂停时：位置固定在 pos，自动下一首的计时器停掉，继续时重新算。
+const CTL_LEAD = 350;   // 操作后留一点时间给大家同时跟上
+function plArm(c, dur) {   // 按当前 startedAt 重新设置“播完自动下一首”
+  clearTimeout(c.timer);
+  c.timer = setTimeout(() => { plNext(c.qid); }, Math.max(0, c.startedAt + dur * 1000 - Date.now()) + GRACE);
+}
+function plCtl(u, qid, op, t) {
+  const c = PL.cur, row = c && plRows().find(r => r.qid === c.qid);
+  if (!c || !row || (qid && parseInt(qid) !== c.qid)) return '这首歌已经播完了';
+  if (!u.is_admin && row.user_id !== u.id) return '只有点歌的人和管理员可以控制播放';
+  const now = Date.now(), dur = row.dur, cur = c.paused ? c.pos : Math.min(dur, Math.max(0, (now - c.startedAt) / 1000));
+  if (op === 'seek') {
+    t = Number(t); if (!isFinite(t)) return '位置不对';
+    t = Math.min(Math.max(0, dur - 0.5), Math.max(0, t));
+  } else t = cur;
+  if (op === 'pause' || (op === 'seek' && c.paused)) { clearTimeout(c.timer); c.paused = true; c.pos = Math.round(t * 1000) / 1000; c.startedAt = now - t * 1000; }
+  else if (op === 'play' || op === 'seek') { c.paused = false; c.pos = null; c.startedAt = now + CTL_LEAD - t * 1000; plArm(c, dur); }
+  else return '不支持的操作';
+  pushMusic();
+  return null;
 }
 function plClear() { if (PL.cur) { clearTimeout(PL.cur.timer); clearTimeout(PL.cur.watch); if (PL.cur.ne) clearTimeout(PL.cur.ne.fail); } }
 function plStop() { if (PL.cur) { plClear(); PL.cur = null; } }
@@ -880,9 +904,29 @@ function leaveRoom(uid, sid) {
 const lives = new Map();   // 主播 id -> { sock: 主播 socket.id, viewers: Map(观众 id -> socket.id) }
 const liveList = () => [...lives.keys()].map(id => userById.get(id).name);
 const pushLive = () => io.emit('live', liveList());
-function endLive(uid) {
+// v0.11：聊天里的“某某 开始共享屏幕 / 结束了屏幕共享”系统行。防刷屏：
+// 开始后 LIVE_ON_MS 内又停了 → 两条都不发；停了以后 LIVE_OFF_MS 内又开始（手滑、断线重连）→ 两条都不发。
+const LIVE_ON_MS = Number(process.env.LIVE_ON_MS) || 3000, LIVE_OFF_MS = Number(process.env.LIVE_OFF_MS) || 10000, LIVE_DROP_MS = Number(process.env.LIVE_DROP_MS) || 20000;
+const liveNote = new Map();   // 用户 id -> { shown: 聊天里最后一条是“开始”, on: 计时器, off: 计时器 }
+function livePost(uid, on) {
+  const r = db.prepare("INSERT INTO messages(user_id,text,ts,kind) VALUES(?,?,?,'live')").run(uid, on ? '1' : '0', Date.now());
+  io.emit('msg', msgOut(msgRow.get(Number(r.lastInsertRowid))));
+}
+function liveNoteOn(uid) {
+  const n = liveNote.get(uid) || {}; liveNote.set(uid, n);
+  if (n.off) { clearTimeout(n.off); n.off = null; return; }   // 刚停又开：什么都不发
+  if (n.shown || n.on) return;
+  n.on = setTimeout(() => { n.on = null; if (lives.has(uid)) { n.shown = true; livePost(uid, true); } }, LIVE_ON_MS);
+}
+function liveNoteOff(uid, dropped) {
+  const n = liveNote.get(uid); if (!n) return;
+  if (n.on) { clearTimeout(n.on); n.on = null; return; }      // 刚开就停：什么都不发
+  if (!n.shown || n.off) return;
+  n.off = setTimeout(() => { n.off = null; if (!lives.has(uid)) { n.shown = false; livePost(uid, false); } }, dropped ? LIVE_DROP_MS : LIVE_OFF_MS);
+}
+function endLive(uid, dropped) {
   const L = lives.get(uid); if (!L) return;
-  lives.delete(uid);
+  lives.delete(uid); liveNoteOff(uid, dropped);
   const name = userById.get(uid).name;
   for (const sid of L.viewers.values()) io.to(sid).emit('live:end', { name });
   pushLive();
@@ -998,7 +1042,7 @@ io.on('connection', socket => {
     const L = lives.get(uid);
     if (L && L.sock !== socket.id) return socket.emit('live:error', { reason: 'elsewhere' });
     if (L) return;
-    lives.set(uid, { sock: socket.id, viewers: new Map() });
+    lives.set(uid, { sock: socket.id, viewers: new Map() }); liveNoteOn(uid);
     socket.emit('live:count', 0);
     pushLive();
   });
@@ -1067,6 +1111,7 @@ io.on('connection', socket => {
     if (r.user_id !== uid && !u.is_admin) return ack(cb, { error: '只能移除自己点的歌' });
     plRemove(r.qid); ack(cb, { ok: true });
   });
+  socket.on('music:ctl', (m, cb) => { m = m || {}; const e = plCtl(userById.get(uid), m.qid, String(m.op || ''), m.t); ack(cb, e ? { error: e } : { ok: true }); });
   socket.on('music:skip', (qid, cb) => {
     const u = userById.get(uid), cur = PL.cur && db.prepare('SELECT * FROM playlist WHERE qid=?').get(PL.cur.qid);
     if (!cur || (qid && cur.qid !== parseInt(qid))) return ack(cb, { error: '这首歌已经播完了' });
@@ -1079,7 +1124,7 @@ io.on('connection', socket => {
     const c = calls.get(uid);
     if (c && (c.sock === socket.id || (!c.sock && !socketsOf(uid).length))) endCall(uid, c.state === 'active' ? 'hangup' : 'offline');
     leaveRoom(uid, socket.id);
-    if (lives.get(uid)?.sock === socket.id) endLive(uid);
+    if (lives.get(uid)?.sock === socket.id) endLive(uid, true);   // 断线：多等一会儿，重连后继续共享就不发“结束”
     for (const L of lives.values()) leaveLive(socket.id, uid, L);
   });
 });
