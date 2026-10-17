@@ -54,12 +54,20 @@ addCol('files', 'kind', 'TEXT');
 for (const [col, def] of [['nick', 'TEXT'], ['avatar', 'TEXT'], ['color', 'TEXT'], ['bio', 'TEXT']]) {
   if (!db.prepare('PRAGMA table_info(users)').all().some(c => c.name === col)) db.exec(`ALTER TABLE users ADD COLUMN ${col} ${def}`);
 }
+// v0.9 升级：个人背景、个人音乐仓库、群聊歌单、群聊设置（全部是新增的表 / 字段，旧数据不受影响）
+addCol('users', 'bg', 'TEXT');
+addCol('messages', 'kind', 'TEXT');
+db.exec(`
+CREATE TABLE IF NOT EXISTS music(id TEXT PRIMARY KEY, user_id INTEGER, title TEXT, ext TEXT, mime TEXT, size INTEGER, dur REAL, created INTEGER);
+CREATE TABLE IF NOT EXISTS playlist(qid INTEGER PRIMARY KEY, music_id TEXT, user_id INTEGER, k INTEGER, pin INTEGER DEFAULT 0, added INTEGER);
+CREATE TABLE IF NOT EXISTS settings(k TEXT PRIMARY KEY, v TEXT);
+`);
 
 // ---------- 等级规则：升到第 N+1 级需要 20 * N² 经验 ----------
 const XP_MESSAGE = 2;      // 发消息（每 5 秒最多算一次）
 const XP_DAILY = 20;       // 每天首次登录
 const level = xp => Math.floor(Math.sqrt(xp / 20)) + 1;
-const profile = u => ({ name: u.name, nick: u.nick || u.name, avatar: u.avatar || '', color: u.color || '', bio: u.bio || '', level: level(u.xp) });
+const profile = u => ({ name: u.name, nick: u.nick || u.name, avatar: u.avatar || '', color: u.color || '', bio: u.bio || '', bg: u.bg || '', level: level(u.xp) });
 const info = u => { const L = level(u.xp); return { ...profile(u), xp: u.xp, from: 20 * (L - 1) ** 2, to: 20 * L ** 2, admin: !!u.is_admin }; };
 
 // ---------- 个人资料校验：去掉控制字符，尖括号换成全角，杜绝 XSS ----------
@@ -190,7 +198,7 @@ const fileMeta = f => f && { id: f.id, name: f.name, size: f.size, mime: f.mime,
 const fileById = db.prepare('SELECT * FROM files WHERE id=?');
 
 // ---------- 消息输出（v0.7：带 id / 回复 / 撤回 / 提及） ----------
-const MSG_SQL = 'SELECT m.id mid, m.text, m.ts, m.file_id, m.reply_to, m.recalled, m.recalled_by, m.mentions, u.* FROM messages m JOIN users u ON u.id=m.user_id LEFT JOIN files f ON f.id=m.file_id';
+const MSG_SQL = 'SELECT m.id mid, m.text, m.ts, m.kind mkind, m.file_id, m.reply_to, m.recalled, m.recalled_by, m.mentions, u.* FROM messages m JOIN users u ON u.id=m.user_id LEFT JOIN files f ON f.id=m.file_id';
 const msgRow = db.prepare(MSG_SQL + ' WHERE m.id=?');
 const msgSel = where => db.prepare(MSG_SQL + ' WHERE ' + where);
 const RECALL_MS = 2 * 60 * 1000;
@@ -198,6 +206,7 @@ function snippet(r) {
   if (!r) return null;
   const base = { id: r.mid, name: r.name, nick: r.nick || r.name };
   if (r.recalled) return { ...base, recalled: true, text: '' };
+  if (r.mkind === 'song') return { ...base, text: '点了《' + r.text + '》' };
   if (r.file_id) { const f = fileById.get(r.file_id); return { ...base, text: '', file: f ? f.name : '文件' }; }
   return { ...base, text: [...r.text].slice(0, 80).join('') };
 }
@@ -207,6 +216,7 @@ function msgOut(r) {
     const by = r.recalled_by && r.recalled_by !== r.id ? userById.get(r.recalled_by) : null;
     return { ...o, text: '', recalled: true, recalledBy: by ? (by.nick || by.name) : null };
   }
+  if (r.mkind === 'song') { o.song = { title: r.text }; return o; }   // v0.9：点歌系统行
   if (r.file_id) o.file = fileMeta(fileById.get(r.file_id)) || { id: r.file_id, name: '文件', size: 0, deleted: true };
   if (r.reply_to) o.reply = snippet(msgRow.get(r.reply_to)) || { id: r.reply_to, gone: true };
   if (r.mentions) { try { o.mentions = JSON.parse(r.mentions); } catch (_) {} }
@@ -390,6 +400,284 @@ app.put('/api/profile', (req, res) => {
   pushOnline();
   res.json(profile(nu));
 });
+
+// =====================================================================
+// v0.9：个人背景、个人音乐仓库、群聊歌单
+// =====================================================================
+const MUSIC_MAX_MB = Number(process.env.MUSIC_MAX_MB) || 100;   // 单首歌最大多少 MB（注意 Cloudflare 免费隧道单个请求上限约 100MB）
+const MUSIC_MAX = MUSIC_MAX_MB * 1024 * 1024;
+const MUSIC_DIR = path.join(UPLOAD_DIR, 'music'), BG_DIR = path.join(UPLOAD_DIR, 'bg');
+fs.mkdirSync(MUSIC_DIR, { recursive: true }); fs.mkdirSync(BG_DIR, { recursive: true });
+// 音乐仓库数量按等级：Lv.1~9 一首，Lv.10~19 两首，Lv.20 起三首（最多 3 首）
+const MUSIC_CAP = 3;
+const musicQuota = L => Math.min(MUSIC_CAP, 1 + Math.floor(L / 10));
+const nextUnlock = L => musicQuota(L) >= MUSIC_CAP ? null : (Math.floor(L / 10) + 1) * 10;
+// 支持的音乐格式（扩展名 -> 类型 + 文件头家族）。wma / aiff 等主流浏览器播放不了，不收
+const MUSIC_TYPES = {
+  mp3: ['audio/mpeg', 'mpeg'], aac: ['audio/aac', 'mpeg'], flac: ['audio/flac', 'flac'], wav: ['audio/wav', 'wav'],
+  m4a: ['audio/mp4', 'mp4'], mp4: ['audio/mp4', 'mp4'], ogg: ['audio/ogg', 'ogg'], oga: ['audio/ogg', 'ogg'], opus: ['audio/ogg', 'ogg'],
+  webm: ['audio/webm', 'webm'], weba: ['audio/webm', 'webm']
+};
+// 看文件头确认真的是音频（防止把别的文件改个扩展名传上来）
+function sniffAudio(b) {
+  const s = (o, t) => b.length >= o + t.length && b.toString('latin1', o, o + t.length) === t;
+  if (s(0, 'fLaC')) return 'flac';
+  if (s(0, 'ID3')) return 'id3';
+  if (s(0, 'RIFF') && s(8, 'WAVE')) return 'wav';
+  if (s(0, 'OggS')) return 'ogg';
+  if (s(4, 'ftyp')) return 'mp4';
+  if (b[0] === 0x1a && b[1] === 0x45 && b[2] === 0xdf && b[3] === 0xa3) return 'webm';
+  if (b[0] === 0xff && (b[1] & 0xe0) === 0xe0) return 'mpeg';
+  return null;
+}
+const headOf = (file, n = 64, at = 0) => { const b = Buffer.alloc(n); const fd = fs.openSync(file, 'r'); const r = fs.readSync(fd, b, 0, n, at); fs.closeSync(fd); return b.subarray(0, r); };
+// 文件开头是 ID3 标签时，跳过标签再看真正的音频头（mp3 / flac 都可能带 ID3）
+function audioFamily(file) {
+  const h = headOf(file), f = sniffAudio(h);
+  if (f !== 'id3' || h.length < 10) return f;
+  const size = ((h[6] & 0x7f) << 21) | ((h[7] & 0x7f) << 14) | ((h[8] & 0x7f) << 7) | (h[9] & 0x7f);
+  const body = headOf(file, 4096, 10 + size + (h[5] & 0x10 ? 10 : 0));
+  if (body.toString('latin1', 0, 4) === 'fLaC') return 'flac';
+  for (let i = 0; i + 1 < body.length; i++) if (body[i] === 0xff && (body[i + 1] & 0xe0) === 0xe0) return 'mpeg';
+  return null;
+}
+const musicById = db.prepare('SELECT * FROM music WHERE id=?');
+const musicOut = m => ({ id: m.id, title: m.title, dur: m.dur, size: m.size, ext: m.ext, created: m.created, queued: !!db.prepare('SELECT 1 FROM playlist WHERE music_id=?').get(m.id) });
+const okHex = id => /^[a-f0-9]{32}$/.test(String(id));
+
+// ----- 设置（群聊设置 + 签名密钥），存在 settings 表 -----
+const getSet = (k, d) => { const r = db.prepare('SELECT v FROM settings WHERE k=?').get(k); return r ? r.v : d; };
+const setSet = (k, v) => db.prepare('INSERT INTO settings(k,v) VALUES(?,?) ON CONFLICT(k) DO UPDATE SET v=excluded.v').run(k, String(v));
+if (!getSet('sign_secret')) setSet('sign_secret', crypto.randomBytes(32).toString('hex'));
+const SIGN_SECRET = getSet('sign_secret');
+const groupSettings = () => ({ music: getSet('music_on', '0') === '1', skip: getSet('music_skip', '0') === '1', per: Math.min(3, Math.max(1, parseInt(getSet('music_per', '2')) || 2)) });
+
+// ----- 播放地址：<audio> 不能带请求头，所以给一个有时效的签名网址（不是登录令牌） -----
+const sign = (id, uid, exp) => crypto.createHmac('sha256', SIGN_SECRET).update(id + '.' + uid + '.' + exp).digest('base64url');
+const urlTtl = dur => Math.min(3 * 3600e3, Math.max(15 * 60e3, (dur || 0) * 1000 + 15 * 60e3));
+// 按 Range 请求分段发送（拖进度条、flac 都需要），返回 206
+function sendRange(req, res, file, size, type) {
+  res.set({ 'Accept-Ranges': 'bytes', 'Content-Type': type, 'X-Content-Type-Options': 'nosniff', 'Content-Security-Policy': "default-src 'none'; sandbox", 'Cache-Control': 'private, max-age=3600', 'Content-Disposition': 'inline' });
+  const range = req.headers.range, m = range && /^bytes=(\d*)-(\d*)$/.exec(range.trim());
+  if (m && (m[1] !== '' || m[2] !== '')) {
+    let start, end;
+    if (m[1] === '') { start = Math.max(0, size - Number(m[2])); end = size - 1; }
+    else { start = Number(m[1]); end = m[2] === '' ? size - 1 : Math.min(Number(m[2]), size - 1); }
+    if (start > end || start >= size) return res.status(416).set('Content-Range', 'bytes */' + size).end();
+    res.status(206).set({ 'Content-Range': `bytes ${start}-${end}/${size}`, 'Content-Length': end - start + 1 });
+    if (req.method === 'HEAD') return res.end();
+    return fs.createReadStream(file, { start, end }).on('error', () => res.destroy()).pipe(res);
+  }
+  res.set('Content-Length', size);
+  if (req.method === 'HEAD') return res.end();
+  fs.createReadStream(file).on('error', () => res.destroy()).pipe(res);
+}
+
+// ----- 个人背景图：浏览器里裁剪压缩后直接上传图片本身 -----
+const BG_MAX = 2 * 1024 * 1024;
+const imgKind = b => b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff ? 'jpg' : b.toString('latin1', 0, 4) === 'RIFF' && b.toString('latin1', 8, 12) === 'WEBP' ? 'webp' : b.toString('hex', 0, 8) === '89504e470d0a1a0a' ? 'png' : null;
+const BG_TYPES = { jpg: 'image/jpeg', webp: 'image/webp', png: 'image/png' };
+const okBg = v => /^[a-f0-9]{32}\.(jpg|webp|png)$/.test(String(v));
+function setBg(u, val) {
+  const old = u.bg;
+  db.prepare('UPDATE users SET bg=? WHERE id=?').run(val, u.id);
+  if (old && okBg(old) && old !== val) try { fs.rmSync(path.join(BG_DIR, old), { force: true }); } catch (_) {}
+  const nu = userById.get(u.id);
+  io.emit('profile', profile(nu));
+  for (const [sid, uid] of onlineIds) if (uid === u.id) io.to(sid).emit('me', info(nu));
+  pushOnline();
+  return profile(nu);
+}
+app.put('/api/profile/bg', (req, res) => {
+  const u = userOf(req);
+  if (!u) { req.resume(); return res.status(401).json({ error: '请先登录' }); }
+  const len = Number(req.headers['content-length']);
+  if (len > BG_MAX) { if (len > BG_MAX * 2) res.set('Connection', 'close'); else req.resume(); return res.status(413).json({ error: '背景图太大（最大 2MB）' }); }
+  const chunks = []; let size = 0, over = false;
+  req.on('data', c => { size += c.length; if (size > BG_MAX) { if (!over) { over = true; res.status(413).json({ error: '背景图太大（最大 2MB）' }); } req.destroy(); } else chunks.push(c); });
+  req.on('end', () => {
+    if (over) return;
+    const b = Buffer.concat(chunks), k = imgKind(b);
+    if (!k) return res.status(415).json({ error: '背景只能是 JPG / PNG / WebP 图片' });
+    const name = crypto.randomBytes(16).toString('hex') + '.' + k;
+    fs.writeFileSync(path.join(BG_DIR, name), b);
+    res.json(setBg(userById.get(u.id), name));
+  });
+});
+app.delete('/api/profile/bg', (req, res) => {
+  const u = userOf(req);
+  if (!u) return res.status(401).json({ error: '请先登录' });
+  res.json(setBg(u, null));
+});
+app.get('/api/bg/:name', (req, res) => {
+  if (!userOf(req)) return res.status(401).json({ error: '请先登录' });
+  const n = String(req.params.name);
+  if (!okBg(n) || !db.prepare('SELECT 1 FROM users WHERE bg=?').get(n)) return res.status(404).json({ error: '背景不存在' });
+  res.set({ 'Content-Type': BG_TYPES[n.split('.').pop()], 'X-Content-Type-Options': 'nosniff', 'Content-Security-Policy': "default-src 'none'; sandbox", 'Cache-Control': 'private, max-age=31536000, immutable' });
+  fs.createReadStream(path.join(BG_DIR, n)).on('error', () => res.destroy()).pipe(res);
+});
+
+// ----- 个人音乐仓库 -----
+function myMusic(u) {
+  const L = level(u.xp), items = db.prepare('SELECT * FROM music WHERE user_id=? ORDER BY created').all(u.id).map(musicOut);
+  return { items, used: items.length, quota: musicQuota(L), cap: MUSIC_CAP, level: L, next: nextUnlock(L), maxMb: MUSIC_MAX_MB };
+}
+app.get('/api/music', (req, res) => {
+  const u = userOf(req);
+  if (!u) return res.status(401).json({ error: '请先登录' });
+  res.json(myMusic(u));
+});
+// 上传：请求体就是音频文件，文件名放在 X-File-Name，时长（秒，浏览器读出来的）放在 X-Duration，歌名放在 X-Title
+app.post('/api/music', (req, res) => {
+  const u = userOf(req);
+  if (!u) { req.resume(); return res.status(401).json({ error: '请先登录' }); }
+  const no = (code, error) => { if (Number(req.headers['content-length']) > MUSIC_MAX * 2) res.set('Connection', 'close'); else req.resume(); res.status(code).json({ error }); };
+  const L = level(u.xp), used = db.prepare('SELECT COUNT(*) n FROM music WHERE user_id=?').get(u.id).n;
+  if (used >= musicQuota(L)) return no(403, nextUnlock(L) ? `音乐仓库已满（${used}/${musicQuota(L)}），Lv.${nextUnlock(L)} 解锁第 ${musicQuota(L) + 1} 首` : `音乐仓库已满（最多 ${MUSIC_CAP} 首）`);
+  if (Number(req.headers['content-length']) > MUSIC_MAX) return no(413, '文件太大，单首最大 ' + MUSIC_MAX_MB + 'MB');
+  const name = safeName(req.headers['x-file-name']), ext = EXT(name), t = MUSIC_TYPES[ext];
+  if (!t) return no(415, '不支持这种格式，请上传 mp3 / flac / wav / m4a / aac / ogg / opus');
+  const dur = Number(req.headers['x-duration']);
+  if (!(dur > 0.5 && dur <= 4 * 3600)) return no(400, '读不出这首歌的时长，可能文件已损坏');
+  let title = ''; try { title = decodeURIComponent(String(req.headers['x-title'] || '')); } catch (_) {}
+  title = clean(title, 60) || clean(name.replace(/\.[^.]+$/, ''), 60) || '未命名';
+  const id = crypto.randomBytes(16).toString('hex'), tmp = path.join(MUSIC_DIR, id + '.part');
+  const out = fs.createWriteStream(tmp);
+  let size = 0, done = false;
+  const bail = (code, error) => {
+    if (done) return; done = true;
+    out.destroy(); fs.rm(tmp, { force: true }, () => {});
+    req.unpipe(out); req.resume();
+    if (!res.headersSent) res.status(code).json({ error });
+  };
+  req.on('data', c => { size += c.length; if (size > MUSIC_MAX) bail(413, '文件太大，单首最大 ' + MUSIC_MAX_MB + 'MB'); if (size > MUSIC_MAX * 2) req.destroy(); });
+  req.on('aborted', () => bail(400, '上传被中断'));
+  out.on('error', () => bail(500, '保存文件失败'));
+  out.on('finish', () => {
+    if (done) return; done = true;
+    const okFam = size > 0 && audioFamily(tmp) === t[1];
+    if (!okFam) { fs.rm(tmp, { force: true }, () => {}); return res.status(415).json({ error: size ? '这不是有效的音频文件' : '不能上传空文件' }); }
+    const nu = userById.get(u.id), n2 = db.prepare('SELECT COUNT(*) n FROM music WHERE user_id=?').get(u.id).n;
+    if (n2 >= musicQuota(level(nu.xp))) { fs.rm(tmp, { force: true }, () => {}); return res.status(403).json({ error: '音乐仓库已满' }); }   // 同时传了好几首
+    fs.renameSync(tmp, path.join(MUSIC_DIR, id));
+    db.prepare('INSERT INTO music(id,user_id,title,ext,mime,size,dur,created) VALUES(?,?,?,?,?,?,?,?)').run(id, u.id, title, ext, t[0], size, Math.round(dur * 1000) / 1000, Date.now());
+    res.json({ ...musicOut(musicById.get(id)), library: myMusic(nu) });
+  });
+  req.pipe(out);
+});
+app.patch('/api/music/:id', (req, res) => {
+  const u = userOf(req);
+  if (!u) return res.status(401).json({ error: '请先登录' });
+  const m = okHex(req.params.id) && musicById.get(String(req.params.id));
+  if (!m || m.user_id !== u.id) return res.status(404).json({ error: '歌曲不存在' });
+  const title = clean((req.body || {}).title, 60);
+  if (!title) return res.status(400).json({ error: '歌名不能为空' });
+  db.prepare('UPDATE music SET title=? WHERE id=?').run(title, m.id);
+  if (db.prepare('SELECT 1 FROM playlist WHERE music_id=?').get(m.id)) pushMusic();
+  res.json(musicOut(musicById.get(m.id)));
+});
+app.delete('/api/music/:id', (req, res) => {
+  const u = userOf(req);
+  if (!u) return res.status(401).json({ error: '请先登录' });
+  const m = okHex(req.params.id) && musicById.get(String(req.params.id));
+  if (!m || (m.user_id !== u.id && !u.is_admin)) return res.status(404).json({ error: '歌曲不存在' });
+  plDropMusic(m.id);
+  db.prepare('DELETE FROM music WHERE id=?').run(m.id);
+  try { fs.rmSync(path.join(MUSIC_DIR, m.id), { force: true }); } catch (_) {}
+  res.json({ ok: true, library: myMusic(userById.get(u.id)) });
+});
+// 取播放地址：自己的歌、或者已经在群聊歌单里的歌
+app.get('/api/music/:id/url', (req, res) => {
+  const u = userOf(req);
+  if (!u) return res.status(401).json({ error: '请先登录' });
+  const m = okHex(req.params.id) && musicById.get(String(req.params.id));
+  if (!m || (m.user_id !== u.id && !u.is_admin && !db.prepare('SELECT 1 FROM playlist WHERE music_id=?').get(m.id))) return res.status(404).json({ error: '歌曲不存在' });
+  const exp = Date.now() + urlTtl(m.dur);
+  res.set('Cache-Control', 'no-store').json({ url: `/api/music/${m.id}/stream?u=${u.id}&e=${exp}&s=${sign(m.id, u.id, exp)}`, exp });
+});
+app.get('/api/music/:id/stream', (req, res) => {
+  const id = String(req.params.id), uid = parseInt(req.query.u), exp = parseInt(req.query.e), s = String(req.query.s || '');
+  if (!okHex(id) || !uid || !exp || !s) return res.status(401).json({ error: '链接无效' });
+  const want = Buffer.from(sign(id, uid, exp)), got = Buffer.from(s);
+  if (want.length !== got.length || !crypto.timingSafeEqual(want, got)) return res.status(403).json({ error: '链接无效' });
+  if (exp < Date.now()) return res.status(403).json({ error: '链接已过期' });
+  const m = musicById.get(id);
+  if (!m || !userById.get(uid)) return res.status(404).json({ error: '歌曲不存在' });
+  sendRange(req, res, path.join(MUSIC_DIR, m.id), m.size, m.mime);
+});
+
+// ----- 群聊设置（管理员） -----
+app.get('/api/group', (req, res) => {
+  if (!userOf(req)) return res.status(401).json({ error: '请先登录' });
+  res.json(groupSettings());
+});
+app.put('/api/group', (req, res) => {
+  if (!adminOf(req)) return res.status(403).json({ error: '只有管理员可以修改群聊设置' });
+  const b = req.body || {};
+  if (typeof b.music === 'boolean') setSet('music_on', b.music ? 1 : 0);
+  if (typeof b.skip === 'boolean') setSet('music_skip', b.skip ? 1 : 0);
+  if ([1, 2, 3].includes(b.per)) setSet('music_per', b.per);
+  if (groupSettings().music) plStart(); else plStop();
+  pushMusic();
+  res.json(groupSettings());
+});
+
+// ----- 群聊歌单：服务器说了算（队列、当前歌曲、开始时间），所有人按服务器时间同步播放 -----
+// 公平轮流：每首歌有一个“轮次” k，同一轮里按点歌先后；同一个人的第二首自动排到下一轮。
+const LEAD = 1200;    // 切歌后留 1.2 秒给大家缓冲
+const GRACE = 600;
+const PL = { cur: null, lastKey: new Map(), curKey: 0 };   // cur: { qid, startedAt, timer }
+const plRows = () => db.prepare('SELECT p.*, m.title, m.dur, u.name uname, u.nick unick FROM playlist p JOIN music m ON m.id=p.music_id JOIN users u ON u.id=p.user_id ORDER BY p.pin DESC, p.k, p.qid').all();
+const plItem = r => ({ qid: r.qid, id: r.music_id, title: r.title, dur: r.dur, by: { name: r.uname, nick: r.unick || r.uname } });
+function musicState() {
+  const rows = plRows(), g = groupSettings();
+  const cur = PL.cur && rows.find(r => r.qid === PL.cur.qid);
+  return { ...g, now: Date.now(), current: cur ? { ...plItem(cur), startedAt: PL.cur.startedAt } : null, queue: rows.filter(r => !cur || r.qid !== cur.qid).map(plItem) };
+}
+const pushMusic = () => io.emit('music', musicState());
+function plStart() {
+  if (PL.cur || !groupSettings().music) return;
+  const r = plRows()[0]; if (!r) return;
+  db.prepare('UPDATE playlist SET pin=1 WHERE qid=?').run(r.qid);
+  const startedAt = Date.now() + LEAD;
+  PL.cur = { qid: r.qid, startedAt, timer: setTimeout(() => { plNext(r.qid); }, r.dur * 1000 + LEAD + GRACE) };
+}
+function plStop() { if (PL.cur) { clearTimeout(PL.cur.timer); PL.cur = null; } }
+function plNext(qid) {   // 当前歌曲播完 / 被切掉
+  if (!PL.cur || (qid && PL.cur.qid !== qid)) return;
+  clearTimeout(PL.cur.timer);
+  const row = db.prepare('SELECT * FROM playlist WHERE qid=?').get(PL.cur.qid);
+  if (row) { PL.lastKey.set(row.user_id, Math.max(PL.lastKey.get(row.user_id) || 0, row.k)); PL.curKey = row.k; db.prepare('DELETE FROM playlist WHERE qid=?').run(row.qid); }
+  PL.cur = null; plStart(); pushMusic();
+}
+function plRemove(qid) {
+  if (PL.cur && PL.cur.qid === qid) return plNext(qid);
+  db.prepare('DELETE FROM playlist WHERE qid=?').run(qid); pushMusic();
+}
+function plDropMusic(mid) {
+  for (const r of db.prepare('SELECT qid FROM playlist WHERE music_id=?').all(mid)) {
+    if (PL.cur && PL.cur.qid === r.qid) plNext(r.qid); else db.prepare('DELETE FROM playlist WHERE qid=?').run(r.qid);
+  }
+  pushMusic();
+}
+function plAdd(u, mid) {
+  const g = groupSettings();
+  if (!g.music) return '群聊音乐还没有开启';
+  const m = okHex(mid) && musicById.get(String(mid));
+  if (!m || m.user_id !== u.id) return '只能点自己音乐仓库里的歌';
+  if (db.prepare('SELECT 1 FROM playlist WHERE music_id=?').get(m.id)) return '这首歌已经在歌单里了';
+  const rows = plRows(), mine = rows.filter(r => r.user_id === u.id);
+  if (mine.length >= g.per) return `每人最多同时点 ${g.per} 首，等你的歌播完再来`;
+  const pin = rows.find(r => r.pin), K = pin ? pin.k : rows.length ? Math.min(...rows.map(r => r.k)) : PL.curKey;
+  const last = Math.max(PL.lastKey.get(u.id) || 0, ...mine.map(r => r.k));
+  const k = Math.max(K, last + 1, 1), ts = Date.now();
+  db.prepare('INSERT INTO playlist(music_id,user_id,k,added) VALUES(?,?,?,?)').run(m.id, u.id, k, ts);
+  const r = db.prepare("INSERT INTO messages(user_id,text,ts,kind) VALUES(?,?,?,'song')").run(u.id, m.title, ts);
+  io.emit('msg', msgOut(msgRow.get(Number(r.lastInsertRowid))));
+  plStart(); pushMusic();
+  return null;
+}
+setTimeout(() => { plStart(); }, 0);   // 重启后：歌单还在、音乐开着，就从第一首重新开始
 
 app.post('/api/register', (req, res) => {
   if (limited(req)) return res.status(429).json({ error: '尝试次数过多，请 10 分钟后再试' });
@@ -637,6 +925,24 @@ io.on('connection', socket => {
       else if (theirs && theirs.viewers.get(uid) === socket.id) { dest = theirs.sock; ch = 'live-s'; }
     }
     if (dest) io.to(dest).emit('rtc', { from: me.name, ch, data: m.data });
+  });
+
+  // ----- v0.9：群聊歌单 -----
+  socket.emit('music', musicState());
+  const ack = (cb, v) => { if (typeof cb === 'function') cb(v); };
+  socket.on('music:ping', (_, cb) => ack(cb, Date.now()));   // 对时：客户端据此算出和服务器的时间差
+  socket.on('music:add', (id, cb) => { const e = plAdd(userById.get(uid), id); ack(cb, e ? { error: e } : { ok: true }); });
+  socket.on('music:remove', (qid, cb) => {
+    const r = db.prepare('SELECT * FROM playlist WHERE qid=?').get(parseInt(qid) || 0), u = userById.get(uid);
+    if (!r) return ack(cb, { error: '这首歌已经不在歌单里了' });
+    if (r.user_id !== uid && !u.is_admin) return ack(cb, { error: '只能移除自己点的歌' });
+    plRemove(r.qid); ack(cb, { ok: true });
+  });
+  socket.on('music:skip', (qid, cb) => {
+    const u = userById.get(uid), cur = PL.cur && db.prepare('SELECT * FROM playlist WHERE qid=?').get(PL.cur.qid);
+    if (!cur || (qid && cur.qid !== parseInt(qid))) return ack(cb, { error: '这首歌已经播完了' });
+    if (!u.is_admin && cur.user_id !== uid && !groupSettings().skip) return ack(cb, { error: '管理员没有开放切歌' });
+    plNext(cur.qid); ack(cb, { ok: true });
   });
 
   socket.on('disconnect', () => {

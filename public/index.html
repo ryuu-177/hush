@@ -334,6 +334,106 @@ aside{padding-top:calc(24px + env(safe-area-inset-top));padding-bottom:calc(20px
   .latest{bottom:calc(74px + env(safe-area-inset-bottom))}
   .upd{top:calc(60px + env(safe-area-inset-top))}
 }
+
+/* ===== v0.9：个人背景、群聊音乐 ===== */
+.sheet .cover{height:124px;position:relative;background-size:cover;background-position:center}
+.sheet .cover.img::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,#0000 50%,#00000029)}
+.sheet .body{position:relative}
+.cvbtn{cursor:pointer}
+.cvbtn .cvchip{position:absolute;top:10px;right:10px;z-index:1;width:32px;height:32px;border-radius:50%;display:grid;place-items:center;background:#0000004a;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);color:#fff;transition:background .15s,transform .15s}
+.cvbtn:hover .cvchip,.cvbtn:focus-visible .cvchip{background:#00000080;transform:scale(1.06)}
+.cvbtn .cvchip svg{width:15px;height:15px}
+.cvbtn:focus-visible{outline:2px solid var(--ac);outline-offset:-2px}
+.lvrow{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--mut)}
+.lvrow .pill{padding:1px 8px;border-radius:999px;background:color-mix(in srgb,var(--ac) 14%,transparent);color:var(--ac);font-weight:600;flex:none}
+.lvrow .bar{flex:1}
+.srow.mrow{cursor:pointer;color:var(--fg)}
+.srow.mrow:hover{background:color-mix(in srgb,var(--ac) 7%,var(--bg))}
+.srow .chev{width:16px;height:16px;color:var(--mut);flex:none}
+.stage.wide{width:320px;height:140px;border-radius:14px}
+.stage.wide .ring{position:absolute;left:22px;bottom:-30px;width:62px;height:62px;border-radius:50%;border:2px dashed #fff9;pointer-events:none}
+/* 顶栏：正在播放 */
+.tb b{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.np{display:inline-flex;align-items:center;gap:8px;height:34px;max-width:min(300px,44vw);padding:0 13px 0 11px;border-radius:999px;border:1px solid var(--line);background:var(--card);font-size:13px;position:relative;overflow:hidden;color:var(--fg);flex:none;transition:border-color .2s,box-shadow .2s,background .2s;animation:fade .25s ease}
+.np:hover{border-color:color-mix(in srgb,var(--ac) 45%,var(--line));box-shadow:0 4px 14px #0000000f}
+.np.idle{width:34px;padding:0;justify-content:center;color:var(--mut)}
+.np .npi{width:16px;height:16px;display:none}.np.idle .npi{display:block}.np.idle .eq,.np.idle .npt,.np.idle .npb{display:none}
+.np .npt{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:500}
+.np .npb{color:var(--mut);white-space:nowrap;font-size:12px;flex:none}
+.np::before,.np::after{content:"";position:absolute;left:16px;bottom:3px;height:2px;border-radius:1px;pointer-events:none}
+.np::before{right:16px;background:color-mix(in srgb,var(--ac) 14%,transparent)}
+.np::after{width:calc((100% - 32px) * var(--p,0));background:var(--ac);opacity:.8;transition:width .5s linear}
+.np.idle::before,.np.idle::after{display:none}
+.np.tap{border-color:color-mix(in srgb,var(--ac) 55%,transparent);color:var(--ac)}
+.np.tap .npb{display:none}
+.np .tapd{display:none;width:6px;height:6px;border-radius:50%;background:currentColor;animation:pulse 1.6s ease-in-out infinite;flex:none}
+.np.tap .tapd{display:block}.np.tap .eq{display:none}
+.eq{display:inline-flex;align-items:flex-end;gap:2px;height:12px;flex:none}
+.eq i{width:3px;height:100%;border-radius:2px;background:var(--ac);transform-origin:bottom;transform:scaleY(.35);animation:eq 1s ease-in-out infinite}
+.eq i:nth-child(2){animation-delay:-.35s;animation-duration:.8s}.eq i:nth-child(3){animation-delay:-.6s;animation-duration:1.15s}
+@keyframes eq{0%,100%{transform:scaleY(.3)}50%{transform:scaleY(1)}}
+.np.still .eq i,.npc.still .eq i{animation:none}
+.np.muted .eq i{background:var(--mut);animation:none}
+.np.muted .npt{color:var(--mut)}
+@media(prefers-reduced-motion:reduce){.eq i{animation:none;transform:scaleY(.6)}}
+/* 音乐抽屉 */
+.mtabs{margin:0 20px 6px}
+.npc{margin:6px 8px 6px;padding:16px;border-radius:18px;background:linear-gradient(150deg,color-mix(in srgb,var(--ac) 13%,var(--card)),var(--card) 70%);border:1px solid var(--line);display:flex;flex-direction:column;gap:12px}
+.npc .top{display:flex;gap:13px;align-items:center;min-width:0}
+.art{--h:170;width:54px;height:54px;border-radius:15px;flex:none;display:grid;place-items:center;color:#fff;background:linear-gradient(135deg,hsl(var(--h) 62% 56%),hsl(calc(var(--h) + 45) 58% 38%));box-shadow:0 8px 22px #00000022}
+.art svg{width:20px;height:20px;opacity:.9}
+.art .eq{height:18px;gap:3px}.art .eq i{background:#fff;width:3.5px}
+.npc .tx{flex:1;min-width:0}
+.npc .tt{font-weight:600;font-size:15px;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.npc .s2{font-size:12px;color:var(--mut);display:flex;align-items:center;gap:6px;margin-top:3px;white-space:nowrap;overflow:hidden}
+.npc .s2 .av.s{width:18px;height:18px;font-size:10px}
+.prog{display:flex;align-items:center;gap:10px;font:11px/1 ui-monospace,Consolas,monospace;color:var(--mut)}
+.prog .bar{flex:1;height:3px}.prog .bar i{transition:width .5s linear}
+.mctl{display:flex;align-items:center;gap:8px}
+.mctl input[type=range]{flex:1;min-width:0;accent-color:var(--ac);padding:0;border:0;background:none}
+.ib3{width:34px;height:34px;padding:0;border-radius:50%;display:grid;place-items:center;border:1px solid var(--line);background:var(--card);color:var(--fg);flex:none}
+.ib3:hover{border-color:color-mix(in srgb,var(--ac) 45%,var(--line));color:var(--ac)}
+.ib3 svg{width:16px;height:16px}.ib3.on{color:var(--mut)}
+.ib3:disabled{opacity:.4;cursor:not-allowed}
+.mh{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:14px 10px 4px;font-size:12px;color:var(--mut);font-weight:500}
+.mh small{font-weight:400}
+.qi{display:flex;align-items:center;gap:12px;padding:8px 10px;border-radius:12px}
+.qi:hover{background:var(--bg)}
+.qi .n{width:16px;text-align:center;font:600 12px ui-monospace,Consolas,monospace;color:var(--mut);flex:none}
+.qi .art{width:38px;height:38px;border-radius:11px;box-shadow:none}.qi .art svg{width:15px;height:15px}
+.qi .tx{flex:1;min-width:0}
+.qi .t1{font-size:14px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.qi .t2{font-size:12px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.qi .t1 input{width:100%;padding:3px 8px;border-radius:7px;font-size:14px;background:var(--bg)}
+.qa{display:flex;gap:2px;opacity:.6;transition:opacity .15s}.qi:hover .qa,.qi:focus-within .qa{opacity:1}
+@media(hover:none){.qa{opacity:1}}
+.qa button{width:32px;height:32px;padding:0;display:grid;place-items:center;border:0;background:none;border-radius:9px;color:var(--mut)}
+.qa button:hover{background:var(--card);color:var(--fg)}.qa button:disabled{opacity:.35;cursor:default;background:none}
+.qa svg{width:16px;height:16px}
+.qa .add{color:var(--ac)}.qa .done{color:var(--ac);opacity:1}
+.qi.me2 .t2 b{color:var(--ac);font-weight:500}
+.mempty{margin:6px 8px;padding:28px 18px;border-radius:18px;border:1px dashed var(--line);text-align:center;color:var(--mut);font-size:13px;line-height:1.8;display:flex;flex-direction:column;align-items:center;gap:6px}
+.mempty .art{width:46px;height:46px;margin-bottom:4px;filter:saturate(.6)}
+.mempty b{color:var(--fg);font-weight:500;font-size:14px}
+.mempty button{margin-top:6px}
+.quota{margin:4px 8px 6px;padding:14px 16px;border-radius:16px;background:var(--bg);display:flex;align-items:center;gap:14px}
+.quota .qt2{flex:1;min-width:0;display:flex;flex-direction:column;gap:6px}
+.quota b{font-weight:500;font-size:14px}.quota small{font-size:12px}
+.slots{display:flex;gap:5px}.slots i{width:26px;height:6px;border-radius:3px;background:color-mix(in srgb,var(--ac) 22%,var(--line))}
+.slots i.u{background:var(--ac)}.slots i.l{background:repeating-linear-gradient(135deg,var(--line) 0 3px,transparent 3px 6px);outline:1px solid var(--line);outline-offset:-1px}
+.mup{display:flex;align-items:center;gap:8px;padding:6px 10px;font-size:12px;color:var(--mut)}.mup .bar{flex:1}.mup.err{color:#d9480f}
+.mnote{padding:14px 12px 4px;font-size:11px;color:var(--mut);text-align:center;opacity:.85;line-height:1.7;white-space:pre-line}
+.sysm{color:var(--ac)!important}
+/* 群聊设置 */
+.seg{display:flex;gap:2px;padding:3px;background:color-mix(in srgb,var(--mut) 14%,transparent);border-radius:10px;flex:none}
+.seg button{border:0;background:none;padding:4px 11px;border-radius:8px;font-size:13px;color:var(--mut)}
+.seg button.on{background:var(--card);color:var(--fg);box-shadow:0 1px 3px #0002}
+.seg button:disabled{opacity:.5}
+@media(max-width:640px){
+  .np{max-width:46vw;padding:0 11px 0 10px;height:36px}.np.idle{width:36px}
+  .np .npb{display:none}
+  .stage.wide{width:288px;height:126px}
+}
 </style>
 </head>
 <body>
@@ -382,7 +482,8 @@ aside{padding-top:calc(24px + env(safe-area-inset-top));padding-bottom:calc(20px
     <button class="link" id="setb" onclick="openSettings()" title="通知、安装、退出登录"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>设置</button>
   </aside>
   <section>
-    <div class="tb"><button class="ib2 mnav" id="mnav" onclick="openNav()" title="菜单"><div class="av s" id="mav"></div></button><b>群聊<small id="onc"></small></b>
+    <div class="tb"><button class="ib2 mnav" id="mnav" onclick="openNav()" title="菜单"><div class="av s" id="mav"></div></button><b id="tbt">群聊<small id="onc"></small></b>
+      <button class="np idle" id="np" type="button" onclick="npClick()" title="群聊歌单"><svg class="npi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg><span class="eq"><i></i><i></i><i></i></span><i class="tapd"></i><span class="npt" id="npt"></span><span class="npb" id="npb"></span></button>
       <button class="ib2" onclick="openSearch()" title="搜索聊天记录"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg></button>
     </div>
     <button class="upd" id="upd" hidden type="button"><i></i>有新版本，点击刷新</button>
@@ -412,7 +513,7 @@ aside{padding-top:calc(24px + env(safe-area-inset-top));padding-bottom:calc(20px
 <!-- 资料卡 -->
 <div class="ov" id="pv" hidden onclick="if(event.target===this)this.hidden=true">
   <div class="sheet" id="pvs">
-    <div class="cover"></div>
+    <div class="cover" id="pcv"></div>
     <button class="x2" onclick="$('#pv').hidden=true" title="关闭">✕</button>
     <div class="body">
       <div class="av bigav" id="pav"></div>
@@ -429,7 +530,7 @@ aside{padding-top:calc(24px + env(safe-area-inset-top));padding-bottom:calc(20px
 <!-- 资料编辑 -->
 <div class="ov" id="pe" hidden onclick="if(event.target===this)this.hidden=true">
   <div class="sheet" id="pes">
-    <div class="cover"></div>
+    <div class="cover cvbtn" id="ecv" role="button" tabindex="0" title="更换背景"><span class="cvchip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg></span></div>
     <div class="body">
       <div class="avbtn" id="eavb" tabindex="0" role="button" title="更换头像" style="width:84px;margin-top:-42px">
         <div class="av bigav" id="eav" style="margin-top:0"></div>
@@ -438,6 +539,8 @@ aside{padding-top:calc(24px + env(safe-area-inset-top));padding-bottom:calc(20px
       </div>
       <div class="fld"><label for="enick">昵称<span id="enc"></span></label><input id="enick" maxlength="16" placeholder="大家看到的名字"></div>
       <div class="fld"><label for="ebio">个性签名<span id="ebc"></span></label><textarea id="ebio" maxlength="60" rows="2" placeholder="一句话介绍自己"></textarea></div>
+      <div class="lvrow"><span class="pill" id="elv"></span><div class="bar"><i id="elvb"></i></div><span id="elvx"></span></div>
+      <button class="srow mrow" type="button" onclick="$('#pe').hidden=true;openMusic('lib')"><div class="si"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></div><div class="stx"><b>我的音乐</b><small id="emus">上传自己的歌，在群里点歌</small></div><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg></button>
       <div class="err2" id="eerr"></div>
       <div class="foot"><span class="sp"></span><button onclick="$('#pe').hidden=true">取消</button><button class="primary" onclick="saveProfile()">保存</button></div>
     </div>
@@ -472,6 +575,60 @@ aside{padding-top:calc(24px + env(safe-area-inset-top));padding-bottom:calc(20px
   </div>
 </div>
 
+<!-- 背景编辑器（v0.9） -->
+<div class="ov" id="be" hidden style="z-index:10">
+  <div class="sheet ae">
+    <div class="body" style="padding-top:18px">
+      <h3 style="margin-top:0">更换背景</h3>
+      <div class="stage wide" id="bstage"><canvas id="bcv" width="640" height="280"></canvas><div class="ring" id="bring" hidden></div><div class="hint" id="bhint">点击选择图片<br>也可以拖进来或粘贴</div></div>
+      <div class="zr">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="M8 11h6M21 21l-5-5"/></svg>
+        <input type="range" id="bzoom" min="1" max="4" step="0.01" value="1">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="M8 11h6M11 8v6M21 21l-5-5"/></svg>
+        <button class="ib" onclick="$('#bef').click()" title="换一张图片"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg></button>
+      </div>
+      <input type="file" id="bef" accept="image/*" hidden>
+      <div class="err2" id="beerr"></div>
+      <div class="foot"><button class="link2" id="berm" onclick="beRemove()" title="不用背景图，恢复成主题色">移除背景</button><span class="sp"></span><button onclick="$('#be').hidden=true">取消</button><button class="primary" onclick="beApply()">使用</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- 群聊设置（v0.9，管理员） -->
+<div class="ov" id="gsv" hidden style="z-index:10" onclick="if(event.target===this)this.hidden=true">
+  <div class="sheet setg">
+    <div class="body" style="padding-top:18px">
+      <div class="sh2"><h3>群聊设置</h3><button class="ib2" onclick="$('#gsv').hidden=true" title="关闭"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+      <div class="srow">
+        <div class="si"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></div>
+        <div class="stx"><b>群聊音乐</b><small>开启后大家可以点歌，一起听</small></div>
+        <button class="tgl" id="gmusic" type="button" role="switch" aria-checked="false" aria-label="群聊音乐" onclick="gsSet({music:!MS.st.music})"><i></i></button>
+      </div>
+      <div class="srow">
+        <div class="si"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4l10 8-10 8z"/><path d="M19 5v14"/></svg></div>
+        <div class="stx"><b>允许成员切歌</b><small>关闭时只有管理员和点歌的人能切</small></div>
+        <button class="tgl" id="gskip" type="button" role="switch" aria-checked="false" aria-label="允许成员切歌" onclick="gsSet({skip:!MS.st.skip})"><i></i></button>
+      </div>
+      <div class="srow">
+        <div class="si"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h13M3 12h9M3 18h9"/><path d="M17 15v6M14 18h6"/></svg></div>
+        <div class="stx"><b>每人同时点歌</b><small>歌单里每人最多几首</small></div>
+        <div class="seg" id="gper"><button data-n="1">1</button><button data-n="2">2</button><button data-n="3">3</button></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 群聊歌单 / 我的音乐（v0.9） -->
+<div class="drawer" id="md" aria-label="群聊歌单">
+  <div class="dh"><h3 id="mdt">群聊歌单</h3><button class="ib2" id="mgs" hidden onclick="openGroupSettings()" title="群聊设置"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/></svg></button><button class="ib2" onclick="closeDrawers()" title="关闭"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+  <div class="tabs mtabs" id="mtabs"><button data-t="pl" class="on">歌单</button><button data-t="lib">我的音乐</button></div>
+  <div class="dl" id="mpl"></div>
+  <div class="dl" id="mlib" hidden></div>
+  <input type="file" id="mff" accept="audio/*,.mp3,.flac,.wav,.m4a,.aac,.ogg,.oga,.opus,.webm,.weba" hidden>
+</div>
+<audio id="mus" preload="auto" playsinline hidden></audio>
+<audio id="mpv" preload="auto" playsinline hidden></audio>
+
 <!-- 设置（v0.8） -->
 <div class="ov" id="setv" hidden onclick="if(event.target===this)closeSettings()">
   <div class="sheet setg">
@@ -488,6 +645,7 @@ aside{padding-top:calc(24px + env(safe-area-inset-top));padding-bottom:calc(20px
         <button class="pill2" id="binst" type="button" onclick="installApp()">安装</button>
       </div>
       <div class="ios" id="ioshelp" hidden><ol><li>点浏览器的 <b>分享</b> 按钮 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M8 7l4-4 4 4"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg></li><li>往下滑，选择 <b>添加到主屏幕</b></li><li>回到主屏幕，点 Hush 图标打开</li></ol></div>
+      <button class="srow mrow" id="sgrp" type="button" hidden onclick="closeSettings();openGroupSettings()"><div class="si"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/></svg></div><div class="stx"><b>群聊设置</b><small>群聊音乐、切歌、点歌数量</small></div><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg></button>
       <button class="srow out" type="button" onclick="closeSettings();logout()">退出登录</button>
       <div class="ver">Hush v__APP_VERSION__</div>
     </div>
@@ -574,7 +732,7 @@ async function viewProfile(name) {
   const p = await r.json();
   people[p.name] = { ...people[p.name], ...p };
   avatar($('#pav'), p); $('#pnick').textContent = p.nick; $('#pname').textContent = '@' + p.name; $('#plv').textContent = 'Lv.' + p.level;
-  $('#pvs').style.setProperty('--pc', p.color || '');
+  $('#pvs').style.setProperty('--pc', p.color || ''); cover($('#pcv'), p.bg);
   $('#pbio').textContent = p.bio || '这个人很懒，什么都没写。'; $('#pbio').classList.toggle('empty', !p.bio);
   const self = p.name === me.name;
   $('#pcall').hidden = self;
@@ -587,15 +745,24 @@ async function viewProfile(name) {
 function preview() {
   avatar($('#eav'), { name: me.name, nick: $('#enick').value || me.name, color: eAv.color, avatar: eAv.avatar }, true);
   $('#pes').style.setProperty('--pc', eAv.color || '');
+  $('#elv').textContent = 'Lv.' + me.level; $('#elvb').style.width = Math.min(100, (me.xp - me.from) / (me.to - me.from) * 100) + '%'; $('#elvx').textContent = me.xp + ' / ' + me.to;
   $('#enc').textContent = [...$('#enick').value].length + '/16'; $('#ebc').textContent = [...$('#ebio').value].length + '/60';
 }
 function editProfile() {
   closeDrawers();
   eAv = { avatar: me.avatar || '', color: me.color || '' };
   $('#enick').value = me.nick; $('#ebio').value = me.bio; $('#eerr').textContent = '';
-  preview(); $('#pe').hidden = false;
+  if (eBg.url) URL.revokeObjectURL(eBg.url); eBg = { blob: null, url: null, remove: false }; ePreviewBg();
+  preview(); $('#pe').hidden = false; emusText(); if (!MS.lib) loadLib();
 }
 async function saveProfile() {
+  if (eBg.blob || (eBg.remove && me.bg)) {   // v0.9：先保存背景图
+    const b = await fetch('/api/profile/bg', eBg.blob ? { method: 'PUT', headers: { ...hdr(), 'Content-Type': eBg.blob.type }, body: eBg.blob } : { method: 'DELETE', headers: hdr() });
+    if (!b.ok) { $('#eerr').textContent = (await b.json().catch(() => ({}))).error || '背景保存失败'; return; }
+    const np = await b.json(); me.bg = np.bg;
+    if (eBg.url && np.bg) bgUrls.set(np.bg, Promise.resolve(eBg.url));   // 刚上传的图直接复用，不用再下载一次
+    eBg = { blob: null, url: null, remove: false };
+  }
   const r = await fetch('/api/profile', {
     method: 'PUT', headers: { ...hdr(), 'Content-Type': 'application/json' },
     body: JSON.stringify({ nick: $('#enick').value, bio: $('#ebio').value, color: eAv.color, avatar: eAv.avatar })
@@ -630,6 +797,7 @@ function start() {
     $('#ml').textContent = 'Lv.' + u.level;
     $('#bar').style.width = Math.min(100, (u.xp - u.from) / (u.to - u.from) * 100) + '%';
     $('#xp').textContent = u.xp + ' / ' + u.to + ' 经验';
+    if (MS.lib && u.level !== libLevel) loadLib();   // v0.9：升级后音乐仓库名额可能变多
     if (!u.admin) $('#adm').hidden = true;
     else if ($('#adm').hidden) { $('#adm').hidden = false; loadInvites(); }
   });
@@ -645,6 +813,7 @@ function start() {
   fetch('/api/config', { headers: hdr() }).then(r => r.ok && r.json()).then(c => { if (c) maxFile = c.maxFile; }).catch(() => {});
   voice();
   liveInit();
+  musicInit();
   socket.on('online', l => {
     $('#on').innerHTML = ''; $('#onc').textContent = l.length + ' 人在线';
     l.forEach(p => {
@@ -680,6 +849,7 @@ function sysLine(m) {
   const d = el('div', 'sys'); d.dataset.id = m.id; d.dataset.u = m.name;
   const who = m.nick || m.name;
   if (m.recalled) d.textContent = m.recalledBy ? m.recalledBy + ' 撤回了 ' + who + ' 的一条消息' : who + ' 撤回了一条消息';
+  else if (m.song) { d.dataset.song = '1'; const a = el('a', '', '《' + m.song.title + '》'); a.title = '打开群聊歌单'; a.onclick = () => openMusic('pl'); d.append(who + ' 点了', a); }
   else {
     d.dataset.fid = m.file.id; d.append(who + ' 发送了 ');
     if (m.file.deleted) d.append(el('s', '', m.file.name), '（已删除）');
@@ -690,7 +860,7 @@ function sysLine(m) {
 }
 function renderMsg(m) {
   people[m.name] = Object.assign(people[m.name] || {}, { name: m.name, nick: m.nick, avatar: m.avatar, color: m.color, level: m.level });
-  if (m.recalled || m.file) return sysLine(m);
+  if (m.recalled || m.file || m.song) return sysLine(m);
   const d = el('div', 'm' + (me && m.name === me.name ? ' own' : '')); d.dataset.id = m.id; d.dataset.ts = m.ts;
   if (me && m.mentions && m.mentions.includes(me.name) && m.name !== me.name) d.classList.add('hit');
   const a = el('div', 'av s'); a.dataset.u = m.name; avatar(a, m); a.style.cursor = 'pointer'; a.onclick = () => avClick(m.name);
@@ -730,6 +900,7 @@ function add(m, quiet) {
 }
 function onIncoming(m) {
   add(m);
+  if (m.song) return;   // v0.9：点歌系统行不算未读、不弹通知
   bump(m); notify(m);   // v0.8：未读角标 + 系统通知（页面在后台时）
 }
 function applyRecall(m) {
@@ -1000,7 +1171,7 @@ async function delInvite(code) {
   if ($('#code').textContent === code) $('#code').textContent = '';
   loadInvites();
 }
-function logout() { endLocal(); leaveRoomLocal(); stopLive(); if (viewer) closeViewer(); localStorage.removeItem('token'); socket.close(); hideTip(); setUnread(0); show('auth'); }
+function logout() { musicStop(); endLocal(); leaveRoomLocal(); stopLive(); if (viewer) closeViewer(); localStorage.removeItem('token'); socket.close(); hideTip(); setUnread(0); show('auth'); }
 
 // ================= 语音通话（WebRTC，v0.4） =================
 let ice = null, local = null, call = null, rpcs = new Map(), muted = false, roomInfo = { max: 6, members: [] };
@@ -1354,7 +1525,7 @@ async function vaultCheck() {
 }
 function vaultNew() { if ($('#vd').classList.contains('open')) loadVault(false); else vaultDot(true); }
 function openDrawer(id) { closeDrawers(); $('#scrim').hidden = false; $(id).classList.add('open'); }
-function closeDrawers() { $('#scrim').hidden = true; document.querySelectorAll('.drawer.open').forEach(d => d.classList.remove('open')); $('aside').classList.remove('open'); }
+function closeDrawers() { if (typeof MS !== 'undefined' && MS.preview) stopPreview(); $('#scrim').hidden = true; document.querySelectorAll('.drawer.open').forEach(d => d.classList.remove('open')); $('aside').classList.remove('open'); }
 function openNav() { openDrawer('aside'); }   // 手机：左侧栏从左边滑出
 function openVault(focusId) {
   openDrawer('#vd'); vaultDot(false);
@@ -1476,7 +1647,7 @@ function openSearch() { openDrawer('#sd'); setTimeout(() => $('#sq').focus(), 60
       list.forEach(m => {
         const d = el('div', 'sr'); d.dataset.id = m.id;
         d.append(el('div', 'sh', (m.nick || m.name) + ' · ' + tmFmt(m.ts)));
-        const st = el('div', 'st2'), txt = m.file ? '[文件] ' + m.file.name : m.text, lo = txt.toLowerCase(), ql = q.toLowerCase();
+        const st = el('div', 'st2'), txt = m.file ? '[文件] ' + m.file.name : m.song ? '点了《' + m.song.title + '》' : m.text, lo = txt.toLowerCase(), ql = q.toLowerCase();
         let i = 0, k;
         while ((k = lo.indexOf(ql, i)) !== -1) { st.append(txt.slice(i, k), el('mark', '', txt.slice(k, k + q.length))); i = k + q.length; }
         st.append(txt.slice(i)); d.append(st);
@@ -1601,7 +1772,7 @@ async function installApp() {
   if (isIOS) { if ($('#setv').hidden) openSettings(); $('#ioshelp').hidden = false; }
 }
 // ----- 设置面板 -----
-function openSettings() { closeDrawers(); notifUi(); instUi(); $('#setv').hidden = false; }
+function openSettings() { closeDrawers(); notifUi(); instUi(); $('#sgrp').hidden = !(me && me.admin); $('#setv').hidden = false; }
 function closeSettings() { $('#setv').hidden = true; $('#ioshelp').hidden = true; }
 // ----- 系统通知：页面在后台 / 没有焦点时才弹；@我 的单独弹并且一定响，普通消息合并成一条 -----
 const NOTIF_OK = 'Notification' in window;
@@ -1667,7 +1838,7 @@ function deepLink() {
   const q = new URLSearchParams(location.search), o = q.get('open'), id = parseInt(q.get('msg'));
   if (!o && !id) return;
   history.replaceState(null, '', '/');
-  if (o === 'search') openSearch(); else if (o === 'vault') openVault(); else if (id) setTimeout(() => jumpTo(id), 400);
+  if (o === 'search') openSearch(); else if (o === 'vault') openVault(); else if (o === 'music') openMusic(); else if (id) setTimeout(() => jumpTo(id), 400);
 }
 // ----- 手机：键盘弹出时，让输入框始终在键盘上方（iOS 不会自动缩小页面） -----
 {
@@ -1683,6 +1854,422 @@ function deepLink() {
     vv.addEventListener('resize', fit); fit();
   }
 }
+
+// ================= v0.9：个人背景 =================
+const bgUrls = new Map();   // 背景文件名 -> Promise<blob URL>（需要带登录头取回，不把令牌放进网址）
+function bgUrl(name) {
+  if (!bgUrls.has(name)) bgUrls.set(name, fetch('/api/bg/' + encodeURIComponent(name), { headers: hdr() }).then(r => { if (!r.ok) throw 0; return r.blob(); }).then(b => URL.createObjectURL(b)).catch(() => { bgUrls.delete(name); return null; }));
+  return bgUrls.get(name);
+}
+function cover(elm, bg, localUrl) {
+  elm.dataset.bg = localUrl || bg || '';
+  const set = u => { elm.style.backgroundImage = u ? 'url("' + u + '")' : ''; elm.classList.toggle('img', !!u); };
+  if (localUrl) return set(localUrl);
+  set(null); if (!bg) return;
+  bgUrl(bg).then(u => { if (elm.dataset.bg === bg) set(u); });
+}
+let eBg = { blob: null, url: null, remove: false };
+function ePreviewBg() { cover($('#ecv'), eBg.remove ? '' : me.bg, eBg.url); }
+// 背景编辑器：16:7 的横幅，拖动 / 滚轮 / 双指缩放
+const BE = { img: null, s: 1, min: 1, ox: 0, oy: 0 };
+const BW = 640, BH = 280, BOUT_W = 1200, BOUT_H = 525;
+function openBE() {
+  BE.img = null; $('#beerr').textContent = ''; $('#bzoom').value = 1;
+  $('#berm').hidden = !(eBg.url || (me.bg && !eBg.remove));
+  const src = eBg.url || null;
+  if (src) beLoad(src); else drawBE();
+  $('#be').hidden = false;
+}
+function beLoad(src) {
+  const i = new Image();
+  i.onload = () => { BE.img = i; BE.min = Math.max(BW / i.naturalWidth, BH / i.naturalHeight); BE.s = BE.min; BE.ox = BE.oy = 0; $('#bzoom').value = 1; $('#beerr').textContent = ''; drawBE(); };
+  i.onerror = () => { $('#beerr').textContent = '这张图片打不开，换一张试试'; };
+  i.src = src;
+}
+function bePick(f) {
+  if (!f) return;
+  if (!/^image\//.test(f.type)) return $('#beerr').textContent = '请选择图片文件';
+  if (f.size > 30 * 1048576) return $('#beerr').textContent = '图片太大（超过 30MB）';
+  const u = URL.createObjectURL(f); beLoad(u); setTimeout(() => URL.revokeObjectURL(u), 60000);
+}
+function clampBE() {
+  BE.s = Math.min(Math.max(BE.s, BE.min), BE.min * 4);
+  const mx = Math.max(0, (BE.img.naturalWidth * BE.s - BW) / 2), my = Math.max(0, (BE.img.naturalHeight * BE.s - BH) / 2);
+  BE.ox = Math.min(mx, Math.max(-mx, BE.ox)); BE.oy = Math.min(my, Math.max(-my, BE.oy));
+}
+function paintBE(ctx, w, h) {
+  const k = w / BW, iw = BE.img.naturalWidth * BE.s * k, ih = BE.img.naturalHeight * BE.s * k;
+  ctx.drawImage(BE.img, w / 2 + BE.ox * k - iw / 2, h / 2 + BE.oy * k - ih / 2, iw, ih);
+}
+function drawBE() {
+  const c = $('#bcv'), ctx = c.getContext('2d');
+  ctx.clearRect(0, 0, BW, BH); $('#bhint').hidden = !!BE.img; $('#bring').hidden = !BE.img;
+  if (BE.img) { clampBE(); ctx.imageSmoothingQuality = 'high'; paintBE(ctx, BW, BH); }
+}
+async function beOut() {
+  const c = document.createElement('canvas'); c.width = BOUT_W; c.height = BOUT_H;
+  const ctx = c.getContext('2d'); ctx.imageSmoothingQuality = 'high'; ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, BOUT_W, BOUT_H); paintBE(ctx, BOUT_W, BOUT_H);
+  for (const q of [0.86, 0.76, 0.62, 0.5]) {
+    let b = await new Promise(r => c.toBlob(r, 'image/webp', q));
+    if (!b || b.type !== 'image/webp') b = await new Promise(r => c.toBlob(r, 'image/jpeg', q));
+    if (b && b.size <= 1.8 * 1048576) return b;
+  }
+  return null;
+}
+async function beApply() {
+  if (!BE.img) return $('#beerr').textContent = '先选一张图片';
+  const b = await beOut(); if (!b) return $('#beerr').textContent = '图片压缩后仍然太大，换一张试试';
+  if (eBg.url) URL.revokeObjectURL(eBg.url);
+  eBg = { blob: b, url: URL.createObjectURL(b), remove: false }; ePreviewBg(); $('#be').hidden = true;
+}
+function beRemove() { if (eBg.url) URL.revokeObjectURL(eBg.url); eBg = { blob: null, url: null, remove: true }; ePreviewBg(); $('#be').hidden = true; }
+$('#ecv').onclick = () => openBE();
+$('#ecv').onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openBE(); } };
+$('#bef').onchange = e => { bePick(e.target.files[0]); e.target.value = ''; };
+$('#bzoom').oninput = () => { if (!BE.img) return; BE.s = BE.min * +$('#bzoom').value; drawBE(); };
+{
+  const st = $('#bstage'), pts = new Map(); let last = null, pinch = null, moved = false;
+  const scale = () => BW / st.getBoundingClientRect().width;
+  const setZoom = s => { BE.s = s; clampBE(); $('#bzoom').value = (BE.s / BE.min).toFixed(2); drawBE(); };
+  st.addEventListener('pointerdown', e => { st.setPointerCapture(e.pointerId); pts.set(e.pointerId, [e.clientX, e.clientY]); moved = false; last = [e.clientX, e.clientY]; if (pts.size === 2) { const [a, b] = [...pts.values()]; pinch = { d: Math.hypot(a[0] - b[0], a[1] - b[1]), s: BE.s }; } st.classList.add('drag'); });
+  st.addEventListener('pointermove', e => {
+    if (!pts.has(e.pointerId) || !BE.img) return;
+    pts.set(e.pointerId, [e.clientX, e.clientY]);
+    if (pts.size === 2 && pinch) { const [a, b] = [...pts.values()]; setZoom(pinch.s * Math.hypot(a[0] - b[0], a[1] - b[1]) / pinch.d); moved = true; return; }
+    const k = scale(), dx = (e.clientX - last[0]) * k, dy = (e.clientY - last[1]) * k;
+    if (Math.abs(dx) + Math.abs(dy) > 2) moved = true;
+    BE.ox += dx; BE.oy += dy; last = [e.clientX, e.clientY]; drawBE();
+  });
+  const up = e => { pts.delete(e.pointerId); if (pts.size < 2) pinch = null; if (pts.size === 1) last = [...pts.values()][0]; if (!pts.size) { st.classList.remove('drag'); if (!moved && !BE.img) $('#bef').click(); } };
+  st.addEventListener('pointerup', up); st.addEventListener('pointercancel', up);
+  st.addEventListener('wheel', e => { if (!BE.img) return; e.preventDefault(); setZoom(BE.s * Math.exp(-e.deltaY * 0.0015)); }, { passive: false });
+  st.addEventListener('dragover', e => { e.preventDefault(); st.classList.add('over'); });
+  st.addEventListener('dragleave', () => st.classList.remove('over'));
+  st.addEventListener('drop', e => { e.preventDefault(); st.classList.remove('over'); bePick(e.dataTransfer.files[0]); });
+  document.addEventListener('paste', e => { if ($('#be').hidden) return; const f = [...(e.clipboardData?.files || [])].find(f => /^image\//.test(f.type)); if (f) { e.preventDefault(); bePick(f); } });
+}
+
+// ================= v0.9：群聊音乐 =================
+// 服务器决定播哪首、从什么时候开始；每个人按“服务器时间 - 开始时间”算出播放位置，自动纠偏。
+// 音乐用单独的 <audio id="mus">，和语音通话的声音（#aud 里的 audio）完全分开，静音 / 音量互不影响。
+const MS = { st: null, off: 0, rtt: 1e9, lib: null, src: null, blocked: false, tab: 'pl', preview: null, errs: 0, unsup: null, timer: 0 };
+const mus = $('#mus'), mpv = $('#mpv');
+const MUSIC_EXT = ['mp3', 'flac', 'wav', 'm4a', 'mp4', 'aac', 'ogg', 'oga', 'opus', 'webm', 'weba'];
+const mVol = () => { const v = parseFloat(localStorage.hush_music_vol); return isFinite(v) ? Math.min(1, Math.max(0, v)) : 0.6; };
+const mMuted = () => localStorage.hush_music_mute === '1';
+const sNow = () => Date.now() + MS.off;
+const mCur = () => MS.st && MS.st.music && MS.st.current;
+const mPos = c => (sNow() - c.startedAt) / 1000;
+const mmss = s => { s = Math.max(0, Math.floor(s || 0)); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); };
+const hueOf = t => { let h = 0; for (const ch of String(t)) h = (h * 31 + ch.codePointAt(0)) % 360; return h; };
+const NOTE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>';
+const MICON = {
+  play: '<path d="M7 4.5v15l13-7.5z" fill="currentColor" stroke="none"/>',
+  pause: '<path d="M8 5v14M16 5v14" stroke-width="3"/>',
+  skip: '<path d="M5 4.5v15l11-7.5z" fill="currentColor" stroke="none"/><path d="M19 5v14" stroke-width="2.4"/>',
+  vol: '<path d="M11 5 6 9H2v6h4l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M19 5a10 10 0 0 1 0 14"/>',
+  mute: '<path d="M11 5 6 9H2v6h4l5 4z"/><path d="m22 9-6 6M16 9l6 6"/>',
+  x: '<path d="M6 6l12 12M18 6 6 18"/>',
+  add: '<path d="M12 5v14M5 12h14"/>',
+  ok: '<path d="m5 12.5 4.5 4.5L19 7"/>',
+  edit: '<path d="M4 20h4L19 9l-4-4L4 16z"/><path d="m13.5 6.5 4 4"/>',
+  del: '<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/>',
+  up: '<path d="M12 16V4M7 9l5-5 5 5M5 20h14"/>'
+};
+const svg = (k, sw) => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="' + (sw || 1.8) + '" stroke-linecap="round" stroke-linejoin="round">' + MICON[k] + '</svg>';
+function mBtn(cls, k, title, fn) { const b = el('button', cls); b.type = 'button'; b.title = title; b.setAttribute('aria-label', title); b.innerHTML = svg(k); b.onclick = e => { e.stopPropagation(); fn(b); }; return b; }   // 图标来自固定常量
+function artEl(title, playing) { const a = el('div', 'art'); a.style.setProperty('--h', hueOf(title)); a.innerHTML = playing ? '<span class="eq"><i></i><i></i><i></i></span>' : NOTE; return a; }
+// ----- 对时：取往返最快的一次 -----
+function mPing(n = 5) {
+  let best = 1e9;
+  const one = i => { const t0 = Date.now(); socket.emit('music:ping', t0, st => { const t1 = Date.now(), rtt = t1 - t0; if (typeof st === 'number' && rtt < best) { best = rtt; MS.rtt = rtt; MS.off = st - (t0 + t1) / 2; } if (i + 1 < n) setTimeout(() => one(i + 1), 120); }); };
+  one(0);
+}
+function onMusic(st) {
+  const prev = MS.st && MS.st.current && MS.st.current.qid;
+  if (MS.rtt === 1e9) MS.off = st.now - Date.now();
+  MS.st = st;
+  if ((st.current && st.current.qid) !== prev) { MS.errs = 0; }
+  mApply(); renderNP();
+  if ($('#md').classList.contains('open')) renderMusic();
+  if (!$('#gsv').hidden) gsUi();
+}
+async function mApply() {
+  const c = mCur();
+  if (!c || mMuted() || MS.preview || MS.unsup === (c && c.qid)) {
+    if (!mus.paused) mus.pause();
+    if (!c && MS.src) { MS.src = null; mus.removeAttribute('src'); mus.load(); }
+    return renderNP();
+  }
+  mus.volume = mVol(); mus.muted = false;
+  if (MS.src !== c.qid) {
+    const my = MS.src = c.qid; MS.loading = true;
+    const r = await fetch('/api/music/' + c.id + '/url', { headers: hdr() }).then(r => r.ok ? r.json() : null).catch(() => null);
+    MS.loading = false;
+    if (MS.src !== my) return;
+    if (!r) { MS.src = null; return; }   // 下一次 mTick 会重试
+    mus.src = r.url; mus.playbackRate = 1;
+  }
+  mTick();
+}
+function mPlay() {
+  const p = mus.play();
+  if (p) p.then(() => { if (MS.blocked) { MS.blocked = false; renderNP(); } }, e => { if (e && e.name === 'NotAllowedError' && !MS.blocked) { MS.blocked = true; renderNP(); } });
+}
+function mTick() {
+  const c = mCur(); clearTimeout(MS.timer);
+  mProgress();
+  if (!c || mMuted() || MS.preview || MS.unsup === c.qid) return;
+  if (MS.src !== c.qid) { if (!MS.loading) mApply(); return; }
+  if (mus.readyState < 1) return;
+  const t = mPos(c);
+  if (t < 0) { if (!mus.paused) mus.pause(); if (mus.currentTime > 0.05) mus.currentTime = 0; MS.timer = setTimeout(mTick, Math.min(-t * 1000, 3000)); return; }
+  if (t >= c.dur - 0.05) { if (!mus.paused) mus.pause(); return; }   // 播完了，等服务器切下一首
+  if (MS.blocked) return;
+  if (mus.paused) { if (Math.abs(mus.currentTime - t) > 0.25) mus.currentTime = t; return mPlay(); }
+  const d = mus.currentTime - t;
+  if (Math.abs(d) > 0.4) { mus.currentTime = t + 0.03; mus.playbackRate = 1; }
+  else if (Math.abs(d) > 0.06) mus.playbackRate = d > 0 ? 0.97 : 1.03;   // 小偏差：微调速度慢慢追上，听不出来
+  else if (mus.playbackRate !== 1) mus.playbackRate = 1;
+}
+setInterval(mTick, 1000);
+mus.addEventListener('loadedmetadata', mTick);
+mus.addEventListener('playing', () => { MS.errs = 0; renderNP(); });
+mus.addEventListener('pause', renderNP);
+mus.addEventListener('error', () => {
+  const c = mCur(); if (!c || !mus.getAttribute('src')) return;
+  if (++MS.errs >= 3) { MS.unsup = c.qid; renderNP(); return toast('这首歌在当前浏览器里播放不了'); }
+  MS.src = null; setTimeout(mApply, 800 * MS.errs);   // 播放地址过期 / 网络抖动：换个新地址接着播
+});
+document.addEventListener('pointerdown', () => { if (MS.blocked && mCur() && !mMuted()) { mus.currentTime = Math.max(0, mPos(mCur())); mPlay(); } }, true);
+function mProgress() {
+  const c = mCur(), p = c ? Math.min(1, Math.max(0, mPos(c) / c.dur)) : 0;
+  $('#np').style.setProperty('--p', p.toFixed(4));
+  const b = $('#mprog'); if (b && c) { b.style.width = (p * 100).toFixed(2) + '%'; $('#mpt').textContent = mmss(Math.min(c.dur, Math.max(0, mPos(c)))); }
+}
+function renderNP() {
+  const np = $('#np'), c = mCur();
+  np.className = 'np' + (!c ? ' idle' : '') + (c && MS.blocked && !mMuted() ? ' tap' : '') + (c && mMuted() ? ' muted' : '') + (c && !mMuted() && mus.paused ? ' still' : '');
+  if (!c) { np.title = '群聊歌单'; $('#npt').textContent = ''; $('#npb').textContent = ''; return; }
+  $('#npt').textContent = MS.blocked && !mMuted() ? '点击收听' : c.title;
+  $('#npb').textContent = c.by.nick;
+  np.title = '《' + c.title + '》 · ' + c.by.nick + ' 点的歌' + (mMuted() ? '（已静音）' : '');
+  const npc = $('#npc'); if (npc) npc.classList.toggle('still', mMuted() || mus.paused);
+  mProgress();
+}
+function npClick() {
+  if (MS.blocked && mCur() && !mMuted()) { MS.blocked = false; mus.currentTime = Math.max(0, mPos(mCur())); mPlay(); renderNP(); return; }
+  openMusic();
+}
+function setMute(m) { localStorage.hush_music_mute = m ? '1' : '0'; if (m) MS.blocked = false; mApply(); renderNP(); if ($('#md').classList.contains('open')) renderMusic(); }
+function setVol(v) { localStorage.hush_music_vol = String(v); mus.volume = v; if (v > 0 && mMuted()) setMute(false); }
+// ----- 抽屉 -----
+function openMusic(tab) {
+  openDrawer('#md'); mTab(tab || MS.tab);
+  if (!MS.lib) loadLib(); else renderMusic();
+}
+function mTab(t) {
+  MS.tab = t; $('#mtabs').querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.t === t));
+  $('#mpl').hidden = t !== 'pl'; $('#mlib').hidden = t !== 'lib'; $('#mdt').textContent = t === 'lib' ? '我的音乐' : '群聊歌单';
+  if (t === 'lib') loadLib(); else if (mpv.src && MS.preview) stopPreview();
+  renderMusic();
+}
+$('#mtabs').onclick = e => { const b = e.target.closest('button'); if (b) mTab(b.dataset.t); };
+async function loadLib() {
+  const r = await fetch('/api/music', { headers: hdr() }).then(r => r.ok ? r.json() : null).catch(() => null);
+  if (r) { MS.lib = r; libLevel = r.level; renderMusic(); emusText(); }
+}
+let libLevel = 0;
+function emusText() { if (MS.lib) $('#emus').textContent = '已用 ' + MS.lib.used + '/' + MS.lib.quota + ' 首' + (MS.lib.next ? ' · Lv.' + MS.lib.next + ' 解锁第 ' + (MS.lib.quota + 1) + ' 首' : ''); }
+function renderMusic() {
+  $('#mgs').hidden = !(me && me.admin);
+  if (MS.tab === 'pl') renderPl(); else renderLib();
+}
+function renderPl() {
+  const box = $('#mpl'), st = MS.st; box.innerHTML = '';
+  if (!st) return;
+  if (!st.music) {
+    const e = el('div', 'mempty'); e.append(artEl('群聊音乐'), el('b', '', '群聊音乐还没有开启'), el('span', '', me && me.admin ? '开启后，大家可以从自己的音乐仓库点歌，一起听' : '管理员开启后，大家就能点歌一起听'));
+    if (me && me.admin) { const b = el('button', 'primary', '开启群聊音乐'); b.type = 'button'; b.onclick = () => gsSet({ music: true }); e.append(b); }
+    box.append(e);
+    if (st.queue.length) box.append(el('div', 'mnote', '歌单里还有 ' + st.queue.length + ' 首，开启后继续播放'));
+    return;
+  }
+  const c = st.current;
+  if (c) {
+    const card = el('div', 'npc' + (mMuted() || mus.paused ? ' still' : '')); card.id = 'npc';
+    const top = el('div', 'top'), tx = el('div', 'tx'), s2 = el('div', 's2'), a = el('div', 'av s');
+    avatar(a, people[c.by.name] || c.by, true); s2.append(a, c.by.nick + ' 点的歌');
+    tx.append(el('div', 'tt', c.title), s2); tx.firstChild.title = c.title;
+    top.append(artEl(c.title, true), tx);
+    const pg = el('div', 'prog'), bar = el('div', 'bar'), bi = el('i'); bi.id = 'mprog'; bar.append(bi);
+    const pt = el('span', '', '0:00'); pt.id = 'mpt'; pg.append(pt, bar, el('span', '', mmss(c.dur)));
+    const ctl = el('div', 'mctl');
+    const mb = mBtn('ib3' + (mMuted() ? ' on' : ''), mMuted() ? 'mute' : 'vol', mMuted() ? '取消静音（只影响你自己）' : '静音音乐（只影响你自己，不影响语音）', () => setMute(!mMuted())); mb.id = 'mmute';
+    const vol = el('input'); vol.type = 'range'; vol.min = 0; vol.max = 1; vol.step = 0.01; vol.value = mMuted() ? 0 : mVol(); vol.id = 'mvol'; vol.title = '音乐音量（只影响你自己）';
+    vol.oninput = () => { setVol(+vol.value); if (+vol.value === 0 && !mMuted()) setMute(true); };
+    ctl.append(mb, vol);
+    const canSkip = me && (me.admin || st.skip || c.by.name === me.name);
+    const sk = mBtn('ib3', 'skip', canSkip ? '切到下一首' : '管理员没有开放切歌', () => socket.emit('music:skip', c.qid, r => r && r.error && toast(r.error))); sk.id = 'mskip'; sk.disabled = !canSkip;
+    ctl.append(sk);
+    card.append(top, pg, ctl); box.append(card);
+    mProgress();
+  } else { const e = el('div', 'mempty'); e.append(artEl('空'), el('b', '', '歌单是空的'), el('span', '', '从下面“点歌”里选一首，大家一起听')); box.append(e); }
+  // 接下来
+  const h = el('div', 'mh'); h.append(el('span', '', '接下来'), el('small', '', st.queue.length ? st.queue.length + ' 首' : '')); box.append(h);
+  if (!st.queue.length) box.append(el('div', 'mnote', '还没有下一首'));
+  st.queue.forEach((q, i) => {
+    const r = el('div', 'qi' + (me && q.by.name === me.name ? ' me2' : '')); r.dataset.qid = q.qid;
+    const tx = el('div', 'tx'), t2 = el('div', 't2');
+    if (me && q.by.name === me.name) t2.append(el('b', '', '我'), ' · ' + mmss(q.dur)); else t2.append(q.by.nick + ' · ' + mmss(q.dur));
+    tx.append(el('div', 't1', q.title), t2); tx.firstChild.title = q.title;
+    const qa = el('div', 'qa');
+    if (me && (me.admin || q.by.name === me.name)) qa.append(mBtn('', 'x', q.by.name === me.name ? '移出歌单' : '移出歌单（管理员）', () => socket.emit('music:remove', q.qid, x => x && x.error && toast(x.error))));
+    r.append(el('span', 'n', String(i + 1)), artEl(q.title), tx, qa); box.append(r);
+  });
+  // 点歌：从我的音乐
+  const mine = [c, ...st.queue].filter(x => x && me && x.by.name === me.name).length;
+  const h2 = el('div', 'mh'); h2.append(el('span', '', '点歌'), el('small', '', '已点 ' + mine + '/' + st.per)); box.append(h2);
+  const lib = MS.lib ? MS.lib.items : null;
+  if (!lib) return box.append(el('div', 'mnote', '加载中…'));
+  if (!lib.length) {
+    const e = el('div', 'mempty'); e.append(el('span', '', '你的音乐仓库还是空的'));
+    const b = el('button', 'pill2', '上传音乐'); b.type = 'button'; b.onclick = () => { mTab('lib'); $('#mff').click(); }; e.append(b); box.append(e); return;
+  }
+  const queued = new Set([c, ...st.queue].filter(Boolean).map(x => x.id));
+  lib.forEach(s => {
+    const r = el('div', 'qi'); r.dataset.mid = s.id;
+    const tx = el('div', 'tx'); tx.append(el('div', 't1', s.title), el('div', 't2', mmss(s.dur) + ' · ' + s.ext.toUpperCase()));
+    const qa = el('div', 'qa'), inq = queued.has(s.id);
+    const b = mBtn(inq ? 'done' : 'add', inq ? 'ok' : 'add', inq ? '已在歌单里' : mine >= st.per ? '每人最多同时点 ' + st.per + ' 首' : '点这首', bt => { bt.disabled = true; socket.emit('music:add', s.id, x => { if (x && x.error) { toast(x.error); bt.disabled = false; } }); });
+    b.disabled = inq || mine >= st.per; b.dataset.add = s.id;
+    qa.append(b); r.append(artEl(s.title), tx, qa); box.append(r);
+  });
+}
+function renderLib() {
+  const box = $('#mlib'), L = MS.lib; box.innerHTML = '';
+  if (!L) return box.append(el('div', 'mnote', '加载中…'));
+  const q = el('div', 'quota'), qt = el('div', 'qt2'), sl = el('div', 'slots');
+  for (let i = 0; i < L.cap; i++) { const s = el('i', i < L.used ? 'u' : i < L.quota ? '' : 'l'); s.title = i < L.used ? '已使用' : i < L.quota ? '可用' : 'Lv.' + (i * 10) + ' 解锁'; sl.append(s); }
+  const msg = el('b', '', '已用 ' + L.used + '/' + L.quota); msg.id = 'mquota';
+  qt.append(msg, sl, el('small', '', L.next ? 'Lv.' + L.next + ' 解锁第 ' + (L.quota + 1) + ' 首' : '已解锁全部 ' + L.cap + ' 首'));
+  const ub = el('button', 'pill2'); ub.type = 'button'; ub.id = 'mupb'; ub.innerHTML = svg('up', 2); ub.append(' 上传'); ub.style.display = 'inline-flex'; ub.style.alignItems = 'center'; ub.style.gap = '6px';
+  ub.querySelector('svg').style.cssText = 'width:14px;height:14px';
+  ub.disabled = L.used >= L.quota; ub.title = L.used >= L.quota ? '音乐仓库已满' : '上传音乐';
+  ub.onclick = () => $('#mff').click();
+  q.append(qt, ub); box.append(q);
+  const ups = el('div'); ups.id = 'mups'; box.append(ups);
+  if (MS.upRow) ups.append(MS.upRow);
+  if (!L.items.length) box.append(el('div', 'mnote', '还没有歌。上传之后，就能在群聊歌单里点给大家听'));
+  L.items.forEach(s => {
+    const r = el('div', 'qi'); r.dataset.mid = s.id;
+    const pl = mBtn('ib3', MS.preview === s.id ? 'pause' : 'play', MS.preview === s.id ? '停止试听' : '试听', () => MS.preview === s.id ? stopPreview() : startPreview(s));
+    pl.dataset.pv = s.id;
+    const tx = el('div', 'tx'), t1 = el('div', 't1', s.title); t1.title = s.title;
+    tx.append(t1, el('div', 't2', mmss(s.dur) + ' · ' + s.ext.toUpperCase() + ' · ' + human(s.size) + (s.queued ? ' · 在歌单里' : '')));
+    const qa = el('div', 'qa');
+    qa.append(mBtn('', 'edit', '改歌名', () => renameSong(s, t1)), mBtn('', 'del', '删除', () => delSong(s)));
+    r.append(pl, tx, qa); box.append(r);
+  });
+  box.append(el('div', 'mnote', '支持 mp3 / flac / wav / m4a / aac / ogg / opus，单首最大 ' + L.maxMb + 'MB\n歌曲存在服务器上，只有你能点自己的歌'));
+}
+function renameSong(s, t1) {
+  const i = el('input'); i.value = s.title; i.maxLength = 60; t1.textContent = ''; t1.append(i); i.focus(); i.select();
+  let done = false;
+  const save = async ok => {
+    if (done) return; done = true;
+    const v = i.value.trim();
+    if (!ok || !v || v === s.title) return renderMusic();
+    const r = await fetch('/api/music/' + s.id, { method: 'PATCH', headers: { ...hdr(), 'Content-Type': 'application/json' }, body: JSON.stringify({ title: v }) });
+    if (!r.ok) toast((await r.json().catch(() => ({}))).error || '改名失败');
+    loadLib();
+  };
+  i.onkeydown = e => { if (e.key === 'Enter') save(true); else if (e.key === 'Escape') { e.stopPropagation(); save(false); } };
+  i.onblur = () => save(true);
+}
+async function delSong(s) {
+  if (!confirm('删除《' + s.title + '》？' + (s.queued ? '\n它也会从群聊歌单里移除。' : ''))) return;
+  if (MS.preview === s.id) stopPreview();
+  const r = await fetch('/api/music/' + s.id, { method: 'DELETE', headers: hdr() });
+  if (!r.ok) toast((await r.json().catch(() => ({}))).error || '删除失败');
+  loadLib();
+}
+async function startPreview(s) {
+  stopPreview(true);
+  const r = await fetch('/api/music/' + s.id + '/url', { headers: hdr() }).then(r => r.ok ? r.json() : null).catch(() => null);
+  if (!r) return toast('试听失败');
+  MS.preview = s.id; mApply();   // 试听时先暂停群聊音乐
+  mpv.src = r.url; mpv.volume = Math.max(0.2, mVol()); mpv.play().catch(() => {});
+  renderMusic();
+}
+function stopPreview(quiet) {
+  mpv.pause(); mpv.removeAttribute('src'); mpv.load();
+  if (MS.preview) { MS.preview = null; if (!quiet) { mApply(); renderMusic(); } }
+}
+mpv.addEventListener('ended', () => stopPreview());
+// ----- 上传音乐：浏览器先读出时长（读不出来说明这个浏览器放不了），再上传 -----
+function readDur(file) {
+  return new Promise(res => {
+    const a = new Audio(), u = URL.createObjectURL(file); let done = false;
+    const fin = v => { if (done) return; done = true; clearTimeout(t); a.removeAttribute('src'); a.load(); URL.revokeObjectURL(u); res(v); };
+    const t = setTimeout(() => fin(null), 15000);
+    a.preload = 'metadata';
+    a.onloadedmetadata = () => { if (isFinite(a.duration) && a.duration > 0) fin(a.duration); else { a.ondurationchange = () => isFinite(a.duration) && a.duration > 0 && fin(a.duration); a.currentTime = 1e7; } };
+    a.onerror = () => fin(null);
+    a.src = u;
+  });
+}
+async function musicUpload(file) {
+  if (!file) return;
+  const L = MS.lib, ext = (/\.([a-z0-9]+)$/i.exec(file.name) || [])[1]?.toLowerCase();
+  const row = el('div', 'mup'), lbl = el('span', '', file.name), bar = el('div', 'bar'), bi = el('i'), pct = el('span', '', '读取中…');
+  bar.append(bi); row.append(lbl, bar, pct); MS.upRow = row; $('#mups')?.append(row);
+  lbl.style.cssText = 'max-width:45%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap';
+  const fail = m => { row.classList.add('err'); pct.textContent = m; setTimeout(() => { row.remove(); if (MS.upRow === row) MS.upRow = null; }, 6000); };
+  if (!MUSIC_EXT.includes(ext) || (file.type && !/^(audio|video)\//.test(file.type))) return fail('不支持这种格式');
+  if (L && file.size > L.maxMb * 1048576) return fail('文件太大，单首最大 ' + L.maxMb + 'MB');
+  if (L && L.used >= L.quota) return fail('音乐仓库已满');
+  const dur = await readDur(file);
+  if (!dur) return fail('当前浏览器读不了这首歌（格式不支持或文件损坏）');
+  pct.textContent = '0%';
+  const x = new XMLHttpRequest();
+  x.open('POST', '/api/music');
+  x.setRequestHeader('Authorization', 'Bearer ' + localStorage.token);
+  x.setRequestHeader('Content-Type', 'application/octet-stream');
+  x.setRequestHeader('X-File-Name', encodeURIComponent(file.name));
+  x.setRequestHeader('X-Title', encodeURIComponent(file.name.replace(/\.[^.]+$/, '')));
+  x.setRequestHeader('X-Duration', String(dur));
+  x.upload.onprogress = e => { if (e.lengthComputable) { const p = Math.round(e.loaded / e.total * 100); bi.style.width = p + '%'; pct.textContent = p + '%'; } };
+  x.onload = () => {
+    if (x.status === 200) { row.remove(); MS.upRow = null; toast('已上传，可以去歌单里点歌了'); return loadLib(); }
+    let m = '上传失败'; try { m = JSON.parse(x.responseText).error || m; } catch (_) { if (x.status === 413) m = '文件太大，超过了隧道或服务器的限制'; }
+    fail(m);
+  };
+  x.onerror = () => fail('网络错误，上传失败');
+  x.send(file);
+}
+$('#mff').onchange = e => { musicUpload(e.target.files[0]); e.target.value = ''; };
+// ----- 群聊设置（管理员） -----
+function openGroupSettings() { if (!me || !me.admin) return; gsUi(); $('#gsv').hidden = false; }
+function gsUi() {
+  const st = MS.st || { music: false, skip: false, per: 2 };
+  [['#gmusic', st.music], ['#gskip', st.skip]].forEach(([s, on]) => { $(s).classList.toggle('on', on); $(s).setAttribute('aria-checked', String(on)); });
+  $('#gskip').disabled = !st.music;
+  $('#gper').querySelectorAll('button').forEach(b => { b.classList.toggle('on', +b.dataset.n === st.per); b.disabled = !st.music; });
+}
+async function gsSet(patch) {
+  const r = await fetch('/api/group', { method: 'PUT', headers: { ...hdr(), 'Content-Type': 'application/json' }, body: JSON.stringify(patch) });
+  if (!r.ok) return toast((await r.json().catch(() => ({}))).error || '保存失败');
+  if (MS.st) { Object.assign(MS.st, await r.json()); gsUi(); }
+}
+$('#gper').onclick = e => { const b = e.target.closest('button'); if (b && !b.disabled) gsSet({ per: +b.dataset.n }); };
+function musicInit() {
+  socket.on('music', onMusic);
+  socket.on('connect', () => mPing());
+  if (socket.connected) mPing();
+  if (!MS.pingT) MS.pingT = setInterval(() => socket && socket.connected && mPing(3), 60000);
+}
+function musicStop() { stopPreview(true); mus.pause(); mus.removeAttribute('src'); mus.load(); MS.st = null; MS.src = null; MS.lib = null; MS.blocked = false; renderNP(); }
 start();
 </script>
 </body>
