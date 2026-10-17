@@ -1,0 +1,25 @@
+{
+  "id": "/",
+  "name": "Hush",
+  "short_name": "Hush",
+  "description": "Hush 群聊：消息、语音、共享屏幕和文件仓",
+  "lang": "zh-CN",
+  "dir": "ltr",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f5f6f8",
+  "theme_color": "#f5f6f8",
+  "categories": ["social", "communication"],
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "/icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "/icons/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ],
+  "shortcuts": [
+    { "name": "搜索聊天记录", "short_name": "搜索", "url": "/?open=search", "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }] },
+    { "name": "文件仓", "short_name": "文件仓", "url": "/?open=vault", "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }] }
+  ]
+}

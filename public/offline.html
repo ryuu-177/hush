@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#f5f6f8" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0f1114" media="(prefers-color-scheme: dark)">
+<title>Hush · 暂时连不上</title>
+<link rel="icon" href="/icons/favicon.svg" type="image/svg+xml">
+<style>
+:root{--bg:#f5f6f8;--card:#fff;--fg:#15171c;--mut:#7b808a;--line:#e4e6eb;--ac:#0f766e;--on:#fff}
+@media(prefers-color-scheme:dark){:root{--bg:#0f1114;--card:#16181d;--fg:#e8eaee;--mut:#7d838e;--line:#23262d;--ac:#2dd4bf;--on:#06201d}}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{font:15px/1.6 system-ui,"PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--fg);display:grid;place-items:center;padding:24px env(safe-area-inset-right) calc(24px + env(safe-area-inset-bottom)) env(safe-area-inset-left);-webkit-tap-highlight-color:transparent}
+.box{width:min(340px,100%);display:flex;flex-direction:column;align-items:center;text-align:center;gap:14px;animation:in .4s cubic-bezier(.2,.8,.2,1)}
+.logo{width:72px;height:72px;border-radius:20px;box-shadow:0 10px 30px #0f766e33;position:relative}
+.logo img{width:100%;height:100%;border-radius:20px;display:block}
+.logo::after{content:"";position:absolute;inset:-8px;border-radius:26px;border:1.5px solid var(--ac);opacity:0;animation:ring 2.6s ease-out infinite}
+h1{margin:10px 0 0;font-size:20px;font-weight:600;letter-spacing:-.01em}
+p{margin:0;color:var(--mut);font-size:14px}
+.st{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--mut);min-height:18px}
+.st i{width:6px;height:6px;border-radius:50%;background:var(--ac);animation:pulse 1.4s ease-in-out infinite}
+button{margin-top:6px;padding:10px 22px;border:1px solid var(--ac);border-radius:999px;background:var(--ac);color:var(--on);font:inherit;font-size:14px;cursor:pointer}
+button:disabled{opacity:.6}
+@keyframes in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@keyframes ring{0%{opacity:.5;transform:scale(.92)}80%,100%{opacity:0;transform:scale(1.12)}}
+@keyframes pulse{0%,100%{opacity:.25}50%{opacity:1}}
+@media(prefers-reduced-motion:reduce){.logo::after,.st i{animation:none}}
+</style>
+</head>
+<body>
+<div class="box" id="offline">
+  <div class="logo"><img src="/icons/icon-192.png" alt=""></div>
+  <h1>暂时连不上服务器</h1>
+  <p id="why">服务器电脑可能关机了，或者网络断开。<br>恢复后会自动进入 Hush。</p>
+  <div class="st"><i></i><span id="st">正在等待服务器…</span></div>
+  <button id="retry" type="button">立即重试</button>
+</div>
+<script>
+(() => {
+  const st = document.getElementById('st'), why = document.getElementById('why'), btn = document.getElementById('retry');
+  let wait = 3000, timer = 0;
+  function paint() {
+    if (!navigator.onLine) { why.innerHTML = '你的设备没有连上网络。<br>连上网络后会自动进入 Hush。'; st.textContent = '等待网络…'; }
+    else { why.innerHTML = '服务器电脑可能关机了，或者网络断开。<br>恢复后会自动进入 Hush。'; st.textContent = '正在等待服务器…'; }
+  }
+  async function check(manual) {
+    clearTimeout(timer);
+    if (manual) { btn.disabled = true; st.textContent = '正在连接…'; }
+    try {
+      const r = await fetch('/api/ping', { cache: 'no-store' });
+      if (r.ok && (await r.json()).ok) { st.textContent = '已恢复，正在进入…'; location.reload(); return; }
+    } catch (_) {}
+    btn.disabled = false; paint();
+    wait = manual ? 3000 : Math.min(wait * 1.5, 15000);
+    timer = setTimeout(check, wait);
+  }
+  btn.onclick = () => check(true);
+  addEventListener('online', () => check(true));
+  addEventListener('offline', paint);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) check(); });
+  paint(); timer = setTimeout(check, wait);
+})();
+</script>
+</body>
+</html>

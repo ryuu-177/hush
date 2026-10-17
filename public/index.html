@@ -1,0 +1,1689 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,interactive-widget=resizes-content">
+<title>Hush</title>
+<meta name="description" content="Hush 群聊">
+<meta name="application-name" content="Hush">
+<meta name="theme-color" content="#f5f6f8" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0f1114" media="(prefers-color-scheme: dark)">
+<meta name="color-scheme" content="light dark">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Hush">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="format-detection" content="telephone=no">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" href="/icons/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/icons/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<style>
+:root{--bg:#f5f6f8;--card:#fff;--fg:#15171c;--mut:#7b808a;--line:#e4e6eb;--ac:#0f766e;--on:#fff}
+@media(prefers-color-scheme:dark){:root{--bg:#0f1114;--card:#16181d;--fg:#e8eaee;--mut:#7d838e;--line:#23262d;--ac:#2dd4bf;--on:#06201d}}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{font:15px/1.55 system-ui,"PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--fg)}
+[hidden]{display:none!important}
+#auth{display:grid;place-items:center;height:100%}
+.card{width:320px;display:flex;flex-direction:column;gap:12px}
+h1{margin:0;font-size:30px;font-weight:600;letter-spacing:-.02em}
+.mut,small{color:var(--mut)}
+input{padding:11px 14px;border:1px solid var(--line);border-radius:10px;background:var(--card);color:var(--fg);font:inherit;outline:none}
+input:focus-visible,button:focus-visible{outline:2px solid var(--ac);outline-offset:1px}
+button{padding:10px 16px;border:1px solid var(--line);border-radius:10px;background:var(--card);color:var(--fg);font:inherit;cursor:pointer}
+button.primary{background:var(--ac);border-color:var(--ac);color:var(--on)}
+.row{display:flex;gap:8px}.row button{flex:1}
+#err{min-height:20px;font-size:13px;color:#d9480f}
+#app{display:flex;height:100%}
+aside{width:240px;padding:24px;border-right:1px solid var(--line);display:flex;flex-direction:column;gap:8px}
+.me{display:flex;align-items:center;gap:10px}
+.av{width:40px;height:40px;border-radius:50%;background:var(--ac);color:var(--on);display:grid;place-items:center;font-weight:600}
+.lv{margin-left:auto;font-size:13px;color:var(--ac);font-weight:600}
+.bar{height:4px;background:var(--line);border-radius:2px;overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:var(--ac);transition:width .4s}
+aside h4{margin:20px 0 4px;font-size:13px;font-weight:500;color:var(--mut)}
+ul{list-style:none;margin:0;padding:0}li{padding:3px 0}
+li::before{content:"";display:inline-block;width:6px;height:6px;margin-right:8px;border-radius:50%;background:#2f9e44}
+.link{margin-top:auto;border:0;background:none;color:var(--mut);padding:8px 0;text-align:left}
+section{flex:1;min-width:0;display:flex;flex-direction:column}
+#msgs{flex:1;overflow:auto;padding:24px;display:flex;flex-direction:column;gap:14px}
+.h{margin-bottom:2px;font-size:12px;color:var(--mut)}
+.b{display:inline-block;max-width:min(560px,100%);padding:8px 14px;background:var(--card);border:1px solid var(--line);border-radius:14px;white-space:pre-wrap;word-break:break-word;text-align:left}
+.own{align-self:flex-end;text-align:right}
+.own .b{background:var(--ac);border-color:var(--ac);color:var(--on)}
+#f{display:flex;gap:8px;padding:16px 24px;border-top:1px solid var(--line)}
+#f input{flex:1;min-width:0}
+.fc{display:inline-flex;align-items:center;gap:10px;max-width:min(360px,100%);padding:10px 14px;background:var(--card);border:1px solid var(--line);border-radius:14px;text-align:left}
+.fc .fi{font-size:26px}.fc .fn{font-weight:500;word-break:break-all}.fc small{display:block}
+.fc button{padding:4px 10px;font-size:13px}
+.th{display:block;max-width:min(280px,100%);max-height:240px;border-radius:12px;border:1px solid var(--line);cursor:zoom-in;margin-bottom:4px;background:var(--line);min-width:80px;min-height:60px}
+.own .fc,.own .th{margin-left:auto}
+#ups{padding:0 24px;display:flex;flex-direction:column;gap:4px}
+.up{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--mut)}.up .bar{flex:1}.up.err{color:#d9480f}
+section.drop{outline:3px dashed var(--ac);outline-offset:-8px}
+.lb{position:fixed;inset:0;background:#000c;display:grid;place-items:center;z-index:11;cursor:zoom-out}.lb img{max-width:95vw;max-height:95vh}
+.adm{display:flex;flex-direction:column;gap:6px}
+.code{min-height:26px;font:600 18px/1.4 ui-monospace,Consolas,monospace;letter-spacing:.06em}
+#invs{font-size:12px;color:var(--mut)}#invs li::before{display:none}
+#invs li{display:flex;align-items:center;gap:6px}#invs li span{flex:1}
+.x{padding:1px 7px;font-size:12px;border-radius:6px}
+.av{overflow:hidden;flex:none}.av img{width:100%;height:100%;object-fit:cover}
+.av.s{width:22px;height:22px;font-size:11px}
+.m{display:flex;gap:10px;align-items:flex-start}.m.own{flex-direction:row-reverse}
+.nm{cursor:pointer}.nm:hover{text-decoration:underline}
+#on li{display:flex;align-items:center;gap:8px;cursor:pointer}#on li::before{display:none}
+.me{cursor:pointer}
+.ov{position:fixed;inset:0;background:#0006;display:grid;place-items:center;z-index:9}
+.pc{width:300px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px;display:flex;flex-direction:column;gap:10px}
+.pc .av{width:64px;height:64px;font-size:28px}
+.pc textarea{padding:11px 14px;border:1px solid var(--line);border-radius:10px;background:var(--card);color:var(--fg);font:inherit;resize:vertical}
+.cb{display:flex;align-items:center;gap:10px;padding:10px 24px;border-bottom:1px solid var(--line);background:var(--card)}
+.cb b{flex:1;font-weight:500}.cb .tm{font:13px ui-monospace,Consolas,monospace;color:var(--mut)}
+button.red{background:#e03131;border-color:#e03131;color:#fff}
+.vu{transition:box-shadow .08s}
+.vu.talk{box-shadow:0 0 0 2px var(--card),0 0 0 calc(3px + var(--lv,0)*5px) #2f9e44}
+.cb .av.s{width:28px;height:28px}
+.mm{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--mut)}
+.mm .bar{flex:1}.mm .bar i{background:#2f9e44;transition:width .06s}
+.mm.off .bar i{background:var(--mut)}
+.tk{font-size:11px;color:#2f9e44}.st{font-size:11px;color:#d9480f}
+#snd{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);z-index:10;box-shadow:0 4px 16px #0003}
+#rm li{display:flex;align-items:center;gap:8px}#rm li::before{display:none}
+.bio{white-space:pre-wrap;word-break:break-word}
+
+/* ===== v0.6：直播标记（纯视觉，不出现文字） ===== */
+.av.live{outline:2px solid #f43f5e;outline-offset:2px;animation:livering 2.4s ease-in-out infinite;cursor:pointer}
+.av.s.live{outline-width:1.5px;outline-offset:1.5px}
+@keyframes livering{0%,100%{outline-color:#f43f5e}50%{outline-color:#f43f5e40}}
+@media(prefers-reduced-motion:reduce){.av.live{animation:none}}
+.lvdot{width:7px;height:7px;border-radius:50%;background:#f43f5e;box-shadow:0 0 0 3px #f43f5e22;flex:none}
+
+/* 侧栏直播控制 */
+.lvc{display:flex;align-items:center;gap:8px;margin-top:6px}
+.lvc button{display:inline-flex;align-items:center;gap:7px;padding:7px 12px;font-size:13px;border-radius:999px}
+.lvc svg{width:15px;height:15px;flex:none}
+.lvc .on{background:#f43f5e;border-color:#f43f5e;color:#fff}
+.lvc .vc{display:inline-flex;align-items:center;gap:5px;font:12px ui-monospace,Consolas,monospace;color:var(--mut)}
+
+/* 观看窗口 */
+.vw{position:fixed;inset:0;z-index:12;background:#05060acc;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);display:grid;place-items:center;padding:24px;animation:fade .18s ease}
+.vw .box{position:relative;width:min(1100px,100%);background:#0b0c10;border:1px solid #ffffff14;border-radius:18px;overflow:hidden;box-shadow:0 30px 80px #0008;color:#e8eaee}
+.vw .top{display:flex;align-items:center;gap:10px;padding:12px 14px}
+.vw .top b{font-weight:500;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.vw video{display:block;width:100%;max-height:calc(100vh - 160px);background:#000;aspect-ratio:16/9;object-fit:contain}
+.vw .ctl{display:flex;align-items:center;gap:10px;padding:10px 14px}
+.vw .ctl input[type=range]{flex:0 1 140px;accent-color:#f43f5e;padding:0;border:0;background:none}
+.vw .ib{width:34px;height:34px;padding:0;display:grid;place-items:center;border-radius:10px;background:#ffffff0d;border:1px solid #ffffff14;color:#e8eaee}
+.vw .ib:hover{background:#ffffff1a}.vw .ib svg{width:17px;height:17px}
+.vw .msg{position:absolute;inset:56px 0 56px;display:grid;place-items:center;color:#9aa0aa;font-size:14px;pointer-events:none}
+.vw:fullscreen .box,.vw .box:fullscreen{width:100%;height:100%;border-radius:0;display:flex;flex-direction:column}
+.vw .box:fullscreen video{flex:1;max-height:none;aspect-ratio:auto}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+@keyframes pop{from{opacity:0;transform:translateY(8px) scale(.98)}to{opacity:1;transform:none}}
+
+/* ===== v0.6：资料卡 / 资料编辑重新设计 ===== */
+.ov{backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);animation:fade .15s ease}
+.sheet{width:340px;max-width:calc(100vw - 32px);background:var(--card);border:1px solid var(--line);border-radius:20px;overflow:hidden;box-shadow:0 24px 64px #0003;animation:pop .2s ease;position:relative}
+.sheet .cover{height:86px;background:linear-gradient(135deg,var(--pc,var(--ac)),color-mix(in srgb,var(--pc,var(--ac)) 35%,#000))}
+.sheet .body{padding:0 22px 20px;display:flex;flex-direction:column;gap:10px}
+.sheet .bigav{width:84px;height:84px;font-size:34px;margin-top:-42px;box-shadow:0 0 0 4px var(--card)}
+.sheet .bigav.live{outline-offset:5px}
+.sheet .nm2{font-size:19px;font-weight:600;letter-spacing:-.01em;line-height:1.3;word-break:break-word}
+.sheet .sub{font-size:12px;color:var(--mut);display:flex;gap:8px;align-items:center}
+.sheet .sub .pill{padding:1px 8px;border-radius:999px;background:color-mix(in srgb,var(--ac) 14%,transparent);color:var(--ac);font-weight:600}
+.sheet .bio{font-size:14px;color:var(--fg);padding:12px 14px;background:var(--bg);border-radius:12px;min-height:20px}
+.sheet .bio.empty{color:var(--mut)}
+.sheet .acts{display:flex;gap:8px;margin-top:4px}.sheet .acts button{flex:1;display:inline-flex;align-items:center;justify-content:center;gap:7px}
+.sheet .acts svg{width:16px;height:16px}
+.sheet .x2{position:absolute;top:10px;right:10px;width:30px;height:30px;padding:0;border-radius:50%;display:grid;place-items:center;background:#0003;border:0;color:#fff;font-size:16px;line-height:1}
+.sheet h3{margin:16px 0 2px;font-size:16px;font-weight:600}
+.fld{display:flex;flex-direction:column;gap:5px}
+.fld label{font-size:12px;color:var(--mut);display:flex;justify-content:space-between}
+.fld input,.fld textarea{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--fg);font:inherit;outline:none;resize:none}
+.fld input:focus,.fld textarea:focus{border-color:var(--ac)}
+.avbtn{position:relative;cursor:pointer;border-radius:50%}
+.avbtn .cam{position:absolute;inset:0;border-radius:50%;background:#0007;color:#fff;display:grid;place-items:center;opacity:0;transition:opacity .15s;font-size:12px}
+.avbtn:hover .cam,.avbtn:focus-visible .cam{opacity:1}
+.avbtn .badge{position:absolute;right:-2px;bottom:-2px;width:26px;height:26px;border-radius:50%;background:var(--ac);color:var(--on);display:grid;place-items:center;box-shadow:0 0 0 3px var(--card)}
+.avbtn .badge svg{width:13px;height:13px}
+.err2{font-size:13px;color:#d9480f;min-height:18px}
+
+/* 头像编辑器 */
+.ae{width:380px}
+.tabs{display:flex;gap:4px;padding:4px;background:var(--bg);border-radius:12px}
+.tabs button{flex:1;border:0;background:none;padding:7px;border-radius:9px;font-size:13px;color:var(--mut)}
+.tabs button.on{background:var(--card);color:var(--fg);box-shadow:0 1px 3px #0002}
+.stage{position:relative;width:300px;height:300px;margin:0 auto;border-radius:16px;overflow:hidden;background:repeating-conic-gradient(var(--line) 0 25%,var(--bg) 0 50%) 0 0/20px 20px;touch-action:none;cursor:grab}
+.stage.drag{cursor:grabbing}.stage canvas{display:block;width:100%;height:100%}
+.stage .hint{position:absolute;inset:0;display:grid;place-items:center;text-align:center;color:var(--mut);font-size:13px;line-height:1.7;pointer-events:none}
+.stage.over{outline:2px dashed var(--ac);outline-offset:-6px}
+.zr{display:flex;align-items:center;gap:10px}.zr input{flex:1;accent-color:var(--ac);padding:0;border:0;background:none}
+.zr .ib{width:34px;height:34px;padding:0;display:grid;place-items:center;border-radius:10px}
+.zr svg{width:16px;height:16px}
+.prv{display:flex;align-items:center;gap:14px;justify-content:center}
+.prv .av{width:56px;height:56px;font-size:24px}.prv .av.s2{width:32px;height:32px;font-size:14px}
+.sw{display:flex;flex-wrap:wrap;gap:8px}
+.sw button{width:28px;height:28px;padding:0;border-radius:50%;border:2px solid transparent}
+.sw button.on{border-color:var(--fg)}
+.sw input[type=color]{width:28px;height:28px;padding:0;border:0;border-radius:50%;background:none;cursor:pointer}
+.foot{display:flex;gap:8px;align-items:center}.foot .sp{flex:1}
+.link2{border:0;background:none;color:var(--mut);padding:8px 4px;font-size:13px}
+/* ===== v0.7 ===== */
+section{position:relative}
+.tb{display:flex;align-items:center;gap:8px;padding:10px 24px;border-bottom:1px solid var(--line)}
+.tb b{flex:1;font-weight:600;font-size:15px}
+.ib2{width:34px;height:34px;padding:0;display:grid;place-items:center;border-radius:10px;position:relative;background:var(--card)}
+.ib2 svg{width:17px;height:17px}
+.ib2 .dot,.vfab .dot{position:absolute;top:5px;right:5px;width:8px;height:8px;border-radius:50%;background:#f43f5e;box-shadow:0 0 0 2px var(--card)}
+.lvc .ib2{width:33px;height:33px;border-radius:999px}
+.vfab{display:none}
+/* 系统行：文件、撤回 */
+.sys{align-self:center;max-width:90%;font-size:12px;color:var(--mut);text-align:center;padding:2px 10px;line-height:1.6}
+.sys a{color:var(--mut);text-decoration:underline;text-decoration-color:color-mix(in srgb,var(--mut) 40%,transparent);text-underline-offset:3px;cursor:pointer;word-break:break-all}
+.sys a:hover{color:var(--ac)}.sys s{opacity:.7}
+.sys .tm2{margin-left:6px;opacity:.6}
+/* 消息操作、回复、提及 */
+.m .c{position:relative;min-width:0}
+.ma{position:absolute;top:-4px;right:0;display:none;gap:2px;background:var(--card);border:1px solid var(--line);border-radius:9px;padding:2px;box-shadow:0 4px 14px #0001;z-index:2}
+.own .ma{right:auto;left:0}
+.m:hover .ma,.m:focus-within .ma,.m.act .ma{display:flex}
+.ma button{border:0;padding:3px 8px;font-size:12px;border-radius:7px;background:none;color:var(--mut)}
+.ma button:hover{background:var(--bg);color:var(--fg)}
+.qt{display:block;max-width:min(520px,100%);margin:0 0 4px;padding:5px 10px;border-left:3px solid var(--ac);background:color-mix(in srgb,var(--ac) 7%,var(--card));border-radius:8px;font-size:12px;color:var(--mut);cursor:pointer;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.own .qt{margin-left:auto}
+.qt b{color:var(--fg);font-weight:500;margin-right:6px}
+.at{color:var(--ac);font-weight:600}
+.own .b .at{color:inherit;text-decoration:underline;text-underline-offset:2px}
+.m.hit .b{box-shadow:0 0 0 2px color-mix(in srgb,#f59e0b 55%,transparent)}
+.flash .b,.flash.sys{animation:flash 1.6s ease}
+.flash.sys{border-radius:8px}
+@keyframes flash{0%,50%{box-shadow:0 0 0 3px color-mix(in srgb,#f59e0b 70%,transparent)}}
+.more{align-self:center;font-size:12px;padding:5px 12px;border-radius:999px;color:var(--mut)}
+.rb{display:flex;align-items:center;gap:10px;margin:0 24px;padding:8px 12px;border-left:3px solid var(--ac);background:color-mix(in srgb,var(--ac) 7%,var(--card));border-radius:10px;font-size:13px}
+.rb .q{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--mut)}.rb b{color:var(--fg);font-weight:500;margin-right:6px}
+.rb button{border:0;background:none;padding:2px 6px;color:var(--mut)}
+#f{position:relative}
+.mp{position:absolute;left:24px;bottom:calc(100% + 4px);width:260px;background:var(--card);border:1px solid var(--line);border-radius:12px;box-shadow:0 12px 32px #0002;padding:4px;z-index:5}
+.mp div{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:8px;cursor:pointer;font-size:13px}
+.mp div small{margin-left:auto}
+.mp div.on{background:var(--bg)}
+.latest{position:absolute;left:50%;bottom:86px;transform:translateX(-50%);z-index:4;border-radius:999px;box-shadow:0 6px 20px #0002;font-size:13px}
+/* 断线提示 */
+.net{position:absolute;top:56px;left:50%;transform:translateX(-50%);z-index:6;display:flex;align-items:center;gap:10px;padding:7px 14px;border-radius:999px;background:var(--fg);color:var(--bg);font-size:13px;box-shadow:0 8px 24px #0003;animation:pop .2s ease;white-space:nowrap}
+.net.ok{background:var(--ac);color:var(--on)}
+.net button{padding:3px 10px;font-size:12px;border-radius:999px;border:0;background:var(--bg);color:var(--fg)}
+.net .spin{width:12px;height:12px;border-radius:50%;border:2px solid currentColor;border-right-color:transparent;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+/* 抽屉：文件仓 / 搜索 */
+.scrim{position:fixed;inset:0;z-index:8;background:#0003;animation:fade .15s ease}
+.drawer{position:fixed;top:0;right:0;bottom:0;z-index:9;width:min(440px,100vw);background:var(--card);border-left:1px solid var(--line);box-shadow:-24px 0 64px #0002;display:flex;flex-direction:column;transform:translateX(105%);transition:transform .26s cubic-bezier(.2,.8,.2,1);visibility:hidden}
+.drawer.open{transform:none;visibility:visible}
+.dh{display:flex;align-items:center;gap:10px;padding:18px 20px 12px}
+.dh h3{margin:0;flex:1;font-size:17px;font-weight:600;letter-spacing:-.01em}
+.dh small{font-size:12px}
+.dc{padding:0 20px 10px;display:flex;flex-direction:column;gap:10px}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chips button{padding:5px 12px;font-size:12px;border-radius:999px;color:var(--mut)}
+.chips button.on{background:var(--fg);border-color:var(--fg);color:var(--bg)}
+.srch{display:flex;gap:8px}
+.srch input{flex:1;padding:9px 12px;border-radius:10px;background:var(--bg);font-size:14px}
+.srch select{padding:0 10px;border:1px solid var(--line);border-radius:10px;background:var(--card);color:var(--fg);font:inherit;font-size:13px}
+.dl{flex:1;overflow:auto;padding:4px 12px 20px}
+.fr{display:flex;align-items:center;gap:12px;padding:10px 8px;border-radius:12px;cursor:pointer}
+.fr:hover{background:var(--bg)}
+.fr.focus{background:color-mix(in srgb,#f59e0b 14%,var(--card))}
+.fr .ic{width:40px;height:40px;border-radius:10px;display:grid;place-items:center;flex:none;font:600 11px/1 ui-monospace,Consolas,monospace;letter-spacing:.02em;color:#fff;overflow:hidden}
+.fr .ic img{width:100%;height:100%;object-fit:cover}
+.fr .tx{flex:1;min-width:0}
+.fr .fn{font-size:14px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fr .fm{font-size:12px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fr .ac2{display:flex;gap:2px;opacity:.55}.fr:hover .ac2{opacity:1}
+.fr .ac2 button{width:30px;height:30px;padding:0;display:grid;place-items:center;border:0;background:none;border-radius:8px;color:var(--mut)}
+.fr .ac2 button:hover{background:var(--card);color:var(--fg)}.fr .ac2 svg{width:16px;height:16px}
+.empty2{padding:48px 12px;text-align:center;color:var(--mut);font-size:13px;line-height:1.8}
+.sr{padding:10px 8px;border-radius:12px;cursor:pointer}.sr:hover{background:var(--bg)}
+.sr .sh{font-size:12px;color:var(--mut);margin-bottom:2px}.sr .st2{font-size:14px;word-break:break-word}
+.sr mark{background:color-mix(in srgb,#f59e0b 35%,transparent);color:inherit;border-radius:3px;padding:0 1px}
+/* 预览 */
+.pw{position:fixed;inset:0;z-index:13;background:#05060ae6;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);display:flex;flex-direction:column;color:#e8eaee;animation:fade .15s ease}
+.pw .ph{display:flex;align-items:center;gap:10px;padding:12px 16px}
+.pw .ph b{flex:1;min-width:0;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pw .ph small{color:#9aa0aa}
+.pw .ib{width:36px;height:36px;padding:0;display:grid;place-items:center;border-radius:10px;background:#ffffff0d;border:1px solid #ffffff14;color:#e8eaee}
+.pw .ib svg{width:18px;height:18px}
+.pw .pb{flex:1;min-height:0;display:grid;place-items:center;padding:0 16px 16px;position:relative}
+.pw .pb img{max-width:100%;max-height:100%;object-fit:contain;border-radius:6px}
+.pw .pb iframe{width:min(1000px,100%);height:100%;border:0;border-radius:8px;background:#fff}
+.pw .pb video{max-width:100%;max-height:100%;border-radius:8px;background:#000}
+.pw .pb audio{width:min(520px,100%)}
+.pw .pb pre{width:min(1000px,100%);height:100%;margin:0;overflow:auto;padding:16px 18px;background:#0e1015;border:1px solid #ffffff14;border-radius:10px;font:13px/1.6 ui-monospace,Consolas,monospace;white-space:pre-wrap;word-break:break-word;color:#d7dae0}
+.pw .nav{position:absolute;top:50%;transform:translateY(-50%);width:44px;height:44px;border-radius:50%}
+.pw .nav.l{left:20px}.pw .nav.r{right:20px}
+.pw .note{position:absolute;bottom:22px;left:50%;transform:translateX(-50%);font-size:12px;color:#9aa0aa;background:#000a;padding:4px 10px;border-radius:999px}
+.toast{position:fixed;left:50%;bottom:96px;transform:translateX(-50%);z-index:20;background:var(--fg);color:var(--bg);padding:8px 14px;border-radius:10px;font-size:13px;box-shadow:0 8px 24px #0003;animation:pop .2s ease}
+@media(max-width:640px){.vfab{display:grid;position:relative;flex:none;height:auto;min-height:36px}#f{gap:6px}.tb{padding:10px 16px}.rb{margin:0 16px}.mp{left:16px}.net{top:52px}}
+@media(max-width:640px){#msgs,#f{padding-left:16px;padding-right:16px}.vw{padding:0}.vw .box{border-radius:0}.stage{width:260px;height:260px}}
+
+/* ===== v0.8：像软件一样用（PWA、手机适配） ===== */
+html{-webkit-text-size-adjust:100%}
+body{-webkit-tap-highlight-color:transparent;overscroll-behavior:none}
+#app{height:100%;height:var(--app-h,100dvh)}
+#auth{height:100%;height:var(--app-h,100dvh);padding:env(safe-area-inset-top) 16px env(safe-area-inset-bottom)}
+.logo{width:52px;height:52px;border-radius:15px;display:block;box-shadow:0 10px 28px #0f766e33;margin-bottom:4px}
+#msgs{overscroll-behavior:contain}
+.tb{padding-top:calc(10px + env(safe-area-inset-top))}
+#f{padding-bottom:calc(16px + env(safe-area-inset-bottom));padding-right:calc(24px + env(safe-area-inset-right))}
+aside{padding-top:calc(24px + env(safe-area-inset-top));padding-bottom:calc(20px + env(safe-area-inset-bottom));padding-left:calc(24px + env(safe-area-inset-left));overflow-y:auto}
+.dh{padding-top:calc(18px + env(safe-area-inset-top))}
+.dl{padding-bottom:calc(20px + env(safe-area-inset-bottom))}
+.pw .ph{padding-top:calc(12px + env(safe-area-inset-top))}
+.toast{bottom:calc(96px + env(safe-area-inset-bottom))}
+.latest{bottom:calc(86px + env(safe-area-inset-bottom))}
+.mnav{display:none}
+.tb b small{font-weight:400;font-size:12px;color:var(--mut);margin-left:8px}
+.link{display:flex;align-items:center;gap:8px}.link svg{width:16px;height:16px}.link:hover{color:var(--fg)}
+/* 设置 */
+.setg{width:360px}
+.setg .body{gap:8px}
+.sh2{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px}.sh2 h3{margin:0}
+.sh2 .ib2{border:0;background:none;color:var(--mut)}
+.srow{display:flex;align-items:center;gap:12px;padding:12px;border-radius:14px;background:var(--bg);border:0;text-align:left;width:100%}
+.srow .si{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;background:color-mix(in srgb,var(--ac) 12%,var(--card));color:var(--ac);flex:none}
+.srow .si svg{width:17px;height:17px}
+.stx{flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.45}.stx b{font-weight:500;font-size:14px}.stx small{font-size:12px}
+.tgl{width:44px;height:26px;padding:0;border-radius:999px;border:0;background:color-mix(in srgb,var(--mut) 35%,transparent);position:relative;flex:none;transition:background .2s}
+.tgl i{position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 3px #0003;transition:transform .2s cubic-bezier(.2,.8,.2,1)}
+.tgl.on{background:var(--ac)}.tgl.on i{transform:translateX(18px)}
+.tgl:disabled{opacity:.45;cursor:not-allowed}
+.pill2{padding:6px 14px;border-radius:999px;font-size:13px;border-color:color-mix(in srgb,var(--ac) 50%,transparent);color:var(--ac);background:none;flex:none}
+.pill2:hover{background:color-mix(in srgb,var(--ac) 10%,transparent)}
+.ios{font-size:13px;color:var(--mut);padding:2px 14px 4px;line-height:2;animation:fade .2s ease}
+.ios ol{margin:0;padding-left:18px}.ios svg{width:15px;height:15px;vertical-align:-2px;color:var(--ac)}.ios b{color:var(--fg);font-weight:500}
+.srow.out{justify-content:center;color:#e03131;font-size:14px;margin-top:4px;cursor:pointer}
+.srow.out:hover{background:color-mix(in srgb,#e03131 8%,var(--bg))}
+.ver{text-align:center;font-size:11px;color:var(--mut);letter-spacing:.06em;margin-top:2px;opacity:.8}
+/* 一次性小提示（安装 / 开启通知），关掉就不再出现 */
+.tip{position:absolute;left:50%;bottom:calc(84px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:5;width:min(400px,calc(100% - 32px));display:flex;align-items:center;gap:12px;padding:10px 8px 10px 12px;background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:0 12px 36px #0002;animation:pop .25s ease}
+.tip .si{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;background:color-mix(in srgb,var(--ac) 12%,var(--card));color:var(--ac);flex:none}
+.tip .si svg{width:17px;height:17px}
+.tip .x3{width:30px;height:30px;padding:0;border:0;background:none;color:var(--mut);border-radius:8px;flex:none;display:grid;place-items:center}
+.tip .x3 svg{width:14px;height:14px}
+/* 新版本提示 */
+.upd{position:absolute;top:calc(56px + env(safe-area-inset-top));left:50%;transform:translateX(-50%);z-index:7;display:flex;align-items:center;gap:8px;padding:7px 15px;border-radius:999px;border:0;background:var(--ac);color:var(--on);font-size:13px;box-shadow:0 8px 24px #0f766e40;animation:pop .2s ease;white-space:nowrap}
+.upd i{width:6px;height:6px;border-radius:50%;background:currentColor;animation:pulse 1.6s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:.35}50%{opacity:1}}
+@media(prefers-reduced-motion:reduce){.upd i{animation:none}}
+.lvc .ib2{padding:0;justify-content:center}
+@media(hover:none){.fr .ac2{opacity:1}}
+@media(max-width:640px){
+  aside{display:flex;position:fixed;top:0;bottom:0;left:0;z-index:9;width:min(300px,86vw);background:var(--card);box-shadow:24px 0 64px #0002;transform:translateX(-105%);visibility:hidden;transition:transform .26s cubic-bezier(.2,.8,.2,1),visibility 0s linear .26s;padding:calc(20px + env(safe-area-inset-top)) 20px calc(16px + env(safe-area-inset-bottom)) calc(20px + env(safe-area-inset-left))}
+  aside.open{transform:none;visibility:visible;transition:transform .26s cubic-bezier(.2,.8,.2,1),visibility 0s}
+  .mnav{display:grid;width:38px;height:38px;margin-left:-6px;border:0;background:none;position:relative}
+  .mnav .av{width:30px;height:30px;font-size:13px}
+  input,textarea,select,.fld input,.fld textarea,.srch input{font-size:16px}
+  .tb{padding-left:calc(12px + env(safe-area-inset-left));padding-right:calc(12px + env(safe-area-inset-right))}
+  #f{padding-top:10px;padding-bottom:calc(10px + env(safe-area-inset-bottom));padding-left:calc(12px + env(safe-area-inset-left));padding-right:calc(12px + env(safe-area-inset-right))}
+  #f button,#f input{min-height:42px}
+  .ib2{width:40px;height:40px}
+  .ma{top:-16px}.ma button{padding:7px 12px;font-size:13px}
+  #msgs{padding-top:16px;padding-bottom:16px}
+  .sheet{max-height:calc(var(--app-h,100dvh) - 32px);overflow-y:auto}
+  .toast{bottom:calc(80px + env(safe-area-inset-bottom))}
+  .tip{bottom:calc(74px + env(safe-area-inset-bottom))}
+  .latest{bottom:calc(74px + env(safe-area-inset-bottom))}
+  .upd{top:calc(60px + env(safe-area-inset-top))}
+}
+</style>
+</head>
+<body>
+<main id="auth" hidden>
+  <div class="card">
+    <img class="logo" src="/icons/icon-192.png" alt="">
+    <h1>Hush</h1>
+    <p class="mut" style="margin:0 0 8px">登录或注册，开始聊天。</p>
+    <input id="name" placeholder="用户名" maxlength="16" autocomplete="username">
+    <input id="pw" type="password" placeholder="密码，至少 6 位" autocomplete="current-password">
+    <input id="inv" placeholder="邀请码，注册时需要" maxlength="12" autocomplete="off">
+    <div id="err"></div>
+    <div class="row">
+      <button class="primary" onclick="auth('login')">登录</button>
+      <button onclick="auth('register')">注册</button>
+    </div>
+  </div>
+</main>
+
+<div id="app" hidden>
+  <aside>
+    <div class="me" onclick="editProfile()" title="编辑个人资料"><div class="av" id="av"></div><b id="mn"></b><span class="lv" id="ml"></span></div>
+    <div class="bar"><i id="bar"></i></div>
+    <small id="xp"></small>
+    <div class="lvc" id="lvc">
+      <button id="lvbtn" onclick="liveToggle()" title="把你的屏幕实时分享给大家">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="4" width="19" height="13" rx="2.5"/><path d="M8 21h8M12 17v4"/></svg>
+        <span id="lvtxt">共享屏幕</span>
+      </button>
+      <button class="ib2" id="vbtn" onclick="openVault()" title="文件仓"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8 12 3 3 8v8l9 5 9-5z"/><path d="M3 8l9 5 9-5M12 13v8"/></svg><i class="dot vdot" hidden></i></button>
+      <span class="vc" id="lvvc" hidden title="正在观看的人数"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="14" height="14"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg><span id="lvn">0</span></span>
+    </div>
+    <h4>语音房 <span id="rc"></span></h4>
+    <ul id="rm"></ul>
+    <div class="mm" id="mm" hidden><span>我的麦克风</span><div class="bar"><i data-vubar="@me"></i></div><span id="mms"></span></div>
+    <button id="rj" onclick="roomToggle()">加入语音房</button>
+    <h4>在线</h4>
+    <ul id="on"></ul>
+    <div class="adm" id="adm" hidden>
+      <h4>邀请新成员</h4>
+      <button onclick="invite()">生成邀请码</button>
+      <div class="code" id="code"></div>
+      <small>7 天内有效，只能用一次</small>
+      <ul id="invs"></ul>
+    </div>
+    <button class="link" id="setb" onclick="openSettings()" title="通知、安装、退出登录"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>设置</button>
+  </aside>
+  <section>
+    <div class="tb"><button class="ib2 mnav" id="mnav" onclick="openNav()" title="菜单"><div class="av s" id="mav"></div></button><b>群聊<small id="onc"></small></b>
+      <button class="ib2" onclick="openSearch()" title="搜索聊天记录"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg></button>
+    </div>
+    <button class="upd" id="upd" hidden type="button"><i></i>有新版本，点击刷新</button>
+    <div class="tip" id="tip" hidden><div class="si" id="tipi"></div><div class="stx"><b id="tipt"></b><small id="tips"></small></div><button class="pill2" id="tipgo" type="button"></button><button class="x3" id="tipx" type="button" title="不再提示"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+    <div class="net" id="net" hidden><span class="spin" id="nets"></span><span id="nett"></span><button id="netb" hidden></button></div>
+    <div class="cb" id="cb" hidden>
+      <div class="av s vu" id="cbme"></div><div class="av s vu" id="cbpeer" hidden></div>
+      <b id="cbt"></b><span class="tk" id="cbtk"></span><span class="tm" id="cbtm"></span>
+      <button id="mute" onclick="toggleMute()">静音</button>
+      <button class="red" onclick="hangup()">挂断</button>
+    </div>
+    <div id="msgs"></div>
+    <button class="latest" id="latest" hidden onclick="backToLatest()">回到最新消息</button>
+    <div id="ups"></div>
+    <div class="rb" id="rb" hidden><div class="q"><b id="rbn"></b><span id="rbt"></span></div><button onclick="cancelReply()" title="取消回复">✕</button></div>
+    <form id="f">
+      <div class="mp" id="mp" hidden></div>
+      <button type="button" class="ib2 vfab" id="vfab" onclick="openVault()" title="文件仓"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8 12 3 3 8v8l9 5 9-5z"/><path d="M3 8l9 5 9-5M12 13v8"/></svg><i class="dot vdot" hidden></i></button>
+      <button type="button" title="发送文件（也可以拖进来或粘贴）" onclick="$('#ff').click()">📎</button>
+      <input id="ff" type="file" multiple hidden>
+      <input id="t" placeholder="说点什么，可拖入或粘贴文件" autocomplete="off">
+      <button class="primary">发送</button>
+    </form>
+  </section>
+</div>
+
+<!-- 资料卡 -->
+<div class="ov" id="pv" hidden onclick="if(event.target===this)this.hidden=true">
+  <div class="sheet" id="pvs">
+    <div class="cover"></div>
+    <button class="x2" onclick="$('#pv').hidden=true" title="关闭">✕</button>
+    <div class="body">
+      <div class="av bigav" id="pav"></div>
+      <div><div class="nm2" id="pnick"></div><div class="sub"><span id="pname"></span><span class="pill" id="plv"></span></div></div>
+      <div class="bio" id="pbio"></div>
+      <div class="acts">
+        <button class="primary" id="pwatch" hidden><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.5-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5z"/></svg>观看</button>
+        <button id="pcall"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"/></svg>语音通话</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 资料编辑 -->
+<div class="ov" id="pe" hidden onclick="if(event.target===this)this.hidden=true">
+  <div class="sheet" id="pes">
+    <div class="cover"></div>
+    <div class="body">
+      <div class="avbtn" id="eavb" tabindex="0" role="button" title="更换头像" style="width:84px;margin-top:-42px">
+        <div class="av bigav" id="eav" style="margin-top:0"></div>
+        <div class="cam">更换头像</div>
+        <div class="badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></div>
+      </div>
+      <div class="fld"><label for="enick">昵称<span id="enc"></span></label><input id="enick" maxlength="16" placeholder="大家看到的名字"></div>
+      <div class="fld"><label for="ebio">个性签名<span id="ebc"></span></label><textarea id="ebio" maxlength="60" rows="2" placeholder="一句话介绍自己"></textarea></div>
+      <div class="err2" id="eerr"></div>
+      <div class="foot"><span class="sp"></span><button onclick="$('#pe').hidden=true">取消</button><button class="primary" onclick="saveProfile()">保存</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- 头像编辑器 -->
+<div class="ov" id="ae" hidden style="z-index:10">
+  <div class="sheet ae">
+    <div class="body" style="padding-top:18px">
+      <h3 style="margin-top:0">更换头像</h3>
+      <div class="tabs"><button id="tabImg" class="on" onclick="aeTab('img')">图片</button><button id="tabTxt" onclick="aeTab('txt')">文字 / 表情</button></div>
+      <div id="aeImg" style="display:flex;flex-direction:column;gap:12px">
+        <div class="stage" id="stage"><canvas id="cv" width="600" height="600"></canvas><div class="hint" id="hint">点击选择图片<br>也可以拖进来或粘贴</div></div>
+        <div class="zr">
+          <button class="ib" onclick="aeRotate()" title="旋转 90°"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg></button>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="M8 11h6M21 21l-5-5"/></svg>
+          <input type="range" id="zoom" min="1" max="4" step="0.01" value="1">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="M8 11h6M11 8v6M21 21l-5-5"/></svg>
+          <button class="ib" onclick="$('#aef').click()" title="换一张图片"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg></button>
+        </div>
+        <input type="file" id="aef" accept="image/*" hidden>
+      </div>
+      <div id="aeTxt" hidden style="display:flex;flex-direction:column;gap:12px">
+        <div class="fld"><label for="aet">一个表情或 1~2 个字（留空用昵称首字）</label><input id="aet" maxlength="4" placeholder="🐱"></div>
+        <div class="fld"><label>背景颜色</label><div class="sw" id="sw"></div></div>
+      </div>
+      <div class="prv"><div class="av" id="aep"></div><div class="av s2" id="aep2"></div></div>
+      <div class="err2" id="aeerr"></div>
+      <div class="foot"><button class="link2" onclick="aeReset()" title="恢复成默认头像">恢复默认</button><span class="sp"></span><button onclick="$('#ae').hidden=true">取消</button><button class="primary" onclick="aeApply()">使用</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- 设置（v0.8） -->
+<div class="ov" id="setv" hidden onclick="if(event.target===this)closeSettings()">
+  <div class="sheet setg">
+    <div class="body" style="padding-top:18px">
+      <div class="sh2"><h3>设置</h3><button class="ib2" onclick="closeSettings()" title="关闭"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+      <div class="srow" id="snotif">
+        <div class="si"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 1 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg></div>
+        <div class="stx"><b>消息通知</b><small id="snotifs"></small></div>
+        <button class="tgl" id="tnotif" type="button" role="switch" aria-checked="false" aria-label="消息通知" onclick="toggleNotify()"><i></i></button>
+      </div>
+      <div class="srow" id="sinst">
+        <div class="si"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="13" rx="2.5"/><path d="M8 21h8M12 7.5v6M9.5 11l2.5 2.5 2.5-2.5"/></svg></div>
+        <div class="stx"><b>安装 Hush</b><small id="sinsts"></small></div>
+        <button class="pill2" id="binst" type="button" onclick="installApp()">安装</button>
+      </div>
+      <div class="ios" id="ioshelp" hidden><ol><li>点浏览器的 <b>分享</b> 按钮 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M8 7l4-4 4 4"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg></li><li>往下滑，选择 <b>添加到主屏幕</b></li><li>回到主屏幕，点 Hush 图标打开</li></ol></div>
+      <button class="srow out" type="button" onclick="closeSettings();logout()">退出登录</button>
+      <div class="ver">Hush v__APP_VERSION__</div>
+    </div>
+  </div>
+</div>
+
+<!-- 文件仓 -->
+<div class="scrim" id="scrim" hidden onclick="closeDrawers()"></div>
+<div class="drawer" id="vd" aria-label="文件仓">
+  <div class="dh"><h3>文件仓</h3><small id="vtot"></small><button class="ib2" onclick="closeDrawers()" title="关闭"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+  <div class="dc">
+    <div class="chips" id="vcat"><button data-c="" class="on">全部</button><button data-c="image">图片</button><button data-c="doc">文档</button><button data-c="media">音视频</button><button data-c="other">其他</button></div>
+    <div class="srch"><input id="vq" placeholder="搜索文件名" autocomplete="off"><select id="vsort"><option value="time:desc">最新</option><option value="time:asc">最早</option><option value="size:desc">最大</option><option value="size:asc">最小</option></select></div>
+    <div class="chips" id="vfocus" hidden><button class="on" onclick="vaultFocus(null)">只看这个文件 ✕</button></div>
+  </div>
+  <div class="dl" id="vl"></div>
+</div>
+<!-- 搜索聊天记录 -->
+<div class="drawer" id="sd" aria-label="搜索聊天记录">
+  <div class="dh"><h3>搜索聊天记录</h3><button class="ib2" onclick="closeDrawers()" title="关闭"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+  <div class="dc"><div class="srch"><input id="sq" placeholder="输入关键词，也能搜文件名" autocomplete="off"></div></div>
+  <div class="dl" id="sl"><div class="empty2">输入关键词开始搜索</div></div>
+</div>
+<!-- 文件预览 -->
+<div class="pw" id="pvw" hidden>
+  <div class="ph"><b id="pwn"></b><small id="pwm"></small>
+    <button class="ib" id="pwdl" title="下载"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg></button>
+    <button class="ib" onclick="closePreview()" title="关闭"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+  </div>
+  <div class="pb" id="pwb"></div>
+</div>
+
+<!-- 直播观看窗口 -->
+<div class="vw" id="vw" hidden>
+  <div class="box" id="vwbox">
+    <div class="top"><div class="av s live" id="vwav"></div><b id="vwn"></b>
+      <button class="ib" onclick="vwFull()" title="全屏"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
+      <button class="ib" onclick="closeViewer()" title="关闭"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+    </div>
+    <video id="vwv" autoplay playsinline></video>
+    <div class="msg" id="vwmsg"></div>
+    <div class="ctl">
+      <button class="ib" id="vwmute" onclick="vwMute()" title="静音"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4z"/><path id="vwwave" d="M15.5 8.5a5 5 0 0 1 0 7M19 5a10 10 0 0 1 0 14"/></svg></button>
+      <input type="range" id="vwvol" min="0" max="1" step="0.01" value="1" title="音量">
+    </div>
+  </div>
+</div>
+
+<div class="ov" id="ring" hidden>
+  <div class="pc">
+    <div class="me"><div class="av" id="rav"></div><div><b id="rnick"></b><br><small>邀请你语音通话</small></div></div>
+    <div class="row"><button class="primary" onclick="answer(true)">接听</button><button class="red" onclick="answer(false)">拒绝</button></div>
+  </div>
+</div>
+
+<button class="primary" id="snd" hidden onclick="unlockAudio()">🔊 点击开启声音</button>
+<div id="aud" hidden></div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+const $ = s => document.querySelector(s);
+let socket, me, eAv = { avatar: '', color: '' };
+const liveSet = new Set();   // 正在直播的用户名
+const people = {};   // 用户名 -> 资料
+// 头像：图片 / 表情 / 昵称首字，全部用 DOM 接口生成，不拼 HTML
+function avatar(el, p, noLive) {
+  el.textContent = ''; el.style.background = p.color || '';
+  if (!noLive) { el.dataset.lu = p.name; el.classList.toggle('live', liveSet.has(p.name)); }
+  if (p.avatar && p.avatar.startsWith('data:image/')) { const i = document.createElement('img'); i.src = p.avatar; i.alt = ''; el.append(i); }
+  else el.textContent = p.avatar || [...(p.nick || p.name)][0]?.toUpperCase() || '?';
+}
+function remember(p) {
+  people[p.name] = p;
+  document.querySelectorAll('[data-u]').forEach(el => {
+    if (el.dataset.u !== p.name) return;
+    if (el.classList.contains('av')) avatar(el, p); else el.textContent = p.nick;
+  });
+}
+// 点头像：对方在直播就直接打开观看，否则看资料卡
+const avClick = name => (liveSet.has(name) && me && name !== me.name) ? watch(name) : viewProfile(name);
+async function viewProfile(name) {
+  const r = await fetch('/api/profile/' + encodeURIComponent(name), { headers: hdr() });
+  if (!r.ok) return;
+  const p = await r.json();
+  people[p.name] = { ...people[p.name], ...p };
+  avatar($('#pav'), p); $('#pnick').textContent = p.nick; $('#pname').textContent = '@' + p.name; $('#plv').textContent = 'Lv.' + p.level;
+  $('#pvs').style.setProperty('--pc', p.color || '');
+  $('#pbio').textContent = p.bio || '这个人很懒，什么都没写。'; $('#pbio').classList.toggle('empty', !p.bio);
+  const self = p.name === me.name;
+  $('#pcall').hidden = self;
+  $('#pcall').onclick = () => { $('#pv').hidden = true; startCall(p.name); };
+  $('#pwatch').hidden = self || !liveSet.has(p.name);
+  $('#pwatch').dataset.u = p.name;
+  $('#pwatch').onclick = () => { $('#pv').hidden = true; watch(p.name); };
+  $('#pv').hidden = false;
+}
+function preview() {
+  avatar($('#eav'), { name: me.name, nick: $('#enick').value || me.name, color: eAv.color, avatar: eAv.avatar }, true);
+  $('#pes').style.setProperty('--pc', eAv.color || '');
+  $('#enc').textContent = [...$('#enick').value].length + '/16'; $('#ebc').textContent = [...$('#ebio').value].length + '/60';
+}
+function editProfile() {
+  closeDrawers();
+  eAv = { avatar: me.avatar || '', color: me.color || '' };
+  $('#enick').value = me.nick; $('#ebio').value = me.bio; $('#eerr').textContent = '';
+  preview(); $('#pe').hidden = false;
+}
+async function saveProfile() {
+  const r = await fetch('/api/profile', {
+    method: 'PUT', headers: { ...hdr(), 'Content-Type': 'application/json' },
+    body: JSON.stringify({ nick: $('#enick').value, bio: $('#ebio').value, color: eAv.color, avatar: eAv.avatar })
+  });
+  const d = await r.json().catch(() => ({ error: '保存失败（图片可能太大）' }));
+  if (!r.ok) { $('#eerr').textContent = d.error; return; }
+  $('#pe').hidden = true;
+}
+const show = v => { $('#auth').hidden = v !== 'auth'; $('#app').hidden = v !== 'app'; };
+
+async function auth(kind) {
+  const r = await fetch('/api/' + kind, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name: $('#name').value, password: $('#pw').value, invite: $('#inv').value })
+  });
+  const d = await r.json();
+  if (!r.ok) { $('#err').textContent = d.error; return; }
+  localStorage.token = d.token; $('#pw').value = ''; $('#err').textContent = '';
+  start();
+}
+
+function start() {
+  if (!localStorage.token) return show('auth');
+  socket = io({ auth: cb => cb({ token: localStorage.token, since: lastId && !windowMode ? lastId : 0 }) });
+  netInit();
+  socket.on('connect_error', e => {
+    if (e.message === 'auth') { localStorage.removeItem('token'); socket.close(); show('auth'); }
+  });
+  socket.on('me', u => {
+    me = u;
+    $('#mn').textContent = u.nick; avatar($('#av'), u); avatar($('#mav'), u); people[u.name] = u;
+    $('#ml').textContent = 'Lv.' + u.level;
+    $('#bar').style.width = Math.min(100, (u.xp - u.from) / (u.to - u.from) * 100) + '%';
+    $('#xp').textContent = u.xp + ' / ' + u.to + ' 经验';
+    if (!u.admin) $('#adm').hidden = true;
+    else if ($('#adm').hidden) { $('#adm').hidden = false; loadInvites(); }
+  });
+  socket.on('history', l => { windowMode = false; $('#latest').hidden = true; renderList(l, l.length >= 50); const box = $('#msgs'); box.scrollTop = box.scrollHeight; });
+  socket.on('resync', ({ messages, recalled }) => { messages.forEach(m => add(m, true)); (recalled || []).forEach(applyRecall); });
+  socket.on('msg', onIncoming);
+  socket.on('recall', applyRecall);
+  socket.on('recall:error', ({ error }) => toast(error));
+  socket.once('me', () => { vaultCheck(); loadUsers(); deepLink(); setTimeout(maybeTip, 4000); });
+  socket.on('ver', v => { if (v !== APP_VERSION) updateReady(); });
+  socket.on('profile', remember);
+  socket.on('file:deleted', markDeleted);
+  fetch('/api/config', { headers: hdr() }).then(r => r.ok && r.json()).then(c => { if (c) maxFile = c.maxFile; }).catch(() => {});
+  voice();
+  liveInit();
+  socket.on('online', l => {
+    $('#on').innerHTML = ''; $('#onc').textContent = l.length + ' 人在线';
+    l.forEach(p => {
+      people[p.name] = p;
+      const li = document.createElement('li'), a = document.createElement('div'), n = document.createElement('span');
+      a.className = 'av s'; a.dataset.u = p.name; avatar(a, p); n.dataset.u = p.name; n.textContent = p.nick;
+      a.onclick = e => { e.stopPropagation(); avClick(p.name); };
+      li.title = '@' + p.name; li.onclick = () => viewProfile(p.name); li.append(a, n); $('#on').append(li);
+    });
+  });
+  show('app');
+}
+
+// ================= 消息渲染（v0.7：系统行 / 回复 / 撤回 / 提及） =================
+let lastId = 0;          // 已收到的最新消息 id（断线重连后据此补齐）
+let windowMode = false;  // 正在查看搜索跳转的历史片段（不是最新）
+let replyTo = null;      // 正在回复的消息 { id, nick, text }
+const RECALL_MS = 120000;
+const tmFmt = ts => { const d = new Date(ts), t = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }); return d.toDateString() === new Date().toDateString() ? t : (d.getMonth() + 1) + '/' + d.getDate() + ' ' + t; };
+const el = (tag, cls, txt) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; };
+function snipText(r) { return r.recalled ? '原消息已撤回' : r.gone ? '原消息不存在' : r.file ? '[文件] ' + r.file : r.text; }
+function richText(box, text, mentions) {   // 只用 textContent 拼 DOM，不解析 HTML
+  const set = new Set(mentions || []); let i = 0;
+  text.replace(/@([^\s@]{1,16})/g, (all, name, at) => {
+    if (!set.has(name)) return all;
+    if (at > i) box.append(text.slice(i, at));
+    const sp = el('span', 'at', '@' + (people[name]?.nick || name)); sp.title = '@' + name; sp.dataset.at = name; box.append(sp);
+    i = at + all.length; return all;
+  });
+  if (i < text.length) box.append(text.slice(i));
+}
+function sysLine(m) {
+  const d = el('div', 'sys'); d.dataset.id = m.id; d.dataset.u = m.name;
+  const who = m.nick || m.name;
+  if (m.recalled) d.textContent = m.recalledBy ? m.recalledBy + ' 撤回了 ' + who + ' 的一条消息' : who + ' 撤回了一条消息';
+  else {
+    d.dataset.fid = m.file.id; d.append(who + ' 发送了 ');
+    if (m.file.deleted) d.append(el('s', '', m.file.name), '（已删除）');
+    else { const a = el('a', '', m.file.name); a.title = '在文件仓中查看'; a.onclick = () => openVault(m.file.id); d.append(a); }
+  }
+  d.append(el('span', 'tm2', tmFmt(m.ts)));
+  return d;
+}
+function renderMsg(m) {
+  people[m.name] = Object.assign(people[m.name] || {}, { name: m.name, nick: m.nick, avatar: m.avatar, color: m.color, level: m.level });
+  if (m.recalled || m.file) return sysLine(m);
+  const d = el('div', 'm' + (me && m.name === me.name ? ' own' : '')); d.dataset.id = m.id; d.dataset.ts = m.ts;
+  if (me && m.mentions && m.mentions.includes(me.name) && m.name !== me.name) d.classList.add('hit');
+  const a = el('div', 'av s'); a.dataset.u = m.name; avatar(a, m); a.style.cursor = 'pointer'; a.onclick = () => avClick(m.name);
+  const c = el('div', 'c');
+  const h = el('div', 'h');
+  const n = el('span', 'nm', m.nick || m.name); n.dataset.u = m.name; n.title = '@' + m.name; n.onclick = () => viewProfile(m.name);
+  h.append(n, '  Lv.' + m.level + '  ' + tmFmt(m.ts));
+  c.append(h);
+  if (m.reply) {
+    const q = el('button', 'qt'); q.type = 'button'; q.dataset.ref = m.reply.id;
+    if (!m.reply.gone) q.append(el('b', '', m.reply.nick || m.reply.name));
+    q.append(snipText(m.reply)); q.title = '跳到原消息'; q.onclick = () => jumpTo(m.reply.id);
+    c.append(q);
+  }
+  const b = el('div', 'b'); richText(b, m.text, m.mentions); c.append(b);
+  const ma = el('div', 'ma');
+  const rp = el('button', '', '回复'); rp.type = 'button'; rp.onclick = () => startReply(m); ma.append(rp);
+  if (me && (me.admin || (m.name === me.name && Date.now() - m.ts < RECALL_MS))) {
+    const rc = el('button', '', '撤回'); rc.type = 'button'; rc.dataset.recall = m.id;
+    rc.onclick = () => { if (confirm(m.name === me.name ? '撤回这条消息？' : '以管理员身份撤回这条消息？')) socket.emit('recall', m.id); };
+    ma.append(rc);
+  }
+  c.append(ma);
+  d.append(a, c);
+  b.onclick = () => { const on = !d.classList.contains('act'); document.querySelectorAll('.m.act').forEach(x => x.classList.remove('act')); if (on) d.classList.add('act'); };   // 手机：点一下消息显示 回复/撤回
+  return d;
+}
+function add(m, quiet) {
+  if (m.id > lastId) lastId = m.id;
+  if (m.file && !m.recalled && me && m.name !== me.name) vaultNew();
+  if (windowMode) { $('#latest').textContent = '有新消息 · 回到最新'; return; }
+  const box = $('#msgs');
+  if (box.querySelector('[data-id="' + m.id + '"]')) return;
+  const near = box.scrollHeight - box.scrollTop - box.clientHeight < 160 || (me && m.name === me.name);
+  box.append(renderMsg(m));
+  if (near || quiet) box.scrollTop = box.scrollHeight;
+}
+function onIncoming(m) {
+  add(m);
+  bump(m); notify(m);   // v0.8：未读角标 + 系统通知（页面在后台时）
+}
+function applyRecall(m) {
+  document.querySelectorAll('[data-id="' + m.id + '"]').forEach(e => e.replaceWith(sysLine(m)));
+  document.querySelectorAll('.qt[data-ref="' + m.id + '"]').forEach(q => { q.textContent = ''; q.append(el('b', '', m.nick || m.name), '原消息已撤回'); });
+  if (replyTo && replyTo.id === m.id) cancelReply();
+}
+function renderList(list, more) {
+  const box = $('#msgs'); box.innerHTML = '';
+  if (more) box.append(moreBtn());
+  list.forEach(m => { if (m.id > lastId && !windowMode) lastId = m.id; box.append(renderMsg(m)); });
+}
+function moreBtn() {
+  const b = el('button', 'more', '查看更早的消息'); b.id = 'more'; b.type = 'button';
+  b.onclick = async () => {
+    const first = $('#msgs').querySelector('[data-id]'); if (!first) return;
+    b.disabled = true; b.textContent = '加载中…';
+    const r = await fetch('/api/messages?limit=50&before=' + first.dataset.id, { headers: hdr() }).then(r => r.json()).catch(() => null);
+    b.remove();
+    if (!r) return;
+    const list = r.messages || r, box = $('#msgs'), h0 = box.scrollHeight;
+    const frag = document.createDocumentFragment();
+    if (list.length >= 50) frag.append(moreBtn());
+    list.forEach(m => frag.append(renderMsg(m)));
+    box.prepend(frag); box.scrollTop += box.scrollHeight - h0;
+  };
+  return b;
+}
+function flash(e) { e.classList.remove('flash'); void e.offsetWidth; e.classList.add('flash'); e.scrollIntoView({ block: 'center', behavior: 'smooth' }); }
+async function jumpTo(id) {
+  const ex = $('#msgs').querySelector('[data-id="' + id + '"]');
+  if (ex) return flash(ex);
+  const r = await fetch('/api/messages?limit=60&around=' + id, { headers: hdr() }).then(r => r.ok ? r.json() : null).catch(() => null);
+  const list = r && (r.messages || r);
+  if (!list || !list.length) return toast('这条消息已经找不到了');
+  windowMode = true; renderList(list, true);
+  $('#latest').textContent = '回到最新消息'; $('#latest').hidden = false;
+  const t = $('#msgs').querySelector('[data-id="' + id + '"]'); if (t) flash(t);
+}
+async function backToLatest() {
+  const r = await fetch('/api/messages?limit=50', { headers: hdr() }).then(r => r.ok ? r.json() : null).catch(() => null);
+  if (!r) return toast('加载失败，请稍后再试');
+  const list = r.messages || r;
+  windowMode = false; $('#latest').hidden = true; renderList(list, list.length >= 50);
+  const box = $('#msgs'); box.scrollTop = box.scrollHeight;
+}
+function startReply(m) {
+  replyTo = { id: m.id, nick: m.nick || m.name, text: m.text };
+  $('#rbn').textContent = '回复 ' + replyTo.nick; $('#rbt').textContent = m.text.slice(0, 80); $('#rb').hidden = false; $('#t').focus();
+}
+function cancelReply() { replyTo = null; $('#rb').hidden = true; }
+let toastT;
+function toast(t) { document.querySelector('.toast')?.remove(); const d = el('div', 'toast', t); document.body.append(d); clearTimeout(toastT); toastT = setTimeout(() => d.remove(), 2600); }
+
+// ================= 文件传输（v0.5） =================
+let maxFile = 50 * 1024 * 1024;
+const blobs = new Map();   // 文件 id -> 已下载的 blob URL
+const human = n => n < 1024 ? n + ' B' : n < 1048576 ? (n / 1024).toFixed(1) + ' KB' : (n / 1048576).toFixed(1) + ' MB';
+async function getBlob(id) {
+  if (blobs.has(id)) return blobs.get(id);
+  const r = await fetch('/api/files/' + id, { headers: hdr() });
+  if (!r.ok) throw new Error((await r.json().catch(() => ({}))).error || '下载失败');
+  const u = URL.createObjectURL(await r.blob()); blobs.set(id, u); return u;
+}
+function markDeleted({ id }) {
+  if (blobs.has(id)) { URL.revokeObjectURL(blobs.get(id)); blobs.delete(id); }
+  document.querySelectorAll('.sys[data-fid="' + id + '"] a').forEach(a => { const x = el('s', '', a.textContent); a.replaceWith(x, '（已删除）'); });
+  document.querySelectorAll('.fr[data-fid="' + id + '"]').forEach(r => r.remove());
+  if (pv && pv.f.id === id) closePreview();
+}
+async function download(f) {
+  try { const a = document.createElement('a'); a.href = await getBlob(f.id); a.download = f.name; document.body.append(a); a.click(); a.remove(); }
+  catch (e) { toast(e.message); }
+}
+function upload(file) {
+  const row = document.createElement('div'); row.className = 'up';
+  const lbl = document.createElement('span'); lbl.textContent = file.name;
+  const bar = document.createElement('div'); bar.className = 'bar'; const i = document.createElement('i'); bar.append(i);
+  const pct = document.createElement('span'); pct.textContent = '0%';
+  row.append(lbl, bar, pct); $('#ups').append(row);
+  const fail = msg => { row.classList.add('err'); pct.textContent = msg; setTimeout(() => row.remove(), 6000); };
+  if (!file.size) return fail('不能上传空文件');
+  if (file.size > maxFile) return fail('文件太大，最大 ' + Math.round(maxFile / 1048576) + 'MB');
+  const x = new XMLHttpRequest();
+  x.open('POST', '/api/files');
+  x.setRequestHeader('Authorization', 'Bearer ' + localStorage.token);
+  x.setRequestHeader('Content-Type', 'application/octet-stream');
+  x.setRequestHeader('X-File-Name', encodeURIComponent(file.name));
+  x.upload.onprogress = e => { if (e.lengthComputable) { const p = Math.round(e.loaded / e.total * 100); i.style.width = p + '%'; pct.textContent = p + '%'; } };
+  x.onload = () => {
+    if (x.status === 200) return row.remove();
+    let m = '上传失败'; try { m = JSON.parse(x.responseText).error || m; } catch (_) { if (x.status === 413) m = '文件太大，超过了隧道或服务器的限制'; }
+    fail(m);
+  };
+  x.onerror = () => fail('网络错误，上传失败');
+  x.send(file);
+}
+const sendFiles = list => [...list].forEach(upload);
+$('#ff').onchange = e => { sendFiles(e.target.files); e.target.value = ''; };
+$('#t').addEventListener('paste', e => { const fl = e.clipboardData?.files; if (fl && fl.length) { e.preventDefault(); sendFiles(fl); } });
+{
+  const sec = $('section'); let depth = 0;
+  sec.addEventListener('dragenter', e => { if (e.dataTransfer.types.includes('Files')) { e.preventDefault(); depth++; sec.classList.add('drop'); } });
+  sec.addEventListener('dragover', e => { if (e.dataTransfer.types.includes('Files')) e.preventDefault(); });
+  sec.addEventListener('dragleave', () => { if (--depth <= 0) { depth = 0; sec.classList.remove('drop'); } });
+  sec.addEventListener('drop', e => { e.preventDefault(); depth = 0; sec.classList.remove('drop'); if (e.dataTransfer.files.length) sendFiles(e.dataTransfer.files); });
+}
+
+$('#f').onsubmit = e => {
+  e.preventDefault(); mpHide();
+  const v = $('#t').value.trim(); if (!v) return;
+  sentOnce = true; setTimeout(maybeTip, 1500);   // v0.8：发过消息后，才礼貌地提示一次“开启通知”
+  socket.emit('msg', replyTo ? { text: v, reply: replyTo.id } : v);
+  $('#t').value = ''; cancelReply();
+  if (windowMode) backToLatest();
+};
+['#enick', '#ebio'].forEach(s => $(s).oninput = preview);
+$('#eavb').onclick = () => openAE();
+$('#eavb').onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openAE(); } };
+
+// ================= 头像编辑器（v0.6）：拖动 / 缩放 / 旋转，圆形裁剪，浏览器里压缩 =================
+const AE = { img: null, rot: 0, s: 1, min: 1, ox: 0, oy: 0, tab: 'img', txt: '', color: '' };
+const CV = 600, D = 480;   // 画布 600×600（显示 300px，2 倍清晰），裁剪圆直径 480
+const OUT = 256, AV_MAX = 190 * 1024;
+const SWATCH = ['#0f766e', '#2563eb', '#7c3aed', '#db2777', '#e11d48', '#ea580c', '#ca8a04', '#16a34a', '#475569', '#111827'];
+function openAE() {
+  AE.tab = eAv.avatar.startsWith('data:') || !eAv.avatar ? 'img' : 'txt';
+  AE.txt = eAv.avatar.startsWith('data:') ? '' : eAv.avatar; AE.color = eAv.color || '';
+  AE.img = null; $('#aeerr').textContent = '';
+  if (eAv.avatar.startsWith('data:')) loadImg(eAv.avatar);   // 已有图片头像：可以继续调整
+  $('#aet').value = AE.txt; buildSwatch(); aeTab(AE.tab); drawAE(); $('#ae').hidden = false;
+}
+function aeTab(t) {
+  AE.tab = t; $('#tabImg').classList.toggle('on', t === 'img'); $('#tabTxt').classList.toggle('on', t === 'txt');
+  $('#aeImg').hidden = t !== 'img'; $('#aeTxt').hidden = t !== 'txt'; aePreview();
+}
+function buildSwatch() {
+  const w = $('#sw'); w.innerHTML = '';
+  SWATCH.forEach(c => { const b = document.createElement('button'); b.style.background = c; b.title = c; b.className = AE.color === c ? 'on' : ''; b.onclick = () => { AE.color = c; buildSwatch(); aePreview(); }; w.append(b); });
+  const ci = document.createElement('input'); ci.type = 'color'; ci.title = '自定义颜色'; ci.value = /^#[0-9a-f]{6}$/i.test(AE.color) ? AE.color : '#0f766e';
+  ci.oninput = () => { AE.color = ci.value; aePreview(); }; w.append(ci);
+}
+function loadImg(src) {
+  const i = new Image();
+  i.onload = () => { AE.img = i; AE.rot = 0; fitAE(); $('#aeerr').textContent = ''; aeTab('img'); };
+  i.onerror = () => { $('#aeerr').textContent = '这张图片打不开，换一张试试'; };
+  i.src = src;
+}
+function pickFile(f) {
+  if (!f) return;
+  if (!/^image\//.test(f.type)) return $('#aeerr').textContent = '请选择图片文件';
+  if (f.size > 20 * 1048576) return $('#aeerr').textContent = '图片太大（超过 20MB）';
+  const u = URL.createObjectURL(f); loadImg(u); setTimeout(() => URL.revokeObjectURL(u), 60000);
+}
+const dims = () => { const w = AE.img.naturalWidth, h = AE.img.naturalHeight; return AE.rot % 180 ? [h, w] : [w, h]; };
+function fitAE() { const [w, h] = dims(); AE.min = D / Math.min(w, h); AE.s = AE.min; AE.ox = AE.oy = 0; $('#zoom').value = 1; drawAE(); }
+function clampAE() {
+  const [w, h] = dims();
+  AE.s = Math.min(Math.max(AE.s, AE.min), AE.min * 4);
+  const mx = Math.max(0, (w * AE.s - D) / 2), my = Math.max(0, (h * AE.s - D) / 2);
+  AE.ox = Math.min(mx, Math.max(-mx, AE.ox)); AE.oy = Math.min(my, Math.max(-my, AE.oy));
+}
+function paintImg(ctx, size, k) {   // k：从编辑坐标到输出坐标的比例
+  ctx.save(); ctx.translate(size / 2 + AE.ox * k, size / 2 + AE.oy * k); ctx.rotate(AE.rot * Math.PI / 180);
+  const w = AE.img.naturalWidth * AE.s * k, h = AE.img.naturalHeight * AE.s * k;
+  ctx.drawImage(AE.img, -w / 2, -h / 2, w, h); ctx.restore();
+}
+function drawAE() {
+  const c = $('#cv'), ctx = c.getContext('2d');
+  ctx.clearRect(0, 0, CV, CV);
+  $('#hint').hidden = !!AE.img;
+  if (AE.img) {
+    clampAE(); ctx.imageSmoothingQuality = 'high'; paintImg(ctx, CV, 1);
+    ctx.save(); ctx.fillStyle = 'rgba(8,10,14,.55)'; ctx.beginPath(); ctx.rect(0, 0, CV, CV); ctx.arc(CV / 2, CV / 2, D / 2, 0, Math.PI * 2, true); ctx.fill('evenodd');
+    ctx.strokeStyle = 'rgba(255,255,255,.9)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(CV / 2, CV / 2, D / 2, 0, Math.PI * 2); ctx.stroke(); ctx.restore();
+  }
+  aePreview();
+}
+function cropOut() {   // 输出 256×256 方形图，优先 webp，不支持就用 jpeg；超过上限自动降质量
+  const c = document.createElement('canvas'); c.width = c.height = OUT;
+  const ctx = c.getContext('2d'); ctx.imageSmoothingQuality = 'high';
+  ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, OUT, OUT);   // 透明背景垫白，避免 jpeg 变黑
+  paintImg(ctx, OUT, OUT / D);
+  for (const q of [0.9, 0.82, 0.72, 0.6, 0.45]) {
+    let u = c.toDataURL('image/webp', q);
+    if (!u.startsWith('data:image/webp')) u = c.toDataURL('image/jpeg', q);
+    if (u.length <= AV_MAX) return u;
+  }
+  return null;
+}
+let prvTimer = 0;
+function aePreview() {
+  clearTimeout(prvTimer);
+  prvTimer = setTimeout(() => {
+    const p = { name: me.name, nick: $('#enick').value || me.name, color: AE.color, avatar: '' };
+    if (AE.tab === 'img' && AE.img) p.avatar = cropOut() || '';
+    else if (AE.tab === 'txt') p.avatar = $('#aet').value.trim();
+    avatar($('#aep'), p, true); avatar($('#aep2'), p, true);
+  }, 40);
+}
+function aeRotate() { if (!AE.img) return; AE.rot = (AE.rot + 90) % 360; const z = +$('#zoom').value; fitAE(); AE.s = AE.min * z; $('#zoom').value = z; drawAE(); }
+function aeReset() { eAv = { avatar: '', color: '' }; preview(); $('#ae').hidden = true; }
+function aeApply() {
+  if (AE.tab === 'img') {
+    if (!AE.img) return $('#aeerr').textContent = '先选一张图片，或者切到“文字 / 表情”';
+    const u = cropOut(); if (!u) return $('#aeerr').textContent = '图片压缩后仍然太大，换一张试试';
+    eAv = { avatar: u, color: AE.color || eAv.color };
+  } else {
+    const t = $('#aet').value.trim();
+    if (t && ([...t].length > 4 || /[\s<>"'&\\/]/.test(t))) return $('#aeerr').textContent = '只能是一个表情或 1~2 个字';
+    eAv = { avatar: t, color: AE.color };
+  }
+  preview(); $('#ae').hidden = true;
+}
+$('#aet').oninput = aePreview;
+$('#aef').onchange = e => { pickFile(e.target.files[0]); e.target.value = ''; };
+$('#zoom').oninput = () => { if (!AE.img) return; AE.s = AE.min * +$('#zoom').value; drawAE(); };
+{
+  const st = $('#stage'), pts = new Map(); let last = null, pinch = null, moved = false;
+  const scale = () => CV / st.getBoundingClientRect().width;   // 屏幕像素 -> 画布像素
+  const setZoom = s => { AE.s = s; clampAE(); $('#zoom').value = (AE.s / AE.min).toFixed(2); drawAE(); };
+  st.addEventListener('pointerdown', e => { st.setPointerCapture(e.pointerId); pts.set(e.pointerId, [e.clientX, e.clientY]); moved = false; last = [e.clientX, e.clientY]; if (pts.size === 2) { const [a, b] = [...pts.values()]; pinch = { d: Math.hypot(a[0] - b[0], a[1] - b[1]), s: AE.s }; } st.classList.add('drag'); });
+  st.addEventListener('pointermove', e => {
+    if (!pts.has(e.pointerId) || !AE.img) return;
+    pts.set(e.pointerId, [e.clientX, e.clientY]);
+    if (pts.size === 2 && pinch) { const [a, b] = [...pts.values()]; setZoom(pinch.s * Math.hypot(a[0] - b[0], a[1] - b[1]) / pinch.d); moved = true; return; }
+    const k = scale(), dx = (e.clientX - last[0]) * k, dy = (e.clientY - last[1]) * k;
+    if (Math.abs(dx) + Math.abs(dy) > 2) moved = true;
+    AE.ox += dx; AE.oy += dy; last = [e.clientX, e.clientY]; drawAE();
+  });
+  const up = e => { pts.delete(e.pointerId); if (pts.size < 2) pinch = null; if (pts.size === 1) last = [...pts.values()][0]; if (!pts.size) { st.classList.remove('drag'); if (!moved && !AE.img) $('#aef').click(); } };
+  st.addEventListener('pointerup', up); st.addEventListener('pointercancel', up);
+  st.addEventListener('wheel', e => { if (!AE.img) return; e.preventDefault(); setZoom(AE.s * Math.exp(-e.deltaY * 0.0015)); }, { passive: false });
+  st.addEventListener('dragover', e => { e.preventDefault(); st.classList.add('over'); });
+  st.addEventListener('dragleave', () => st.classList.remove('over'));
+  st.addEventListener('drop', e => { e.preventDefault(); st.classList.remove('over'); pickFile(e.dataTransfer.files[0]); });
+  document.addEventListener('paste', e => { if ($('#ae').hidden) return; const f = [...(e.clipboardData?.files || [])].find(f => /^image\//.test(f.type)); if (f) { e.preventDefault(); pickFile(f); } });
+}
+$('#pw').onkeydown = e => { if (e.key === 'Enter') auth('login'); };
+const hdr = () => ({ Authorization: 'Bearer ' + localStorage.token });
+async function loadInvites() {
+  const r = await fetch('/api/invites', { headers: hdr() });
+  if (!r.ok) return;
+  $('#invs').innerHTML = '';
+  (await r.json()).forEach(i => {
+    const li = document.createElement('li'), t = document.createElement('span');
+    const day = ms => new Date(ms).toLocaleString([], { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+    t.textContent = i.code + '  ' + (i.status === 'used' ? '已被 ' + i.used_by + ' 使用' : i.status === 'expired' ? '已过期' : '未使用');
+    t.title = '创建：' + day(i.created_at) + '\n到期：' + day(i.expires_at);
+    li.append(t);
+    if (i.status !== 'used') {
+      const x = document.createElement('button'); x.className = 'x'; x.textContent = '删除'; x.title = '作废这个邀请码';
+      x.onclick = () => delInvite(i.code); li.append(x);
+    }
+    $('#invs').append(li);
+  });
+}
+async function invite() {
+  const r = await fetch('/api/invites', { method: 'POST', headers: hdr() });
+  const d = await r.json();
+  $('#code').textContent = r.ok ? d.code : d.error;
+  if (r.ok) { navigator.clipboard?.writeText(d.code).catch(() => {}); loadInvites(); }
+}
+async function delInvite(code) {
+  if (!confirm('确定作废邀请码 ' + code + '？作废后无法再用来注册。')) return;
+  const r = await fetch('/api/invites/' + encodeURIComponent(code), { method: 'DELETE', headers: hdr() });
+  if (!r.ok) alert((await r.json()).error);
+  if ($('#code').textContent === code) $('#code').textContent = '';
+  loadInvites();
+}
+function logout() { endLocal(); leaveRoomLocal(); stopLive(); if (viewer) closeViewer(); localStorage.removeItem('token'); socket.close(); hideTip(); setUnread(0); show('auth'); }
+
+// ================= 语音通话（WebRTC，v0.4） =================
+let ice = null, local = null, call = null, rpcs = new Map(), muted = false, roomInfo = { max: 6, members: [] };
+const REASON = {
+  offline: '对方不在线', busy: '对方正在通话中', selfbusy: '你已经在通话或语音房里了', self: '不能给自己打电话',
+  declined: '对方拒绝了通话', timeout: '无人接听', hangup: '通话已结束', elsewhere: '已在其他窗口接听', mic: '无法使用麦克风'
+};
+const nick = n => (people[n] && people[n].nick) || n;
+async function getIce() {
+  if (ice) return ice;
+  const r = await fetch('/api/ice', { headers: hdr() });
+  ice = r.ok ? (await r.json()).iceServers : [];
+  return ice;
+}
+async function mic() {
+  if (local) return local;
+  if (!navigator.mediaDevices?.getUserMedia) throw new Error('需要通过 https 地址或 localhost 打开才能使用麦克风');
+  local = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } });
+  local.getAudioTracks().forEach(t => t.enabled = !muted);
+  meter('@me', local); micUi();
+  return local;
+}
+// ----- 声音播放 + 音量检测（v0.4.1） -----
+let actx = null;
+const meters = new Map();   // '@me' 或 用户名 -> { an, src, buf, lv, hold }
+function ctx() {
+  if (!actx) { const C = window.AudioContext || window.webkitAudioContext; if (C) actx = new C(); }
+  if (actx && actx.state === 'suspended') actx.resume().catch(() => {});
+  return actx;
+}
+function playAll() {
+  ctx();
+  $('#aud').querySelectorAll('audio').forEach(a => a.play().then(() => {}, () => { $('#snd').hidden = false; }));
+}
+function unlockAudio() { $('#snd').hidden = true; playAll(); }
+document.addEventListener('pointerdown', () => { if (actx && actx.state === 'suspended') actx.resume().catch(() => {}); }, true);
+function attachAudio(name, stream) {
+  let a = $('#aud').querySelector('audio[data-a="' + CSS.escape(name) + '"]');
+  if (!a) { a = document.createElement('audio'); a.autoplay = true; a.setAttribute('playsinline', ''); a.dataset.a = name; $('#aud').append(a); }
+  if (a.srcObject !== stream) a.srcObject = stream;
+  a.play().then(() => {}, () => { $('#snd').hidden = false; });
+  meter(name, stream);
+}
+function detachAudio(name) {
+  const a = $('#aud').querySelector('audio[data-a="' + CSS.escape(name) + '"]');
+  if (a) { a.srcObject = null; a.remove(); }
+  unmeter(name);
+  if (!$('#aud').querySelector('audio')) $('#snd').hidden = true;
+}
+function meter(key, stream) {
+  unmeter(key);
+  const c = ctx(); if (!c || !stream.getAudioTracks().length) return;
+  const src = c.createMediaStreamSource(stream), an = c.createAnalyser();
+  an.fftSize = 512; src.connect(an);   // 只分析，不接到扬声器（声音由 <audio> 播放）
+  meters.set(key, { an, src, buf: new Float32Array(an.fftSize), lv: 0, hold: 0 });
+  if (meters.size === 1) requestAnimationFrame(tick);
+}
+function unmeter(key) { const m = meters.get(key); if (m) { try { m.src.disconnect(); } catch (_) {} meters.delete(key); } paint(key, 0, false); }
+const TALK = 0.12;   // 超过这个音量算“正在说话”
+function tick(now) {
+  for (const [k, m] of meters) {
+    m.an.getFloatTimeDomainData(m.buf);
+    let sum = 0; for (const v of m.buf) sum += v * v;
+    const raw = Math.min(1, Math.sqrt(sum / m.buf.length) * 6);   // RMS 放大到 0~1
+    m.lv = raw > m.lv ? m.lv * 0.4 + raw * 0.6 : m.lv * 0.85;      // 快起慢落
+    if (k === '@me' && muted) m.lv = 0;
+    if (m.lv > TALK) m.hold = now + 350;                           // 停顿 350ms 内仍算在说话
+    paint(k, m.lv, now < m.hold);
+  }
+  if (meters.size) requestAnimationFrame(tick);
+}
+function paint(k, lv, talk) {
+  const name = k === '@me' ? (me && me.name) : k;
+  document.querySelectorAll('[data-vu]').forEach(el => {
+    if (el.dataset.vu !== name) return;
+    el.style.setProperty('--lv', lv.toFixed(2)); el.classList.toggle('talk', talk);
+  });
+  document.querySelectorAll('[data-tk]').forEach(el => { if (el.dataset.tk === name) el.textContent = talk ? '正在说话' : ''; });
+  if (k === '@me') document.querySelectorAll('[data-vubar="@me"]').forEach(el => el.style.width = Math.round(lv * 100) + '%');
+}
+function micUi() {
+  $('#mm').hidden = !local;
+  $('#mm').classList.toggle('off', muted);
+  $('#mms').textContent = muted ? '已静音' : '';
+}
+function releaseMic() {
+  if (!call && !rpcs.size && local && !$('#rj').dataset.in) { local.getTracks().forEach(t => t.stop()); local = null; unmeter('@me'); }
+  micUi();
+}
+function mkpc(name, ch) {
+  const pc = new RTCPeerConnection({ iceServers: ice });
+  pc.q = [];   // 远端描述到来前先攒着 ICE
+  local.getTracks().forEach(t => pc.addTrack(t, local));
+  pc.onicecandidate = e => e.candidate && socket.emit('rtc', { to: name, ch, data: { ice: e.candidate } });
+  pc.peer = name;
+  pc.ontrack = e => attachAudio(name, e.streams[0] || new MediaStream([e.track]));
+  const ICE_TXT = { checking: '正在连接…', disconnected: '连接不稳定，正在重连…', failed: '连接失败（可能需要 TURN 服务器）', closed: '' };
+  pc.oniceconnectionstatechange = () => {
+    const st = pc.iceConnectionState, t = ICE_TXT[st] || '';
+    if (ch === 'call' && call && call.pc === pc) { call.ice = t; callText(); }
+    if (ch === 'room') document.querySelectorAll('[data-st]').forEach(el => { if (el.dataset.st === name) el.textContent = t; });
+  };
+  return pc;
+}
+function closePc(pc) { if (!pc) return; detachAudio(pc.peer); pc.close(); }
+function callText() { if (call && call.state === 'on') status(call.ice || '与 ' + nick(call.peer) + ' 通话中'); }
+async function sendOffer(pc, name, ch) {
+  await pc.setLocalDescription(await pc.createOffer());
+  socket.emit('rtc', { to: name, ch, data: { sdp: pc.localDescription } });
+}
+async function onRtc({ from, ch, data }) {
+  if (ch === 'live-v' || ch === 'live-s') return onLiveRtc(from, ch, data);
+  let pc = ch === 'call' ? (call && call.peer === from ? call.pc : null) : rpcs.get(from);
+  if (!pc && ch === 'room' && $('#rj').dataset.in && data.sdp?.type === 'offer') { pc = mkpc(from, 'room'); rpcs.set(from, pc); }
+  if (!pc) return;
+  try {
+    if (data.sdp) {
+      await pc.setRemoteDescription(data.sdp);
+      for (const c of pc.q.splice(0)) await pc.addIceCandidate(c).catch(() => {});
+      if (data.sdp.type === 'offer') {
+        await pc.setLocalDescription(await pc.createAnswer());
+        socket.emit('rtc', { to: from, ch, data: { sdp: pc.localDescription } });
+      }
+    } else if (data.ice) {
+      if (pc.remoteDescription) await pc.addIceCandidate(data.ice).catch(() => {}); else pc.q.push(data.ice);
+    }
+  } catch (e) { console.warn('rtc', e); }
+}
+function status(t) {
+  $('#cbt').textContent = t; $('#cb').hidden = false;
+  if (me) { avatar($('#cbme'), me); $('#cbme').dataset.vu = me.name; $('#cbme').title = '我'; }
+  const peer = call && call.state === 'on' ? call.peer : null;
+  $('#cbpeer').hidden = !peer; $('#cbtk').dataset.tk = peer || '';
+  if (peer) { avatar($('#cbpeer'), people[peer] || { name: peer }); $('#cbpeer').dataset.vu = peer; $('#cbpeer').title = nick(peer); }
+  else $('#cbtk').textContent = '';
+}
+function bar() {
+  if (!call && !$('#rj').dataset.in) { $('#cb').hidden = true; return; }
+  if (call) return;
+  status('语音房（' + roomInfo.members.length + ' 人）'); $('#cbtm').textContent = '';
+}
+async function startCall(name) {
+  ctx();
+  if (call || $('#rj').dataset.in) return alert(REASON.selfbusy);
+  try { await getIce(); await mic(); } catch (e) { return alert(e.message || REASON.mic); }
+  call = { peer: name, state: 'out' };
+  status('正在呼叫 ' + nick(name) + '…'); $('#cbtm').textContent = '';
+  socket.emit('call:invite', name);
+}
+async function answer(ok) {
+  $('#ring').hidden = true; ctx();
+  if (!call || call.state !== 'in') return;
+  if (ok) {
+    try { await getIce(); await mic(); } catch (e) { alert(e.message || REASON.mic); ok = false; }
+  }
+  socket.emit('call:answer', ok);
+  if (!ok) endLocal();
+}
+function hangup() {
+  if (call) { socket.emit('call:hangup'); endLocal(); }
+  else if ($('#rj').dataset.in) roomToggle();
+}
+function endLocal(reason) {
+  if (!call) return;
+  clearInterval(call.timer); closePc(call.pc); call = null;
+  $('#ring').hidden = true; $('#cbtm').textContent = '';
+  if (reason && reason !== 'hangup') { status(REASON[reason] || '通话已结束'); setTimeout(bar, 2500); } else bar();
+  releaseMic();
+}
+function toggleMute() {
+  muted = !muted; $('#mute').textContent = muted ? '取消静音' : '静音'; micUi();
+  local && local.getAudioTracks().forEach(t => t.enabled = !muted);
+}
+async function roomToggle() {
+  ctx();
+  if ($('#rj').dataset.in) { socket.emit('room:leave'); leaveRoomLocal(); return; }
+  if (call) return alert('请先挂断当前通话');
+  try { await getIce(); await mic(); } catch (e) { return alert(e.message || REASON.mic); }
+  socket.emit('room:join');
+}
+function leaveRoomLocal() {
+  delete $('#rj').dataset.in; $('#rj').textContent = '加入语音房';
+  rpcs.forEach(closePc); rpcs.clear(); bar(); releaseMic();
+}
+// ================= 屏幕直播（v0.6） =================
+// 主播：每来一位观众，就新建一条只发送（sendonly）的连接；观众：只接收。信令走 socket.io。
+let live = null;      // 我在直播：{ stream, pcs: Map(观众名 -> pc) }
+let viewer = null;    // 我在看：{ name, pc }
+let rewatch = null;   // v0.7：直播因断线中断时记住对方，60 秒内对方恢复就自动重新观看
+const LIVE_ERR = { notlive: '对方已经不在直播了', self: '不能观看自己的直播', full: '观看人数已满，稍后再试', elsewhere: '你在另一个窗口打开了这个直播' };
+const canLive = () => !!(navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia);
+function paintLive() {
+  document.querySelectorAll('.av[data-lu]').forEach(el => el.classList.toggle('live', liveSet.has(el.dataset.lu)));
+  const pw = $('#pwatch'); if (pw && pw.dataset.u) pw.hidden = !liveSet.has(pw.dataset.u) || pw.dataset.u === me?.name;
+}
+function liveUi() {
+  $('#lvbtn').hidden = !canLive();
+  $('#lvbtn').classList.toggle('on', !!live);
+  $('#lvtxt').textContent = live ? '结束共享' : '共享屏幕';
+  $('#lvvc').hidden = !live;
+}
+async function liveToggle() {
+  if (live) return stopLive();
+  if (!canLive()) return alert('当前浏览器不支持共享屏幕（手机只能观看）');
+  let stream;
+  try {
+    stream = await navigator.mediaDevices.getDisplayMedia({ video: { frameRate: { ideal: 30, max: 30 } }, audio: true });
+  } catch (e) { if (e.name !== 'NotAllowedError') alert('无法共享屏幕：' + (e.message || e.name)); return; }
+  await getIce();
+  live = { stream, pcs: new Map() };
+  const v = stream.getVideoTracks()[0];
+  if (v) { v.contentHint = 'detail'; v.onended = () => stopLive(); }   // 浏览器自带的“停止共享”按钮
+  socket.emit('live:start'); $('#lvn').textContent = '0'; liveUi();
+}
+function stopLive() {
+  if (!live) return;
+  live.pcs.forEach(pc => pc.close());
+  live.stream.getTracks().forEach(t => t.stop());
+  live = null; socket.emit('live:stop'); liveUi();
+}
+async function liveOffer(name) {   // 主播给一位观众建连接
+  if (!live) return;
+  live.pcs.get(name)?.close();
+  const pc = new RTCPeerConnection({ iceServers: ice }); pc.q = [];
+  live.stream.getTracks().forEach(t => pc.addTransceiver(t, { direction: 'sendonly', streams: [live.stream] }));
+  pc.onicecandidate = e => e.candidate && socket.emit('rtc', { to: name, ch: 'live', data: { ice: e.candidate } });
+  live.pcs.set(name, pc);
+  await pc.setLocalDescription(await pc.createOffer());
+  socket.emit('rtc', { to: name, ch: 'live', data: { sdp: pc.localDescription } });
+}
+async function onLiveRtc(from, ch, data) {
+  let pc = null;
+  if (ch === 'live-s') pc = live?.pcs.get(from);            // 观众发给我（主播）的 answer / ice
+  else if (viewer && viewer.name === from) {               // 主播发给我（观众）的 offer / ice
+    if (data.sdp?.type === 'offer') {
+      viewer.pc?.close();
+      pc = viewer.pc = new RTCPeerConnection({ iceServers: ice }); pc.q = [];
+      pc.onicecandidate = e => e.candidate && socket.emit('rtc', { to: from, ch: 'live', data: { ice: e.candidate } });
+      pc.ontrack = e => { const v = $('#vwv'); const st = e.streams[0] || new MediaStream([e.track]); if (v.srcObject !== st) v.srcObject = st; v.play().catch(() => { vwMsg('点击画面开始播放'); }); };
+      pc.oniceconnectionstatechange = () => {
+        const s = pc.iceConnectionState;
+        if (s === 'checking') vwMsg('正在连接…'); else if (s === 'connected' || s === 'completed') vwMsg('');
+        else if (s === 'disconnected') vwMsg('连接不稳定，正在重连…'); else if (s === 'failed') vwMsg('连接失败（可能需要 TURN 服务器）');
+      };
+    } else pc = viewer.pc;
+  }
+  if (!pc) return;
+  try {
+    if (data.sdp) {
+      await pc.setRemoteDescription(data.sdp);
+      for (const c of pc.q.splice(0)) await pc.addIceCandidate(c).catch(() => {});
+      if (data.sdp.type === 'offer') { await pc.setLocalDescription(await pc.createAnswer()); socket.emit('rtc', { to: from, ch: 'live', data: { sdp: pc.localDescription } }); }
+    } else if (data.ice) { if (pc.remoteDescription) await pc.addIceCandidate(data.ice).catch(() => {}); else pc.q.push(data.ice); }
+  } catch (e) { console.warn('live rtc', e); }
+}
+function vwMsg(t) { $('#vwmsg').textContent = t; }
+async function watch(name) {
+  if (viewer) closeViewer();
+  ctx(); await getIce();
+  viewer = { name, pc: null };
+  const p = people[name] || { name, nick: name };
+  avatar($('#vwav'), p); $('#vwav').classList.add('live'); $('#vwn').textContent = p.nick || name;
+  $('#vwv').srcObject = null; $('#vwv').volume = +$('#vwvol').value; vwMsg('正在连接…'); $('#vw').hidden = false;
+  socket.emit('live:watch', name);
+}
+function closeViewer(msg) {
+  if (!msg) rewatch = null;
+  if (!viewer) { if (!msg) { $('#vw').hidden = true; $('#vwv').srcObject = null; } return; }
+  socket.emit('live:leave', viewer.name);
+  viewer.pc?.close(); viewer = null;
+  if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+  if (msg) { vwMsg(msg); $('#vwv').srcObject = null; setTimeout(() => { if (!viewer) $('#vw').hidden = true; }, 1800); }
+  else { $('#vwv').srcObject = null; $('#vw').hidden = true; }
+}
+function vwFull() { const b = $('#vwbox'); document.fullscreenElement ? document.exitFullscreen() : (b.requestFullscreen || b.webkitRequestFullscreen)?.call(b); }
+function vwMute() { const v = $('#vwv'); v.muted = !v.muted; $('#vwwave').style.display = v.muted ? 'none' : ''; }
+$('#vwvol').oninput = e => { const v = $('#vwv'); v.volume = +e.target.value; v.muted = v.volume === 0; $('#vwwave').style.display = v.muted ? 'none' : ''; };
+$('#vwv').onclick = () => $('#vwv').play().catch(() => {});
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && viewer && !document.fullscreenElement) closeViewer(); });
+function liveInit() {
+  liveUi();
+  socket.on('live', list => {
+    liveSet.clear(); list.forEach(n => liveSet.add(n)); paintLive();
+    if (rewatch && !viewer && liveSet.has(rewatch.name) && Date.now() - rewatch.t < 60000) { const n = rewatch.name; rewatch = null; watch(n); return; }
+    if (viewer && !liveSet.has(viewer.name)) closeViewer('直播已结束');
+  });
+  socket.on('live:viewer', p => { people[p.name] = people[p.name] || p; liveOffer(p.name); });
+  socket.on('live:viewer-left', ({ name }) => { live?.pcs.get(name)?.close(); live?.pcs.delete(name); });
+  socket.on('live:count', n => { $('#lvn').textContent = n; });
+  socket.on('live:end', ({ name, reason }) => { if (viewer && viewer.name === name) { viewer.pc?.close(); viewer = null; vwMsg(LIVE_ERR[reason] || '直播已结束'); setTimeout(() => { if (!viewer) $('#vw').hidden = true; }, 1800); } });
+  socket.on('live:error', ({ name, reason }) => {
+    if (reason === 'elsewhere' && !name) { stopLiveLocal(); return alert('你已经在另一个窗口共享屏幕了'); }
+    if (viewer && viewer.name === name) { viewer = null; vwMsg(LIVE_ERR[reason] || '无法观看'); setTimeout(() => { if (!viewer) $('#vw').hidden = true; }, 1800); }
+  });
+  socket.on('disconnect', () => {   // v0.7：断线时不停止屏幕采集，重连后自动恢复直播
+    if (live) { live.pcs.forEach(pc => pc.close()); live.pcs.clear(); }
+    if (viewer) { rewatch = { name: viewer.name, t: Date.now() }; viewer.pc?.close(); viewer = null; vwMsg('连接中断，正在重连…'); }
+  });
+  socket.on('live:end', ({ name }) => { if (rewatch === null && $('#vw').hidden === false) rewatch = { name, t: Date.now() }; });
+}
+function stopLiveLocal() { if (!live) return; live.pcs.forEach(pc => pc.close()); live.stream.getTracks().forEach(t => t.stop()); live = null; liveUi(); }
+
+function voice() {
+  socket.on('rtc', onRtc);
+  socket.on('call:incoming', p => {
+    if (call) return;
+    people[p.name] = people[p.name] || p;
+    call = { peer: p.name, state: 'in' };
+    avatar($('#rav'), p); $('#rnick').textContent = p.nick; $('#ring').hidden = false;
+  });
+  socket.on('call:ringing', () => {});
+  socket.on('call:start', async p => {
+    if (!call || call.peer !== p.name) return;
+    call.state = 'on'; call.pc = mkpc(p.name, 'call');
+    const t0 = Date.now();
+    callText();
+    call.timer = setInterval(() => { const s = Math.floor((Date.now() - t0) / 1000); $('#cbtm').textContent = String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0'); }, 1000);
+    if (p.caller === false) {} else await sendOffer(call.pc, p.name, 'call');
+  });
+  socket.on('call:end', ({ reason }) => endLocal(reason || 'hangup'));
+  socket.on('room', r => {
+    roomInfo = r;
+    $('#rc').textContent = r.members.length ? '(' + r.members.length + '/' + r.max + ')' : '';
+    $('#rm').innerHTML = '';
+    r.members.forEach(p => {
+      const li = document.createElement('li'), a = document.createElement('div'), n = document.createElement('span');
+      a.className = 'av s'; a.dataset.u = p.name; avatar(a, p); n.dataset.u = p.name; n.textContent = p.nick;
+      a.classList.add('vu'); const tk = document.createElement('span'), st = document.createElement('span');
+      tk.className = 'tk'; tk.dataset.tk = p.name; st.className = 'st'; st.dataset.st = p.name;
+      li.append(a, n, tk, st); $('#rm').append(li);
+    });
+    if ($('#rj').dataset.in) bar();
+  });
+  socket.on('room:error', m => { alert(m); releaseMic(); });
+  socket.on('room:peers', async peers => {
+    $('#rj').dataset.in = '1'; $('#rj').textContent = '离开语音房'; bar();
+    for (const p of peers) { const pc = mkpc(p.name, 'room'); rpcs.set(p.name, pc); await sendOffer(pc, p.name, 'room'); }
+  });
+  socket.on('room:joined', () => {});   // 新成员会主动发 offer
+  socket.on('room:left', ({ name }) => { closePc(rpcs.get(name)); rpcs.delete(name); });
+  socket.on('disconnect', () => { endLocal(); leaveRoomLocal(); });
+}
+// ================= 文件仓（v0.7） =================
+const V = { cat: '', q: '', sort: 'time', order: 'desc', items: [], total: 0, focus: null, loading: false, seq: 0 };
+const seenKey = () => 'hush_vault_seen_' + (me ? me.name : '');
+const KIND_COLOR = { image: '#8b5cf6', doc: '#2563eb', media: '#db2777', other: '#64748b' };
+function vaultDot(on) { document.querySelectorAll('.vdot').forEach(d => d.hidden = !on); }
+async function vaultCheck() {
+  const r = await fetch('/api/files?limit=1', { headers: hdr() }).then(r => r.ok ? r.json() : null).catch(() => null);
+  if (r && r.latest && r.latest > (+localStorage[seenKey()] || 0)) vaultDot(true);
+}
+function vaultNew() { if ($('#vd').classList.contains('open')) loadVault(false); else vaultDot(true); }
+function openDrawer(id) { closeDrawers(); $('#scrim').hidden = false; $(id).classList.add('open'); }
+function closeDrawers() { $('#scrim').hidden = true; document.querySelectorAll('.drawer.open').forEach(d => d.classList.remove('open')); $('aside').classList.remove('open'); }
+function openNav() { openDrawer('aside'); }   // 手机：左侧栏从左边滑出
+function openVault(focusId) {
+  openDrawer('#vd'); vaultDot(false);
+  vaultFocus(typeof focusId === 'string' ? focusId : null);
+}
+function vaultFocus(id) { V.focus = id; $('#vfocus').hidden = !id; loadVault(false); }
+async function loadVault(more) {
+  const seq = ++V.seq;
+  const qs = new URLSearchParams({ limit: 30, offset: more ? V.items.length : 0, sort: V.sort, order: V.order });
+  if (V.focus) qs.set('id', V.focus); else { if (V.cat) qs.set('cat', V.cat); if (V.q) qs.set('q', V.q); }
+  const r = await fetch('/api/files?' + qs, { headers: hdr() }).then(r => r.ok ? r.json() : null).catch(() => null);
+  if (seq !== V.seq) return;
+  if (!r) { $('#vl').innerHTML = ''; $('#vl').append(el('div', 'empty2', '加载失败，请稍后再试')); return; }
+  V.items = more ? V.items.concat(r.items) : r.items; V.total = r.total;
+  if (r.latest && me) localStorage[seenKey()] = Math.max(+localStorage[seenKey()] || 0, r.latest);
+  $('#vtot').textContent = V.focus ? '' : '共 ' + r.total + ' 个';
+  renderVault();
+}
+const ICON = {
+  eye: '<path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
+  dl: '<path d="M12 4v11M7 10l5 5 5-5M5 20h14"/>',
+  del: '<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/>'
+};
+function iconBtn(k, title, fn) {   // 图标来自上面固定的常量，不含任何用户数据
+  const b = el('button'); b.type = 'button'; b.title = title;
+  b.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' + ICON[k] + '</svg>';
+  b.onclick = e => { e.stopPropagation(); fn(); }; return b;
+}
+function extOf(n) { const m = /\.([a-z0-9]{1,5})$/i.exec(n || ''); return m ? m[1].toUpperCase() : 'FILE'; }
+function renderVault() {
+  const box = $('#vl'); box.innerHTML = '';
+  if (!V.items.length) { box.append(el('div', 'empty2', V.q || V.cat ? '没有符合条件的文件' : '还没有人发送过文件\n点输入框旁的 📎、拖拽或粘贴即可上传')); return; }
+  V.items.forEach(f => {
+    const r = el('div', 'fr' + (f.id === V.focus ? ' focus' : '')); r.dataset.fid = f.id;
+    const ic = el('div', 'ic', extOf(f.name)); ic.style.background = KIND_COLOR[f.kind] || KIND_COLOR.other;
+    if (f.preview === 'image') getBlob(f.id).then(u => { ic.textContent = ''; const i = el('img'); i.alt = ''; i.src = u; ic.append(i); }).catch(() => {});
+    const tx = el('div', 'tx');
+    tx.append(el('div', 'fn', f.name), el('div', 'fm', (f.uploader?.nick || f.uploader?.name || '未知') + ' · ' + tmFmt(f.created) + ' · ' + human(f.size)));
+    tx.firstChild.title = f.name;
+    const ac = el('div', 'ac2');
+    if (f.preview) ac.append(iconBtn('eye', '预览', () => openPreview(f)));
+    ac.append(iconBtn('dl', '下载', () => download(f)));
+    if (me && me.admin) ac.append(iconBtn('del', '删除（管理员）', async () => {
+      if (!confirm('确定删除文件“' + f.name + '”？所有人都将无法再下载。')) return;
+      const x = await fetch('/api/files/' + f.id, { method: 'DELETE', headers: hdr() });
+      if (!x.ok) toast((await x.json().catch(() => ({}))).error || '删除失败');
+    }));
+    r.append(ic, tx, ac);
+    r.onclick = () => f.preview ? openPreview(f) : download(f);
+    box.append(r);
+  });
+  if (V.items.length < V.total) { const m = el('button', 'more', '加载更多'); m.type = 'button'; m.style.margin = '10px auto'; m.style.display = 'block'; m.onclick = () => loadVault(true); box.append(m); }
+}
+$('#vcat').onclick = e => { const b = e.target.closest('button'); if (!b) return; V.cat = b.dataset.c; $('#vcat').querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); vaultFocus(null); };
+{ let t; $('#vq').oninput = e => { clearTimeout(t); t = setTimeout(() => { V.q = e.target.value.trim(); vaultFocus(null); }, 250); }; }
+$('#vsort').onchange = e => { [V.sort, V.order] = e.target.value.split(':'); loadVault(false); };
+
+// ----- 预览：一律用带 Authorization 头的 fetch 取 blob，token 不进 URL；HTML/SVG 只会以纯文本显示 -----
+let pv = null;   // { f, url, list }
+async function openPreview(f) {
+  const list = f.preview === 'image' ? V.items.filter(x => x.preview === 'image') : [f];
+  pvClean(); pv = { f, url: null, list };
+  $('#pvw').hidden = false; $('#pwn').textContent = f.name; $('#pwn').title = f.name;
+  $('#pwm').textContent = (f.uploader?.nick || '') + ' · ' + human(f.size);
+  $('#pwdl').onclick = () => download(f);
+  const b = $('#pwb'); b.innerHTML = ''; b.append(el('div', 'note', '加载中…'));
+  let r;
+  try { r = await fetch('/api/files/' + f.id + '/preview', { headers: hdr() }); } catch (_) { r = null; }
+  if (!pv || pv.f !== f) return;
+  b.innerHTML = '';
+  if (!r || !r.ok) { b.append(el('div', 'note', (r && (await r.json().catch(() => ({}))).error) || '预览失败')); return; }
+  const kind = r.headers.get('X-Preview-Kind');
+  if (kind === 'text') {
+    const pre = el('pre'); pre.textContent = await r.text(); b.append(pre);
+    if (r.headers.get('X-Truncated') === '1') b.append(el('div', 'note', '文件较大，只显示前 200KB，完整内容请下载'));
+  } else {
+    const blob = await r.blob(); if (!pv || pv.f !== f) return;
+    const type = { image: /^image\/(png|jpeg|gif|webp|bmp|avif)$/, pdf: /^application\/pdf$/, video: /^video\//, audio: /^audio\// }[kind];
+    if (!type || !type.test(blob.type)) { b.append(el('div', 'note', '不支持预览这种文件')); return; }
+    pv.url = URL.createObjectURL(blob);
+    let m;
+    if (kind === 'image') { m = el('img'); m.alt = f.name; }
+    else if (kind === 'pdf') { m = el('iframe'); m.title = f.name; }
+    else { m = el(kind); m.controls = true; m.autoplay = true; m.playsInline = true; }
+    m.src = pv.url; b.append(m);
+  }
+  if (list.length > 1) {
+    const i = list.findIndex(x => x.id === f.id);
+    const nav = (cls, d, sym) => { const x = el('button', 'ib nav ' + cls, sym); x.type = 'button'; x.onclick = () => openPreview(list[(i + d + list.length) % list.length]); b.append(x); };
+    nav('l', -1, '‹'); nav('r', 1, '›');
+    b.append(el('div', 'note', (i + 1) + ' / ' + list.length));
+  }
+}
+function pvClean() { if (pv && pv.url) URL.revokeObjectURL(pv.url); $('#pwb').innerHTML = ''; }
+function closePreview() { pvClean(); pv = null; $('#pvw').hidden = true; }
+document.addEventListener('keydown', e => {
+  if (!$('#pvw').hidden) {
+    if (e.key === 'Escape') closePreview();
+    else if (e.key === 'ArrowLeft') $('#pwb .nav.l')?.click();
+    else if (e.key === 'ArrowRight') $('#pwb .nav.r')?.click();
+  } else if (e.key === 'Escape' && !$('#setv').hidden) closeSettings();
+  else if (e.key === 'Escape' && document.querySelector('.drawer.open, aside.open')) closeDrawers();
+});
+
+// ================= 搜索聊天记录（v0.7） =================
+function openSearch() { openDrawer('#sd'); setTimeout(() => $('#sq').focus(), 60); }
+{
+  let t, seq = 0;
+  $('#sq').oninput = e => {
+    clearTimeout(t); const q = e.target.value.trim();
+    t = setTimeout(async () => {
+      const my = ++seq, box = $('#sl');
+      if (!q) { box.innerHTML = ''; box.append(el('div', 'empty2', '输入关键词开始搜索')); return; }
+      const r = await fetch('/api/messages/search?q=' + encodeURIComponent(q), { headers: hdr() }).then(r => r.ok ? r.json() : null).catch(() => null);
+      if (my !== seq) return;
+      box.innerHTML = '';
+      const list = r && (r.messages || r);
+      if (!list || !list.length) { box.append(el('div', 'empty2', '没有找到相关消息')); return; }
+      list.forEach(m => {
+        const d = el('div', 'sr'); d.dataset.id = m.id;
+        d.append(el('div', 'sh', (m.nick || m.name) + ' · ' + tmFmt(m.ts)));
+        const st = el('div', 'st2'), txt = m.file ? '[文件] ' + m.file.name : m.text, lo = txt.toLowerCase(), ql = q.toLowerCase();
+        let i = 0, k;
+        while ((k = lo.indexOf(ql, i)) !== -1) { st.append(txt.slice(i, k), el('mark', '', txt.slice(k, k + q.length))); i = k + q.length; }
+        st.append(txt.slice(i)); d.append(st);
+        d.onclick = () => { closeDrawers(); m.file ? openVault(m.file.id) : jumpTo(m.id); };
+        box.append(d);
+      });
+    }, 280);
+  };
+}
+
+// ================= @提及 自动补全（v0.7） =================
+let users = [], mpSel = 0, mpList = [];
+async function loadUsers() {
+  const r = await fetch('/api/users', { headers: hdr() }).then(r => r.ok ? r.json() : null).catch(() => null);
+  if (r) { users = r.users || r; users.forEach(u => { people[u.name] = Object.assign(people[u.name] || {}, u); }); }
+}
+function mpHide() { $('#mp').hidden = true; mpList = []; }
+function mpShow() {
+  const t = $('#t'), pre = t.value.slice(0, t.selectionStart), m = /(^|\s)@([^\s@]{0,16})$/.exec(pre);
+  if (!m) return mpHide();
+  const q = m[2].toLowerCase();
+  mpList = users.filter(u => u.name !== me?.name && (u.name.toLowerCase().includes(q) || (u.nick || '').toLowerCase().includes(q))).slice(0, 6);
+  if (!mpList.length) return mpHide();
+  mpSel = Math.min(mpSel, mpList.length - 1);
+  const box = $('#mp'); box.innerHTML = '';
+  mpList.forEach((u, i) => {
+    const d = el('div', i === mpSel ? 'on' : ''); const a = el('div', 'av s'); avatar(a, u, true);
+    d.append(a, el('span', '', u.nick || u.name), el('small', '', '@' + u.name));
+    d.onmousedown = e => { e.preventDefault(); mpPick(i); };
+    box.append(d);
+  });
+  box.hidden = false;
+}
+function mpPick(i) {
+  const u = mpList[i]; if (!u) return;
+  const t = $('#t'), pos = t.selectionStart, pre = t.value.slice(0, pos).replace(/@([^\s@]{0,16})$/, '@' + u.name + ' ');
+  t.value = pre + t.value.slice(pos); t.setSelectionRange(pre.length, pre.length); mpHide(); t.focus();
+}
+$('#t').addEventListener('input', () => { mpSel = 0; mpShow(); });
+$('#t').addEventListener('blur', () => setTimeout(mpHide, 120));
+$('#t').addEventListener('keydown', e => {
+  if ($('#mp').hidden) { if (e.key === 'Escape' && replyTo) cancelReply(); return; }
+  if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); mpSel = (mpSel + (e.key === 'ArrowDown' ? 1 : -1) + mpList.length) % mpList.length; mpShow(); }
+  else if (e.key === 'Enter' || e.key === 'Tab') { e.preventDefault(); mpPick(mpSel); }
+  else if (e.key === 'Escape') mpHide();
+});
+
+// ================= 断线重连（v0.7） =================
+// 断开时记住语音房 / 通话 / 直播状态；重连后：消息自动补齐（服务器按 since 发 resync），
+// 语音房自动重新加入，直播自动恢复，通话给出“一键回拨”。
+const net = { down: false, room: false, peer: null, t: null };
+function netShow(text, kind, btn, fn) {
+  const n = $('#net'); clearTimeout(net.t);
+  n.hidden = false; n.className = 'net' + (kind === 'ok' ? ' ok' : '');
+  $('#nets').hidden = kind !== 'wait'; $('#nett').textContent = text;
+  const b = $('#netb'); b.hidden = !btn; if (btn) { b.textContent = btn; b.onclick = fn; }
+  if (kind === 'ok') net.t = setTimeout(() => { n.hidden = true; }, btn ? 15000 : 2500);
+}
+function netInit() {
+  socket.on('disconnect', reason => {   // 先于语音、直播的 disconnect 处理执行，所以还能读到状态
+    if (reason === 'io client disconnect') return;
+    net.down = true; net.at = Date.now(); net.room = !!$('#rj').dataset.in; net.peer = call && call.state === 'on' ? call.peer : null;
+    netShow('连接已断开，正在重连…', 'wait');
+  });
+  // v0.8：重连 6 秒还不成功，说明是服务器关了或网络断了，换成更明确的提示
+  socket.io.on('reconnect_attempt', () => { if (net.down && Date.now() - net.at > 6000) netShow(navigator.onLine ? '服务器暂时连不上，恢复后自动重连' : '网络已断开，连上后自动恢复', 'wait'); });
+  socket.on('connect', async () => {
+    if (!net.down) return; net.down = false;
+    const tasks = [];
+    if (live) { socket.emit('live:start'); $('#lvn').textContent = '0'; tasks.push('直播已恢复'); }
+    if (net.room) {
+      net.room = false;
+      try { await getIce(); await mic(); socket.emit('room:join'); tasks.push('已重新加入语音房'); }
+      catch (_) { return netShow('已重新连接，语音房已断开', 'ok', '重新加入', () => { $('#net').hidden = true; roomToggle(); }); }
+    }
+    if (net.peer) { const p = net.peer; net.peer = null; return netShow('已重新连接，通话已中断', 'ok', '回拨 ' + nick(p), () => { $('#net').hidden = true; startCall(p); }); }
+    netShow(['已重新连接'].concat(tasks).join('，'), 'ok');
+  });
+}
+
+// ================= v0.8：像软件一样用（安装 / 通知 / 未读角标 / 新版本提示） =================
+const APP_VERSION = '__APP_VERSION__';
+const isStandalone = () => matchMedia('(display-mode: standalone)').matches || matchMedia('(display-mode: window-controls-overlay)').matches || navigator.standalone === true;
+const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+let swReg = null, installEvt = null, sentOnce = false;
+// ----- service worker：缓存外壳、离线页、点通知回到 Hush -----
+if ('serviceWorker' in navigator && window.isSecureContext) {
+  let had = !!navigator.serviceWorker.controller;
+  navigator.serviceWorker.register('/sw.js', { scope: '/', updateViaCache: 'none' }).then(r => { swReg = r; }).catch(e => console.warn('sw', e));
+  navigator.serviceWorker.addEventListener('controllerchange', () => { if (had) updateReady(); had = true; });
+  navigator.serviceWorker.addEventListener('message', e => { if (e.data && e.data.type === 'open') { window.focus(); if (e.data.id && me) jumpTo(e.data.id); } });
+  setInterval(() => swReg && swReg.update().catch(() => {}), 30 * 60 * 1000);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden && swReg) swReg.update().catch(() => {}); });
+}
+// ----- 新版本：不在通话 / 上传 / 打字时，页面切到后台就自动刷新；否则显示一个小提示，点一下刷新 -----
+let updShown = false;
+const busyNow = () => !!(call || $('#rj').dataset.in || live || viewer || $('#ups').children.length || $('#t').value.trim());
+function updateReady() {
+  if (updShown) return; updShown = true;
+  const go = () => location.reload();
+  if (document.hidden && !busyNow()) return go();
+  $('#upd').hidden = false; $('#upd').onclick = go;
+  document.addEventListener('visibilitychange', () => { if (document.hidden && !busyNow()) go(); });
+}
+// ----- 安装成软件 -----
+addEventListener('beforeinstallprompt', e => { e.preventDefault(); installEvt = e; instUi(); if (me) maybeTip(); });
+addEventListener('appinstalled', () => { installEvt = null; localStorage.hush_tip_install = '1'; hideTip(); instUi(); toast('已安装，可以从桌面或主屏幕打开 Hush'); });
+function instUi() {
+  const st = isStandalone();
+  $('#sinst').hidden = st; if (st) $('#ioshelp').hidden = true;
+  $('#sinsts').textContent = installEvt ? '从桌面直接打开，独立窗口' : isIOS ? '用 Safari 添加到主屏幕' : '在浏览器菜单里选“安装 Hush”或“添加到主屏幕”';
+  $('#binst').hidden = !installEvt && !isIOS;
+  $('#binst').textContent = installEvt ? '安装' : '怎么做';
+}
+async function installApp() {
+  if (installEvt) {
+    const e = installEvt; e.prompt();
+    const r = await e.userChoice.catch(() => null);
+    if (r && r.outcome === 'accepted') { installEvt = null; hideTip(); }
+    instUi(); return;
+  }
+  if (isIOS) { if ($('#setv').hidden) openSettings(); $('#ioshelp').hidden = false; }
+}
+// ----- 设置面板 -----
+function openSettings() { closeDrawers(); notifUi(); instUi(); $('#setv').hidden = false; }
+function closeSettings() { $('#setv').hidden = true; $('#ioshelp').hidden = true; }
+// ----- 系统通知：页面在后台 / 没有焦点时才弹；@我 的单独弹并且一定响，普通消息合并成一条 -----
+const NOTIF_OK = 'Notification' in window;
+const notifyOn = () => NOTIF_OK && Notification.permission === 'granted' && localStorage.hush_notify !== '0';
+function notifUi() {
+  const t = $('#tnotif'), on = notifyOn(), denied = NOTIF_OK && Notification.permission === 'denied';
+  t.classList.toggle('on', on); t.setAttribute('aria-checked', String(on)); t.disabled = !NOTIF_OK || denied;
+  $('#snotifs').textContent = !NOTIF_OK ? (isIOS ? 'iPhone 需先添加到主屏幕（iOS 16.4 及以上）' : '当前浏览器不支持通知')
+    : denied ? '通知被浏览器拦截了，请在网站设置里允许' : on ? '在后台时提醒新消息，@我 会单独提醒' : '在后台时提醒新消息和 @我';
+}
+async function toggleNotify() {
+  if (!NOTIF_OK) return;
+  if (notifyOn()) { localStorage.hush_notify = '0'; return notifUi(); }
+  let p = Notification.permission;
+  if (p === 'default') p = await Notification.requestPermission().catch(() => 'default');
+  if (p === 'granted') { localStorage.hush_notify = '1'; localStorage.hush_tip_notify = '1'; hideTip(); toast('已开启消息通知'); }
+  notifUi();
+}
+const away = () => document.hidden || !document.hasFocus();
+let lastNote = 0;
+async function notify(m) {
+  if (!me || m.name === me.name || m.recalled || !notifyOn() || !away()) return;
+  const at = !!(m.mentions && m.mentions.includes(me.name)), who = m.nick || m.name, now = Date.now();
+  const quiet = !at && now - lastNote < 8000;   // 8 秒内连续的普通消息只更新通知、不重复响
+  lastNote = now;
+  const title = at ? who + ' 提到了你' : '群聊 · ' + who;
+  const opt = { body: m.file ? '发送了文件：' + m.file.name : m.text.slice(0, 140), icon: '/icons/icon-192.png', badge: '/icons/badge-96.png',
+    tag: at ? 'hush-at-' + m.id : 'hush-chat', renotify: !quiet, silent: quiet, data: { id: m.id }, timestamp: m.ts };
+  try {
+    const reg = swReg || (navigator.serviceWorker && await navigator.serviceWorker.getRegistration());
+    if (reg && reg.showNotification) return await reg.showNotification(title, opt);
+  } catch (_) {}
+  try { const n = new Notification(title, opt); n.onclick = () => { window.focus(); jumpTo(m.id); n.close(); }; } catch (_) {}   // 没有 service worker 时（比如局域网 http 地址）
+}
+// ----- 未读数：标题 “(3) Hush”，安装后图标上也有数字角标 -----
+let unread = 0;
+function setUnread(n) {
+  unread = n;
+  document.title = (n ? '(' + (n > 99 ? '99+' : n) + ') ' : '') + 'Hush';
+  if ('setAppBadge' in navigator) (n ? navigator.setAppBadge(n) : navigator.clearAppBadge()).catch(() => {});
+}
+function bump(m) { if (me && m.name !== me.name && away()) setUnread(unread + 1); }
+function seen() { if (unread && !document.hidden && document.hasFocus()) setUnread(0); }
+addEventListener('focus', seen); addEventListener('pageshow', seen); document.addEventListener('visibilitychange', seen); document.addEventListener('pointerdown', seen, true);
+// ----- 一次性小提示：安装 / 开启通知，点 ✕ 以后不再出现 -----
+function tip(kind, title, sub, btn, fn, iconFrom) {
+  $('#tipi').innerHTML = $(iconFrom + ' .si').innerHTML;   // 复用设置面板里的固定图标
+  $('#tipt').textContent = title; $('#tips').textContent = sub; $('#tipgo').textContent = btn;
+  $('#tipgo').onclick = () => { localStorage['hush_tip_' + kind] = '1'; hideTip(); fn(); };
+  $('#tipx').onclick = () => { localStorage['hush_tip_' + kind] = '1'; hideTip(); };
+  $('#tip').dataset.kind = kind; $('#tip').hidden = false;
+}
+function hideTip() { $('#tip').hidden = true; }
+function maybeTip() {
+  if (!me || !$('#tip').hidden || $('#app').hidden) return;
+  if (!isStandalone() && !localStorage.hush_tip_install && (installEvt || isIOS))
+    return tip('install', '把 Hush 安装成软件', isIOS ? '添加到主屏幕，像 App 一样打开' : '从桌面直接打开，独立窗口', installEvt ? '安装' : '怎么做', installApp, '#sinst');
+  if (sentOnce && NOTIF_OK && Notification.permission === 'default' && !localStorage.hush_notify && !localStorage.hush_tip_notify)
+    return tip('notify', '开启消息通知', '切到别处时也不会错过新消息', '开启', toggleNotify, '#snotif');
+}
+// ----- 从通知 / 桌面快捷方式打开：/?msg=123 定位消息，/?open=search|vault 直接打开 -----
+function deepLink() {
+  const q = new URLSearchParams(location.search), o = q.get('open'), id = parseInt(q.get('msg'));
+  if (!o && !id) return;
+  history.replaceState(null, '', '/');
+  if (o === 'search') openSearch(); else if (o === 'vault') openVault(); else if (id) setTimeout(() => jumpTo(id), 400);
+}
+// ----- 手机：键盘弹出时，让输入框始终在键盘上方（iOS 不会自动缩小页面） -----
+{
+  const vv = window.visualViewport;
+  if (vv) {
+    const fit = () => {
+      if (Math.abs((vv.scale || 1) - 1) > 0.01) return;   // 用户双指放大时不动
+      const box = $('#msgs'), near = box.scrollHeight - box.scrollTop - box.clientHeight < 80;
+      document.documentElement.style.setProperty('--app-h', Math.round(vv.height) + 'px');
+      if (vv.offsetTop > 0) window.scrollTo(0, 0);
+      if (near) box.scrollTop = box.scrollHeight;
+    };
+    vv.addEventListener('resize', fit); fit();
+  }
+}
+start();
+</script>
+</body>
+</html>
