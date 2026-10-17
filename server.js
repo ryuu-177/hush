@@ -5,13 +5,70 @@ const { DatabaseSync } = require('node:sqlite');
 const crypto = require('crypto');
 const path = require('path');
 
-// ---------- 语音通话的 ICE 服务器（v0.4） ----------
-// 默认只用公共 STUN。要加 TURN（跨国 / 严格 NAT 时需要），设置环境变量 ICE_SERVERS 为 JSON，例如：
-// ICE_SERVERS=[{"urls":"stun:stun.l.google.com:19302"},{"urls":"turn:你的服务器:3478","username":"u","credential":"p"}]
-// 或直接改下面这个数组。
-let ICE_SERVERS = [{ urls: 'stun:stun.l.google.com:19302' }, { urls: 'stun:stun.cloudflare.com:3478' }];
+// ---------- 语音通话 / 屏幕直播的 ICE 服务器（v0.4，v0.11.1 改为国内可用 STUN + Cloudflare TURN） ----------
+// 默认 STUN：都已从外网实测能响应；stun.l.google.com 在国内连不上，已移除。
+// 设置环境变量 ICE_SERVERS（JSON 数组）可整体替换这份 STUN / 静态 TURN 列表。
+let ICE_SERVERS = [
+  { urls: 'stun:stun.cloudflare.com:3478' },
+  { urls: 'stun:stun.miwifi.com:3478' },
+  { urls: 'stun:stun.chat.bilibili.com:3478' },
+];
 if (process.env.ICE_SERVERS) {
   try { ICE_SERVERS = JSON.parse(process.env.ICE_SERVERS); } catch (e) { console.error('ICE_SERVERS 不是有效的 JSON，已使用默认 STUN'); }
+}
+// Cloudflare Realtime TURN（v0.11.1）：中转服务器，P2P 打不通时（比如国内两位好友之间）走它。
+// 密钥只留在服务器：环境变量 CF_TURN_KEY_ID / CF_TURN_API_TOKEN，或者同目录 turn.json：{"keyId":"...","apiToken":"..."}
+// turn.json 已在 .gitignore 里，不要发给别人。没配置就只用 STUN。
+const TURN_BASE = (process.env.CF_TURN_BASE || 'https://rtc.live.cloudflare.com/v1').replace(/\/$/, '');
+const TURN_TTL = Math.max(10, Number(process.env.CF_TURN_TTL) || 86400);   // 每份凭证有效期（秒）
+const TURN_RETRY_MS = Number(process.env.CF_TURN_RETRY_MS) || 60000;      // 失败后多久再试
+const turn = { cache: null, flight: null, failAt: 0, logged: false };
+function turnConf() {
+  if (process.env.CF_TURN_KEY_ID && process.env.CF_TURN_API_TOKEN) return { keyId: process.env.CF_TURN_KEY_ID, apiToken: process.env.CF_TURN_API_TOKEN };
+  try {
+    const j = JSON.parse(fs.readFileSync(path.join(__dirname, 'turn.json'), 'utf8'));
+    if (j && j.keyId && j.apiToken) return { keyId: String(j.keyId).trim(), apiToken: String(j.apiToken).trim() };
+  } catch (e) { if (e.code !== 'ENOENT' && !turn.badFile) { turn.badFile = true; console.error('turn.json 格式不对，应为 {"keyId":"...","apiToken":"..."}'); } }
+  return null;
+}
+async function turnMint(c) {
+  const r = await fetch(TURN_BASE + '/turn/keys/' + encodeURIComponent(c.keyId) + '/credentials/generate-ice-servers', {
+    method: 'POST', headers: { Authorization: 'Bearer ' + c.apiToken, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ ttl: TURN_TTL }), signal: AbortSignal.timeout(8000),
+  });
+  if (!r.ok) throw new Error('HTTP ' + r.status);
+  const list = (await r.json()).iceServers;
+  // 只要带凭证的 TURN 部分；去掉 53 端口（官方说明浏览器会拦）
+  const servers = (Array.isArray(list) ? list : []).filter(s => s && s.username && s.credential).map(s => ({
+    urls: [].concat(s.urls || []).filter(u => typeof u === 'string' && !/:53(\?|$)/.test(u)), username: s.username, credential: s.credential,
+  })).filter(s => s.urls.length);
+  if (!servers.length) throw new Error('返回里没有 TURN 地址');
+  const now = Date.now();
+  return { servers, expires: now + TURN_TTL * 1000, refreshAt: now + TURN_TTL * 500 };   // 用到一半就换新的
+}
+function turnRefresh(c) {
+  if (!turn.flight) turn.flight = turnMint(c).then(v => {
+    if (turn.logged) console.log('Cloudflare TURN 已恢复');
+    turn.cache = v; turn.logged = false; turn.failAt = 0; return v;
+  }).catch(e => {
+    turn.failAt = Date.now();
+    if (!turn.logged) { turn.logged = true; console.error('Cloudflare TURN 凭证获取失败，暂时只用 STUN：' + e.message); }
+    return null;
+  }).finally(() => { turn.flight = null; });
+  return turn.flight;
+}
+// 返回 { iceServers, exp }，exp = 距离这份凭证失效还有多少毫秒（只有 STUN 时为 null）
+async function iceFor() {
+  const c = turnConf(), now = Date.now();
+  if (!c) return { iceServers: ICE_SERVERS, exp: null };
+  let v = turn.cache && turn.cache.expires - now > Math.min(60000, TURN_TTL * 100) ? turn.cache : null;   // 快过期的不再发
+  const due = !v || now >= v.refreshAt;
+  if (due && now - turn.failAt >= TURN_RETRY_MS) {
+    const p = turnRefresh(c);
+    if (!v || v.expires - now < TURN_TTL * 250) v = (await p) || v;   // 旧凭证还很新鲜就后台换，不让用户等
+  }
+  if (!v) return { iceServers: ICE_SERVERS, exp: null };
+  return { iceServers: ICE_SERVERS.concat(v.servers), exp: v.expires - now };
 }
 const ROOM_MAX = 6;          // 语音房最多人数
 // 屏幕直播（v0.6）：每个直播最多几人同时观看。主播要给每位观众单独上传一路画面，人多了主播上行带宽吃不消。
@@ -375,9 +432,11 @@ app.delete('/api/files/:id', (req, res) => {
   res.json({ ok: true });
 });
 
-app.get('/api/ice', (req, res) => {
-  if (!userOf(req)) return res.status(401).json({ error: '请先登录' });
-  res.json({ iceServers: ICE_SERVERS, roomMax: ROOM_MAX, maxViewers: MAX_VIEWERS });
+app.get('/api/ice', async (req, res) => {
+  if (!userOf(req)) return res.status(401).json({ error: '请先登录' });   // TURN 凭证只给已登录的人
+  const { iceServers, exp } = await iceFor();
+  res.set('Cache-Control', 'no-store');
+  res.json({ iceServers, exp, roomMax: ROOM_MAX, maxViewers: MAX_VIEWERS });
 });
 
 app.get('/api/profile/:name', (req, res) => {
@@ -1130,4 +1189,7 @@ io.on('connection', socket => {
 });
 
 const PORT = process.env.PORT || 3000;
-server.listen(PORT, '0.0.0.0', () => console.log('Hush v' + VERSION + ' 已启动：http://localhost:' + PORT));
+server.listen(PORT, '0.0.0.0', () => {
+  console.log('Hush v' + VERSION + ' 已启动：http://localhost:' + PORT);
+  if (turnConf()) { console.log('已配置 Cloudflare TURN（语音 / 直播打不通时自动中转）'); iceFor(); }
+});

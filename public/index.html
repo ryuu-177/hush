@@ -1319,17 +1319,42 @@ async function delInvite(code) {
 function logout() { musicStop(); endLocal(); leaveRoomLocal(); stopLive(); if (viewer) closeViewer(); localStorage.removeItem('token'); socket.close(); hideTip(); setUnread(0); show('auth'); }
 
 // ================= 语音通话（WebRTC，v0.4） =================
-let ice = null, local = null, call = null, rpcs = new Map(), muted = false, roomInfo = { max: 6, members: [] };
+let ice = null, iceAt = 0, iceLife = 0, local = null, call = null, rpcs = new Map(), muted = false, roomInfo = { max: 6, members: [] };
 const REASON = {
   offline: '对方不在线', busy: '对方正在通话中', selfbusy: '你已经在通话或语音房里了', self: '不能给自己打电话',
   declined: '对方拒绝了通话', timeout: '无人接听', hangup: '通话已结束', elsewhere: '已在其他窗口接听', mic: '无法使用麦克风'
 };
 const nick = n => (people[n] && people[n].nick) || n;
-async function getIce() {
-  if (ice) return ice;
-  const r = await fetch('/api/ice', { headers: hdr() });
-  ice = r.ok ? (await r.json()).iceServers : [];
+// v0.11.1：TURN 凭证有时效。用过一半就重新取；只有 STUN 时 10 分钟后再问一次（服务器可能刚恢复 TURN）
+const iceStale = () => !ice || Date.now() - iceAt > (iceLife ? iceLife / 2 : 600000);
+function allPcs() {
+  const a = [call?.pc, viewer?.pc, ...rpcs.values(), ...(live ? live.pcs.values() : [])];
+  return a.filter(pc => pc && pc.signalingState !== 'closed');
+}
+async function getIce(force) {
+  if (!force && !iceStale()) return ice;
+  try {
+    const r = await fetch('/api/ice', { headers: hdr() });
+    if (r.ok) { const j = await r.json(); ice = j.iceServers || []; iceLife = j.exp || 0; iceAt = Date.now(); }
+  } catch (e) {}
+  if (!ice) ice = [];
+  for (const pc of allPcs()) { try { pc.setConfiguration({ ...pc.getConfiguration(), iceServers: ice }); } catch (e) {} }   // 正在进行的连接也换上新凭证
   return ice;
+}
+setInterval(() => { if (allPcs().length && iceStale()) getIce(true); }, 60000);   // 长时间通话 / 直播（超过 24 小时）自动续凭证
+// ICE 失败：先换新凭证再重启 ICE（由发起方重新 offer），两次都不行才提示失败
+const ICE_FAIL = '连接失败，请检查网络后重试';
+function iceWatch(pc, onFail) {   // 20 秒还没接通也按失败处理（有时会一直卡在“正在连接”）
+  clearTimeout(pc.wd);
+  pc.wd = setTimeout(() => { if (pc.signalingState !== 'closed' && !/connected|completed/.test(pc.iceConnectionState)) onFail(); }, 20000);
+}
+async function iceRetry(pc, show, restart) {
+  clearTimeout(pc.wd);
+  if ((pc.retried || 0) >= 2) return show(ICE_FAIL);
+  pc.retried = (pc.retried || 0) + 1; show('连接中断，正在重试…');
+  iceWatch(pc, () => iceRetry(pc, show, restart));
+  await getIce(true);
+  if (pc.signalingState !== 'closed' && restart) { try { await restart(); } catch (e) { console.warn('ice restart', e); } }
 }
 async function mic() {
   if (local) return local;
@@ -1413,17 +1438,28 @@ function mkpc(name, ch) {
   pc.onicecandidate = e => e.candidate && socket.emit('rtc', { to: name, ch, data: { ice: e.candidate } });
   pc.peer = name;
   pc.ontrack = e => attachAudio(name, e.streams[0] || new MediaStream([e.track]));
-  const ICE_TXT = { checking: '正在连接…', disconnected: '连接不稳定，正在重连…', failed: '连接失败（可能需要 TURN 服务器）', closed: '' };
-  pc.oniceconnectionstatechange = () => {
-    const st = pc.iceConnectionState, t = ICE_TXT[st] || '';
+  const ICE_TXT = { checking: '正在连接…', disconnected: '连接不稳定，正在重连…', closed: '' };
+  const show = t => {
     if (ch === 'call' && call && call.pc === pc) { call.ice = t; callText(); }
     if (ch === 'room') document.querySelectorAll('[data-st]').forEach(el => { if (el.dataset.st === name) el.textContent = t; });
+  };
+  const fail = () => iceRetry(pc, show, pc.offerer ? async () => {   // 由发起方重新 offer（避免双方同时 offer 撞车）
+    await pc.setLocalDescription(await pc.createOffer({ iceRestart: true }));
+    socket.emit('rtc', { to: name, ch, data: { sdp: pc.localDescription } });
+  } : null);
+  iceWatch(pc, fail);
+  pc.oniceconnectionstatechange = () => {
+    const st = pc.iceConnectionState;
+    if (st === 'connected' || st === 'completed') { pc.retried = 0; clearTimeout(pc.wd); }
+    if (st === 'failed') return fail();
+    show(ICE_TXT[st] || '');
   };
   return pc;
 }
 function closePc(pc) { if (!pc) return; detachAudio(pc.peer); pc.close(); }
 function callText() { if (call && call.state === 'on') status(call.ice || '与 ' + nick(call.peer) + ' 通话中'); }
 async function sendOffer(pc, name, ch) {
+  pc.offerer = true;
   await pc.setLocalDescription(await pc.createOffer());
   socket.emit('rtc', { to: name, ch, data: { sdp: pc.localDescription } });
 }
@@ -1540,6 +1576,8 @@ function stopLive() {
 }
 async function liveOffer(name) {   // 主播给一位观众建连接
   if (!live) return;
+  await getIce();
+  if (!live) return;
   live.pcs.get(name)?.close();
   const pc = new RTCPeerConnection({ iceServers: ice }); pc.q = [];
   live.stream.getTracks().forEach(t => pc.addTransceiver(t, { direction: 'sendonly', streams: [live.stream] }));
@@ -1554,14 +1592,17 @@ async function onLiveRtc(from, ch, data) {
   else if (viewer && viewer.name === from) {               // 主播发给我（观众）的 offer / ice
     if (data.sdp?.type === 'offer') {
       viewer.pc?.close();
-      pc = viewer.pc = new RTCPeerConnection({ iceServers: ice }); pc.q = [];
+      pc = viewer.pc = new RTCPeerConnection({ iceServers: ice }); pc.q = []; pc.retried = viewer.retried || 0;
       pc.onicecandidate = e => e.candidate && socket.emit('rtc', { to: from, ch: 'live', data: { ice: e.candidate } });
       pc.ontrack = e => { const v = $('#vwv'); const st = e.streams[0] || new MediaStream([e.track]); if (v.srcObject !== st) v.srcObject = st; v.play().catch(() => { vwMsg('点击画面开始播放'); }); };
       pc.oniceconnectionstatechange = () => {
         const s = pc.iceConnectionState;
-        if (s === 'checking') vwMsg('正在连接…'); else if (s === 'connected' || s === 'completed') vwMsg('');
-        else if (s === 'disconnected') vwMsg('连接不稳定，正在重连…'); else if (s === 'failed') vwMsg('连接失败（可能需要 TURN 服务器）');
+        if (s === 'checking') vwMsg('正在连接…'); else if (s === 'connected' || s === 'completed') { vwMsg(''); pc.retried = 0; if (viewer) viewer.retried = 0; clearTimeout(pc.wd); }
+        else if (s === 'disconnected') vwMsg('连接不稳定，正在重连…');
+        else if (s === 'failed') fail();
       };
+      const v = viewer, fail = () => iceRetry(pc, vwMsg, async () => { if (viewer === v) { v.retried = pc.retried; socket.emit('live:watch', from); } });   // 请主播重新建一条连接
+      iceWatch(pc, fail);
     } else pc = viewer.pc;
   }
   if (!pc) return;
