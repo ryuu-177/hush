@@ -1131,7 +1131,7 @@ input,textarea,select,.nesf{transition:border-color .35s var(--lq-out),box-shado
 /* ---- 进场：界面像墨水在纸上显影 ---- */
 #app:not([hidden]) aside{animation:inL .9s var(--lq-out) both}
 #app:not([hidden]) .tb{animation:inD .8s var(--lq-out) .08s both}
-#app:not([hidden]) #f{animation:inU .9s var(--lq-out) .16s both}
+#app:not([hidden]) #f{animation:inU .9s var(--lq-out) .16s backwards}
 #auth:not([hidden]) .ef-hero>*{animation:inU 1s var(--lq-out) both}
 #auth:not([hidden]) .ef-hero>*:nth-child(3){animation-delay:.1s}
 #auth:not([hidden]) .ef-hero>*:nth-child(4){animation-delay:.2s}
@@ -1354,6 +1354,31 @@ a.pill2{text-decoration:none;display:inline-flex;align-items:center}
 .stkf span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .stkf a{cursor:pointer;color:var(--ef-tx2,var(--mut));text-decoration:underline;text-underline-offset:3px}
 @media(max-width:640px){.stkp{right:12px;left:12px;width:auto;max-height:56vh}.stkg{grid-template-columns:repeat(auto-fill,minmax(64px,1fr))}}
+
+/* ===== v0.17.1：浮在聊天上的面板（表情、@、截图卡片、歌单、消息菜单）——不管玻璃设置多透明都要看得清 ===== */
+:root{--pop-bg:linear-gradient(180deg,rgb(253 253 250/.95),rgb(244 245 239/.93));--pop-solid:#f5f6f0;--pop-edge:rgb(255 255 255/.75);--pop-ring:rgb(20 30 25/.10);--pop-blur:blur(calc(22px + 14px*var(--lq-bk,1))) saturate(1.6);--pop-sh:0 18px 48px rgb(20 28 24/.18),0 2px 8px rgb(20 28 24/.08)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--pop-bg:linear-gradient(180deg,rgb(32 38 36/.96),rgb(18 22 21/.965));--pop-solid:#191e1d;--pop-edge:rgb(236 240 232/.10);--pop-ring:rgb(0 0 0/.5);--pop-sh:0 18px 48px rgb(0 0 0/.5),0 2px 8px rgb(0 0 0/.3)}}
+:root[data-theme="dark"]{--pop-bg:linear-gradient(180deg,rgb(32 38 36/.96),rgb(18 22 21/.965));--pop-solid:#191e1d;--pop-edge:rgb(236 240 232/.10);--pop-ring:rgb(0 0 0/.5);--pop-sh:0 18px 48px rgb(0 0 0/.5),0 2px 8px rgb(0 0 0/.3)}
+.stkp,.mp,.shcard,.drawer,.ma,.tip,.pmenu,.att{background:var(--pop-bg)!important;-webkit-backdrop-filter:var(--pop-blur)!important;backdrop-filter:var(--pop-blur)!important;border-color:var(--pop-edge)!important;box-shadow:inset 0 1px 0 var(--lq-spec,transparent),0 0 0 .5px var(--pop-ring),var(--pop-sh)!important}
+.stkp .stkh input{background:color-mix(in srgb,var(--ef-tx1,#222) 5%,transparent)!important}
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){.stkp,.mp,.shcard,.drawer,.ma,.tip,.pmenu,.att{background:var(--pop-solid)!important}}
+.ilb .lbt{background:linear-gradient(rgb(8 10 9/.72),rgb(8 10 9/0))}
+.ilb .nav{background:rgb(12 15 14/.62);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
+.toast{z-index:100}
+/* 输入栏的入场动画结束后不再留下 filter（留着的话里面面板的背景模糊会失效，后面的字就透出来了） */
+/* 存到我的表情：图片右上角的小按钮（电脑悬停时出现）+ 右键菜单 */
+.m .pic button.pk{all:unset;position:absolute;top:6px;right:6px;z-index:2;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;cursor:pointer;color:#fff;background:rgb(12 15 14/.55)!important;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);box-shadow:0 0 0 .5px rgb(255 255 255/.25),0 2px 8px rgb(0 0 0/.25)!important;opacity:0;transform:scale(.9);transition:opacity .15s,transform .15s}
+.m .pic button.pk svg{width:16px;height:16px}
+.m .pic button.pk:hover{background:rgb(12 15 14/.78)!important;transform:scale(1)}
+.m .pic button.pk:focus-visible{opacity:1;outline:2px solid #d9e84f;outline-offset:1px}
+@media not (pointer:coarse){.m .pic:hover button.pk{opacity:1;transform:scale(1)}}
+.m .pic.err button.pk{display:none}
+@media not (pointer:coarse){.ma .svm{display:none}}   /* 电脑上用图片角上的按钮和右键菜单，消息菜单里就不重复了 */
+.stkp,.mp{z-index:40!important}
+.pmenu{position:fixed;z-index:95;min-width:176px;padding:5px;border-radius:14px;border:1px solid;display:flex;flex-direction:column;gap:1px;animation:stkin .12s ease-out}
+.pmenu button{all:unset;display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:9px;cursor:pointer;font-size:13px;color:var(--ef-tx1,var(--fg))}
+.pmenu button svg{width:16px;height:16px;opacity:.75;flex:none}
+.pmenu button:hover,.pmenu button:focus-visible{background:color-mix(in srgb,var(--ef-tx1,#222) 8%,transparent)}
 </style>
 <script src="/lq-glass.js"></script>
 </head>
@@ -1853,10 +1878,11 @@ function renderMsg(m) {
     rc.onclick = () => { if (confirm(m.name === me.name ? '撤回这条消息？' : '以管理员身份撤回这条消息？')) socket.emit('recall', m.id); };
     ma.append(rc);
   }
+  if (m.file) { const sv = el('button', 'svm', '存表情'); sv.type = 'button'; sv.title = '存到我的表情'; sv.onclick = () => { d.classList.remove('act'); stkSaveFrom(m.file.id, m.file.name); }; ma.append(sv); }
   c.append(ma);
   d.append(a, c);
   const tog = () => { const on = !d.classList.contains('act'); document.querySelectorAll('.m.act').forEach(x => x.classList.remove('act')); if (on) d.classList.add('act'); };
-  if (m.file) b.oncontextmenu = e => { if (matchMedia('(pointer: coarse)').matches) { e.preventDefault(); tog(); } };   // 手机：长按图片显示 回复/撤回
+  if (m.file) b.oncontextmenu = e => { e.preventDefault(); if (matchMedia('(pointer: coarse)').matches) tog(); else picMenu(e, m); };   // 手机：长按图片显示 回复/撤回
   else b.onclick = tog;   // 手机：点一下消息显示 回复/撤回
   return d;
 }
@@ -2876,12 +2902,14 @@ function picBox(w, h, sticker) {   // 聊天里显示多大：普通图片最长
 }
 function picEl(m) {
   const f = m.file, sz = picBox(f.w, f.h, m.sticker);
-  const p = el('div', 'pic'); p.dataset.fid = f.id; p.style.width = sz.w + 'px'; p.style.aspectRatio = sz.w + ' / ' + sz.h;
+  const p = el('div', 'pic'); p.dataset.fid = f.id; p.dataset.fn = f.name || ''; p.style.width = sz.w + 'px'; p.style.aspectRatio = sz.w + ' / ' + sz.h;
   p.tabIndex = 0; p.setAttribute('role', 'button'); p.setAttribute('aria-label', (m.sticker ? '表情：' : '图片：') + f.name + '（点开看大图）');
   p.title = m.sticker ? '' : f.name;
   const img = document.createElement('img'); img.alt = m.sticker ? '[表情]' : f.name; img.decoding = 'async'; img.draggable = false; p.append(img);
   if (!m.sticker && /\.gif$/i.test(f.name)) p.append(el('span', 'gif', 'GIF'));
   p.onclick = () => lbOpen(f.id);
+  const pk = document.createElement('button'); pk.type = 'button'; pk.className = 'pk'; pk.title = '存到我的表情'; pk.setAttribute('aria-label', '存到我的表情');
+  pk.innerHTML = STK_SAVE_SVG; pk.onclick = e => { e.stopPropagation(); stkSaveFrom(f.id, f.name); }; p.append(pk);
   p.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); lbOpen(f.id); } };
   if (PIC_IO) requestAnimationFrame(() => PIC_IO.observe(p)); else picLoad(p);
   return p;
@@ -2900,7 +2928,7 @@ let LB = null;
 function lbList() {
   const seen = new Set(), out = [];
   document.querySelectorAll('#msgs .m.im .pic[data-fid]').forEach(p => { const id = p.dataset.fid; if (seen.has(id)) return; seen.add(id);
-    const m = p.closest('.m'); out.push({ id, name: p.querySelector('img')?.alt || '图片', who: m?.querySelector('.nm')?.textContent || '', ts: +m?.dataset.ts || 0, sticker: !!p.closest('.stk') }); });
+    const m = p.closest('.m'); out.push({ id, name: p.querySelector('img')?.alt || '图片', fname: p.dataset.fn || '', who: m?.querySelector('.nm')?.textContent || '', ts: +m?.dataset.ts || 0, sticker: !!p.closest('.stk') }); });
   return out;
 }
 function lbOpen(id) {
@@ -2911,7 +2939,7 @@ function lbOpen(id) {
   const top = el('div', 'lbt'), nm = el('div', 'nm2'), v = el('div', 'lbv'), img = document.createElement('img'); img.alt = '';
   const B = (t, title, fn, cls) => { const b = el('button', cls || '', t); b.type = 'button'; b.title = title; b.setAttribute('aria-label', title); b.onclick = e => { e.stopPropagation(); fn(); }; return b; };
   const zp = el('span', 'zp', '100%');
-  top.append(nm, B('－', '缩小', () => lbZoom(1 / 1.25), 'zbtn'), zp, B('＋', '放大', () => lbZoom(1.25), 'zbtn'), B('适合', '适合屏幕 / 原始大小', () => lbFit(true)), B('下载', '下载原图', () => { const it = LB.list[LB.i]; download({ id: it.id, name: it.name }); }), B('✕', '关闭（Esc）', lbClose));
+  top.append(nm, B('－', '缩小', () => lbZoom(1 / 1.25), 'zbtn'), zp, B('＋', '放大', () => lbZoom(1.25), 'zbtn'), B('适合', '适合屏幕 / 原始大小', () => lbFit(true)), B('存表情', '存到我的表情', () => { const it = LB.list[LB.i]; stkSaveFrom(it.id, it.fname || it.name); }), B('下载', '下载原图', () => { const it = LB.list[LB.i]; download({ id: it.id, name: it.name }); }), B('✕', '关闭（Esc）', lbClose));
   const pl = B('‹', '上一张（←）', () => lbGo(-1), 'nav l'), pr = B('›', '下一张（→）', () => lbGo(1), 'nav r');
   v.append(img, pl, pr, el('div', 'lbh', '滚轮缩放 · 拖动查看 · 双击放大 / 还原 · ← → 切换 · Esc 关闭'));
   ov.append(top, v); document.body.append(ov);
@@ -3120,11 +3148,25 @@ async function stkPickSource(fromSettings) {   // 选 / 更换表情包文件夹
   }
   $('#stkf').click(); return null;   // 不支持选文件夹：挑几张图片存在这台设备上
 }
+// v0.17.1：表情面板 / @ 列表挪到 body 下、固定在输入栏上方。放在输入栏里面时，输入栏自己的玻璃效果会让面板的背景模糊失效，后面的字会透出来。
+function popPlace(box, align) {
+  const f = $('#f'); if (!f || box.hidden) return;
+  const r = f.getBoundingClientRect(), mob = matchMedia('(max-width:640px)').matches, vh = innerHeight;
+  box.style.position = 'fixed'; box.style.bottom = Math.max(8, vh - r.top + (align === 'right' ? 6 : 4)) + 'px';
+  if (align === 'right') {
+    if (mob) { box.style.left = (r.left + 12) + 'px'; box.style.right = Math.max(8, innerWidth - r.right + 12) + 'px'; box.style.width = 'auto'; }
+    else { box.style.left = 'auto'; box.style.right = Math.max(8, innerWidth - r.right + 24) + 'px'; box.style.width = ''; }
+    box.style.maxHeight = Math.max(160, Math.min(mob ? vh * .56 : Math.min(440, vh * .62), r.top - 14)) + 'px';
+  } else { box.style.right = 'auto'; box.style.left = (r.left + (mob ? 16 : 24)) + 'px'; }
+}
+function popPlaceAll() { const a = $('#stkp'), b = $('#mp'); if (a && !a.hidden) popPlace(a, 'right'); if (b && !b.hidden) popPlace(b, 'left'); }
+addEventListener('resize', popPlaceAll); if (window.visualViewport) visualViewport.addEventListener('resize', popPlaceAll);
+document.body.append($('#stkp'), $('#mp'));
 function stkToggle() { STK.open ? stkClose() : stkOpenPanel(); }
 function stkClose() { STK.open = false; $('#stkp').hidden = true; $('#stkb').classList.remove('on'); $('#stkb').setAttribute('aria-expanded', 'false'); }
 async function stkOpenPanel() {
   mpHide && mpHide();
-  STK.open = true; $('#stkp').hidden = false; $('#stkb').classList.add('on'); $('#stkb').setAttribute('aria-expanded', 'true');
+  STK.open = true; $('#stkp').hidden = false; popPlace($('#stkp'), 'right'); $('#stkb').classList.add('on'); $('#stkb').setAttribute('aria-expanded', 'true');
   await stkRender(true);   // 每次打开都重新读一遍文件夹（新加的图片马上能看到）
   const q = $('#stkp .stkh input'); if (q && !matchMedia('(pointer: coarse)').matches) q.focus({ preventScroll: true });
 }
@@ -3188,6 +3230,106 @@ document.addEventListener('pointerdown', e => { if (STK.open && !e.target.closes
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && STK.open) { stkClose(); } });
 stkUi();
 
+// ---- v0.17.1：把聊天里的图片 / 表情存到“我的表情” ----
+const STK_SAVE_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21a9 9 0 1 1 9-9"/><path d="M8.5 14.5s1.2 1.5 3.5 1.5"/><path d="M9 9.5h.01M15 9.5h.01"/><path d="M18.5 15v6M15.5 18h6"/></svg>';
+let PMENU = null;
+function picMenuClose() { if (PMENU) { PMENU.remove(); PMENU = null; } }
+function picMenu(e, m) {
+  picMenuClose(); const f = m.file; if (!f || f.deleted) return;
+  const box = el('div', 'pmenu'); box.setAttribute('role', 'menu');
+  const I = { save: STK_SAVE_SVG, view: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4M11 8v6M8 11h6"/></svg>', dl: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>', rp: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14L4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 6 6v4"/></svg>' };
+  const it = (ic, t, fn) => { const b = el('button'); b.type = 'button'; b.setAttribute('role', 'menuitem'); b.innerHTML = I[ic]; b.append(t); b.onclick = () => { picMenuClose(); fn(); }; box.append(b); return b; };
+  const first = it('save', '存到我的表情', () => stkSaveFrom(f.id, f.name));
+  it('view', '查看大图', () => lbOpen(f.id));
+  it('dl', '下载', () => download({ id: f.id, name: f.name }));
+  it('rp', '回复', () => startReply(m));
+  document.body.append(box);
+  const r = box.getBoundingClientRect();
+  box.style.left = Math.max(8, Math.min(e.clientX, innerWidth - r.width - 8)) + 'px';
+  box.style.top = Math.max(8, Math.min(e.clientY, innerHeight - r.height - 8)) + 'px';
+  PMENU = box; first.focus({ preventScroll: true });
+}
+document.addEventListener('pointerdown', e => { if (PMENU && !e.target.closest('.pmenu')) picMenuClose(); }, true);
+document.addEventListener('keydown', e => { if (PMENU && e.key === 'Escape') { e.preventDefault(); picMenuClose(); } }, true);
+addEventListener('blur', picMenuClose); document.getElementById('msgs')?.addEventListener('scroll', picMenuClose, { passive: true });
+
+const stkHashCache = new Map();   // 'k|v' → sha256
+async function stkSha(blob) {
+  if (!crypto.subtle) return null;
+  return [...new Uint8Array(await crypto.subtle.digest('SHA-256', await blob.arrayBuffer()))].map(x => x.toString(16).padStart(2, '0')).join('');
+}
+const STK_MAGIC = b => b[0] === 0x89 && b[1] === 0x50 ? 'png' : b[0] === 0xff && b[1] === 0xd8 ? 'jpg' : b[0] === 0x47 && b[1] === 0x49 && b[2] === 0x46 ? 'gif' : (b[0] === 0x52 && b[1] === 0x49 && b[8] === 0x57 && b[9] === 0x45) ? 'webp' : '';
+function stkSafeName(name, ext, hash) {
+  let n = String(name || '').replace(/^.*[\\/]/, '').replace(/[<>:"|?*\u0000-\u001f]/g, '').replace(/^[.\s]+|[.\s]+$/g, '').trim();
+  let base = n.replace(STK_EXT, '');
+  if (!base || /^(con|prn|aux|nul|com\d|lpt\d)$/i.test(base)) base = 'Hush-sticker-' + (hash || Date.now().toString(36)).slice(0, 8);
+  if (base.length > 80) base = base.slice(0, 80);
+  return base + '.' + ext;
+}
+let stkSaving = false;
+async function stkSaveFrom(fid, fname) {   // 存到我的表情：桌面版写进文件夹；浏览器有文件夹就写进去；否则存在这台设备上
+  if (stkSaving) return; stkSaving = true;
+  try {
+    let mode = await stkMode();
+    // 需要用户点一下才能弹的东西（选文件夹 / 允许写入）先做，再去下载图片
+    if (mode === 'desk' && typeof DESK.saveSticker !== 'function') { toast('桌面版要更新到 1.1.1 才能存表情（托盘菜单 → 检查更新）'); return; }
+    if (!mode) {
+      if (stkDeskOk() || stkFsOk()) {
+        toast('先选一个放表情包的文件夹');
+        if (stkDeskOk()) { if (typeof DESK.saveSticker !== 'function') { toast('桌面版要更新到 1.1.1 才能存表情（托盘菜单 → 检查更新）'); return; } const d = await DESK.chooseStickerDir().catch(() => null); if (!d) return; STK.mode = mode = 'desk'; STK.dir = d; }
+        else {
+          let h = null; try { h = await window.showDirectoryPicker({ id: 'hush-stk', mode: 'readwrite', startIn: 'pictures' }); } catch (e) { if (e && e.name === 'AbortError') return; toast('不能用文件夹，改成存在这台设备上'); }
+          if (h) { STK.mode = mode = 'dir'; STK.dir = h; await stkDb('readwrite', 'kv', st => st.put(h, 'dir')).catch(() => {}); } else mode = 'local';
+        }
+        if (mode !== 'local') { localStorage.removeItem('hush_stk_mode'); STK.dirty = true; stkClearUrls(); stkUi(); }
+      } else { mode = 'local'; }
+    }
+    if (mode === 'dir') {
+      const o = { mode: 'readwrite' };
+      let ok = (await STK.dir.queryPermission(o).catch(() => 'denied')) === 'granted';
+      if (!ok) ok = (await STK.dir.requestPermission(o).catch(() => 'denied')) === 'granted';
+      if (!ok) { toast('没有允许写入「' + STK.dir.name + '」，没存'); return; }
+    }
+    const blob = await fetch(await getBlob(fid)).then(r => r.blob());
+    if (blob.size > STK_MAX) { toast('表情最大 10MB，这张太大了'); return; }
+    const head = new Uint8Array(await blob.slice(0, 16).arrayBuffer()), ext = STK_MAGIC(head);
+    if (!ext) { toast('这张图片的格式不能当表情（只支持 png / jpg / gif / webp）'); return; }
+    const hash = await stkSha(blob);
+    const name = stkSafeName(fname, ext, hash);
+    if (mode === 'desk') {
+      const r = await DESK.saveSticker(name, new Uint8Array(await blob.arrayBuffer()));
+      if (r && r.dup) { toast('已在表情库里'); return; }
+      if (!r || !r.ok) { toast('没存成：' + ((r && r.error) || '未知错误')); return; }
+      STK.dirty = true; toast('已存到我的表情' + (r.name !== name ? '（' + r.name + '）' : ''));
+    } else {
+      // 同样大小的才需要比内容
+      if (STK.dirty || !STK.items.length) await stkScan();
+      for (const it of STK.items) {
+        if (it.size !== blob.size) continue;
+        const key = it.k + '|' + it.v; let hv = stkHashCache.get(key);
+        if (!hv) { try { hv = await stkSha(await stkBlob(it)); stkHashCache.set(key, hv); } catch (_) { continue; } }
+        if (hv && hv === hash) { toast('已在表情库里'); return; }
+      }
+      if (mode === 'dir') {
+        const h = STK.dir, base = name.replace(STK_EXT, '');
+        let fn = name;
+        for (let i = 1; i < 200; i++) { try { await h.getFileHandle(fn); fn = base + '-' + i + '.' + ext; } catch (_) { break; } }
+        const fh = await h.getFileHandle(fn, { create: true }), w = await fh.createWritable();
+        await w.write(blob); await w.close();
+        toast('已存到我的表情');
+      } else {
+        const k = 'l' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+        await stkDb('readwrite', 'local', st => st.put({ k, name, blob: new Blob([blob], { type: STK_MIME[ext] }), added: Date.now(), hash }));
+        localStorage.hush_stk_mode = 'local'; STK.mode = 'local';
+        toast('已存到我的表情');
+      }
+      STK.dirty = true;
+    }
+    stkUi(); if (STK.open) stkRender(true);
+  } catch (e) { toast('没存成：' + (e && e.message || e)); }
+  finally { stkSaving = false; }
+}
+
 let att = null;   // 输入框里等待发送的截图
 function attSet(file) { attClear(); att = { file, url: URL.createObjectURL(file) }; $('#atti').src = att.url; $('#attn').textContent = file.name; $('#att').hidden = false; $('#t').focus(); }
 function attClear() { if (att) URL.revokeObjectURL(att.url); att = null; $('#att').hidden = true; }
@@ -3240,7 +3382,7 @@ function mpShow() {
     d.onpointerdown = e => { e.preventDefault(); mpPick(i); };
     box.append(d);
   });
-  box.hidden = false;
+  box.hidden = false; popPlace(box, 'left');
 }
 function mpPick(i) {
   const u = mpList[i]; if (!u) return;
