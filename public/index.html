@@ -1287,6 +1287,73 @@ a.pill2{text-decoration:none;display:inline-flex;align-items:center}
 .shcard .shlinks a{color:var(--ef-tx3,var(--mut));cursor:pointer;text-decoration:underline;text-underline-offset:3px;text-decoration-color:color-mix(in srgb,currentColor 40%,transparent)}
 .shcard .shlinks a:hover{color:var(--ef-tx1,var(--fg))}
 .shcard{grid-template-areas:"img tx x" "links links links" "acts acts acts"}
+
+/* ===== v0.17：聊天里直接显示图片 / 表情包 / 大图查看 ===== */
+.m .b.bimg,.m.own .b.bimg{-webkit-backdrop-filter:none!important;backdrop-filter:none!important;padding:0!important;background:none!important;border:0!important;box-shadow:none!important;overflow:visible;line-height:0}
+.pic{position:relative;display:block;max-width:100%;border-radius:6px 16px 16px 16px;overflow:hidden;cursor:zoom-in;background:color-mix(in srgb,var(--ef-tx3,#888) 14%,transparent);border:1px solid color-mix(in srgb,var(--ef-bd,#ccc) 80%,transparent);box-shadow:var(--sh1,0 2px 8px #0001)}
+.own .pic{border-radius:16px 6px 16px 16px}
+.pic img{display:block;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .25s}
+.pic img.ok{opacity:1}
+.pic:not(.ld)::after{content:"";position:absolute;inset:0;background:linear-gradient(100deg,transparent 30%,rgb(255 255 255/.18) 50%,transparent 70%);background-size:220% 100%;animation:picsh 1.3s linear infinite}
+@keyframes picsh{from{background-position:120% 0}to{background-position:-120% 0}}
+.pic.err{display:grid;place-items:center;cursor:default;font:12px/1.4 var(--sans,inherit);color:var(--ef-tx3,#888);line-height:1.4}
+.pic.err::after{display:none}
+.pic .gif{position:absolute;left:8px;bottom:8px;padding:1px 6px;border-radius:6px;font:700 10px/1.6 var(--sans,inherit);letter-spacing:.08em;color:#fff;background:#0008;line-height:1.6}
+.m .b.bimg::before,.m .b.stk::before,.m .b.bimg::after,.m .b.stk::after{display:none!important;content:none!important}
+.m .b.stk,.m.own .b.stk{-webkit-backdrop-filter:none!important;backdrop-filter:none!important;padding:0!important;background:none!important;border:0!important;box-shadow:none!important;line-height:0}
+.stk .pic{background:none;border:0;box-shadow:none;border-radius:10px;cursor:zoom-in}
+.stk .pic::after{display:none}
+.pic+.cap{display:block;margin-top:4px;font-size:11px;line-height:1.4;color:var(--ef-tx3,#888)}
+.gone2{display:inline-block;padding:8px 12px;font-size:12.5px;color:var(--ef-tx3,#888);border:1px dashed var(--ef-bd,#ccc);border-radius:12px;line-height:1.4}
+@media(prefers-reduced-motion:reduce){.pic::after{animation:none}}
+/* 大图查看 */
+.ilb{position:fixed;inset:0;z-index:90;background:rgb(8 10 9/.86);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);display:flex;flex-direction:column;color:#ecf0e8;touch-action:none;animation:ilbin .16s ease-out}
+@keyframes ilbin{from{opacity:0}}
+.ilb .lbv{position:relative;flex:1;overflow:hidden;cursor:grab}
+.ilb .lbv.drag{cursor:grabbing}
+.ilb .lbv img{position:absolute;left:50%;top:50%;max-width:none;transform-origin:0 0;user-select:none;-webkit-user-drag:none;image-rendering:auto;box-shadow:0 20px 60px #0008}
+.ilb .lbt{display:flex;align-items:center;gap:8px;padding:10px 14px;padding-top:calc(10px + env(safe-area-inset-top));font-size:13px}
+.ilb .lbt .nm2{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;opacity:.85}
+.ilb .lbt .nm2 small{opacity:.6;margin-left:8px}
+.ilb button{all:unset;cursor:pointer;min-width:38px;height:38px;padding:0 10px;box-sizing:border-box;border-radius:999px;display:grid;place-items:center;font:600 13px/1 var(--sans,inherit);color:#ecf0e8;background:rgb(255 255 255/.09);border:1px solid rgb(255 255 255/.14)}
+.ilb button:hover{background:rgb(255 255 255/.18)}
+.ilb button:focus-visible{outline:2px solid #d9e84f;outline-offset:2px}
+.ilb .zp{min-width:54px;text-align:center;font-variant-numeric:tabular-nums;opacity:.8}
+.ilb .nav{position:absolute;top:50%;transform:translateY(-50%);width:46px;height:46px;font-size:22px;z-index:2;background:rgb(0 0 0/.35)}
+.ilb .nav.l{left:14px}.ilb .nav.r{right:14px}
+.ilb .nav[hidden]{display:none}
+.ilb .lbh{position:absolute;left:50%;bottom:calc(14px + env(safe-area-inset-bottom));transform:translateX(-50%);font-size:11.5px;opacity:.55;white-space:nowrap;pointer-events:none}
+@media(pointer:coarse){.ilb .lbh,.ilb .zbtn{display:none}}
+/* 表情包按钮和面板 */
+#f .stkb svg{width:21px;height:21px}
+#f .stkb.on{color:var(--ac);background:color-mix(in srgb,var(--ac) 14%,var(--bg))}
+.stkp{position:absolute;right:24px;bottom:calc(100% + 6px);width:min(420px,calc(100vw - 32px));max-height:min(440px,62vh);display:flex;flex-direction:column;z-index:6;border-radius:var(--lq-r-lg,20px);background:var(--lq-panel,var(--card));border:1px solid var(--lq-edge,var(--line));-webkit-backdrop-filter:blur(calc(22px*var(--lq-bk,1))) saturate(1.7);backdrop-filter:blur(calc(22px*var(--lq-bk,1))) saturate(1.7);box-shadow:inset 0 1px 0 var(--lq-spec,transparent),var(--lq-drop-lg,0 12px 32px #0003);overflow:hidden;animation:stkin .14s ease-out}
+@keyframes stkin{from{opacity:0;transform:translateY(6px)}}
+.stkp[hidden]{display:none}
+.stkh{display:flex;align-items:center;gap:6px;padding:10px 10px 6px}
+.stkh input{flex:1;min-width:0;height:34px!important;min-height:34px!important;padding:0 12px!important;border-radius:999px!important;font-size:13px!important}
+.stkh button{all:unset;cursor:pointer;height:32px;padding:0 11px;border-radius:999px;font:600 12px/32px var(--sans,inherit);color:var(--ef-tx2,var(--mut));white-space:nowrap}
+.stkh button:hover{background:color-mix(in srgb,var(--ef-tx3,#888) 14%,transparent);color:var(--ef-tx1,var(--fg))}
+.stkh button:focus-visible,.stkg button:focus-visible{outline:2px solid var(--ac);outline-offset:1px}
+.stks{padding:0 14px 4px;font:600 10.5px/1.8 var(--sans,inherit);letter-spacing:.12em;color:var(--ef-tx3,var(--mut))}
+.stks span{letter-spacing:0;font-weight:500;margin-left:6px;opacity:.85}
+.stkr,.stkg{display:grid;grid-template-columns:repeat(auto-fill,minmax(72px,1fr));gap:6px;padding:2px 10px 8px}
+.stkr{grid-auto-flow:column;grid-auto-columns:56px;grid-template-columns:none;overflow-x:auto;scrollbar-width:none;padding-bottom:6px}
+.stkr::-webkit-scrollbar{display:none}
+.stkg{overflow-y:auto;flex:1;min-height:90px;align-content:start;padding-bottom:12px}
+.stkg button,.stkr button{all:unset;cursor:pointer;aspect-ratio:1;border-radius:12px;display:grid;place-items:center;overflow:hidden;background:color-mix(in srgb,var(--ef-tx3,#888) 8%,transparent);transition:background-color .12s,transform .1s;position:relative}
+.stkg button:hover,.stkr button:hover{background:color-mix(in srgb,var(--ac) 18%,transparent)}
+.stkg button:active,.stkr button:active{transform:scale(.94)}
+.stkg img,.stkr img{width:86%;height:86%;object-fit:contain}
+.stkg button.busy{opacity:.45;pointer-events:none}
+.stke{padding:22px 18px 24px;text-align:center;font-size:13px;line-height:1.7;color:var(--ef-tx2,var(--mut))}
+.stke b{display:block;font-size:14.5px;color:var(--ef-tx1,var(--fg));margin-bottom:4px}
+.stke .row2{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:12px}
+.stke a{cursor:pointer;color:var(--ac);text-decoration:underline;text-underline-offset:3px}
+.stkf{display:flex;gap:6px;align-items:center;padding:6px 12px 10px;border-top:1px solid color-mix(in srgb,var(--ef-bd,#ccc) 60%,transparent);font-size:11.5px;color:var(--ef-tx3,var(--mut))}
+.stkf span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.stkf a{cursor:pointer;color:var(--ef-tx2,var(--mut));text-decoration:underline;text-underline-offset:3px}
+@media(max-width:640px){.stkp{right:12px;left:12px;width:auto;max-height:56vh}.stkg{grid-template-columns:repeat(auto-fill,minmax(64px,1fr))}}
 </style>
 <script src="/lq-glass.js"></script>
 </head>
@@ -1370,7 +1437,10 @@ a.pill2{text-decoration:none;display:inline-flex;align-items:center}
       <button type="button" class="ib2 vfab" id="vfab" onclick="openVault()" title="文件仓"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8 12 3 3 8v8l9 5 9-5z"/><path d="M3 8l9 5 9-5M12 13v8"/></svg><i class="dot vdot" hidden></i></button>
       <button type="button" title="发送文件（也可以拖进来或粘贴）" onclick="$('#ff').click()">📎</button>
       <input id="ff" type="file" multiple hidden>
+      <div class="stkp" id="stkp" hidden role="dialog" aria-label="表情包"></div>
       <input id="t" placeholder="说点什么… 输入 @ 可以提到某人" autocomplete="off">
+      <button type="button" class="stkb" id="stkb" title="表情包" aria-label="表情包" onclick="stkToggle()" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20.5 12.5A8.5 8.5 0 1 1 11.5 3.5"/><path d="M20.5 12.5c-4.6 0-9-4.4-9-9"/><path d="M8.5 13.2c.9 1.2 2.2 1.8 3.6 1.8"/><circle cx="8.6" cy="9.4" r=".6" fill="currentColor"/></svg></button>
+      <input id="stkf" type="file" accept="image/png,image/jpeg,image/gif,image/webp" multiple hidden>
       <button type="button" class="shotb" id="shotb" title="截图（框选屏幕区域，保存到本机）" aria-label="截图" hidden onclick="shotStart()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8V5.5A1.5 1.5 0 0 1 5.5 4H8M16 4h2.5A1.5 1.5 0 0 1 20 5.5V8M20 16v2.5a1.5 1.5 0 0 1-1.5 1.5H16M8 20H5.5A1.5 1.5 0 0 1 4 18.5V16"/><circle cx="12" cy="12" r="2.6"/></svg></button>
       <button class="primary">发送</button>
     </form>
@@ -1516,6 +1586,11 @@ a.pill2{text-decoration:none;display:inline-flex;align-items:center}
         <div class="si"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8V5.5A1.5 1.5 0 0 1 5.5 4H8M16 4h2.5A1.5 1.5 0 0 1 20 5.5V8M20 16v2.5a1.5 1.5 0 0 1-1.5 1.5H16M8 20H5.5A1.5 1.5 0 0 1 4 18.5V16"/><circle cx="12" cy="12" r="2.6"/></svg></div>
         <div class="stx"><b>截图保存位置</b><small id="sshots"></small><span class="shdir" id="sshotd" hidden></span></div>
         <div class="sbtns"><button class="pill2 ghost" id="sshotr" type="button" hidden onclick="shotResetDir()">恢复默认</button><button class="pill2" id="sshotb" type="button" onclick="shotPickDir(true)">更改</button></div>
+      </div>
+      <div class="srow shrow" id="sstk" hidden>
+        <div class="si"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20.5 12.5A8.5 8.5 0 1 1 11.5 3.5"/><path d="M20.5 12.5c-4.6 0-9-4.4-9-9"/><path d="M8.5 13.2c.9 1.2 2.2 1.8 3.6 1.8"/><circle cx="8.6" cy="9.4" r=".6" fill="currentColor"/></svg></div>
+        <div class="stx"><b>表情包</b><small id="sstks"></small><span class="shdir" id="sstkd" hidden></span></div>
+        <div class="sbtns"><button class="pill2" id="sstkb" type="button" onclick="stkPickSource(true)">选择文件夹</button></div>
       </div>
       <div class="srow" id="sdesk" hidden>
         <div class="si"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg></div>
@@ -1713,7 +1788,7 @@ let replyTo = null;      // 正在回复的消息 { id, nick, text }
 const RECALL_MS = 120000;
 const tmFmt = ts => { const d = new Date(ts), t = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }); return d.toDateString() === new Date().toDateString() ? t : (d.getMonth() + 1) + '/' + d.getDate() + ' ' + t; };
 const el = (tag, cls, txt) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; };
-function snipText(r) { return r.recalled ? '原消息已撤回' : r.gone ? '原消息不存在' : r.file ? '[文件] ' + r.file : r.text; }
+function snipText(r) { return r.recalled ? '原消息已撤回' : r.gone ? '原消息不存在' : r.file ? (r.sticker ? '[表情]' : r.image ? '[图片]' : '[文件] ' + r.file) : r.text; }
 function richText(box, text, mentions) {   // 只用 textContent 拼 DOM，不解析 HTML
   const set = new Set(mentions || []); let i = 0;
   text.replace(/@([^\s@]{1,16})/g, (all, cand, at) => {
@@ -1751,7 +1826,7 @@ function sysLine(m) {
 }
 function renderMsg(m) {
   people[m.name] = Object.assign(people[m.name] || {}, { name: m.name, nick: m.nick, avatar: m.avatar, color: m.color, level: m.level });
-  if (m.recalled || m.file || m.song || m.live) return sysLine(m);
+  if (m.recalled || m.song || m.live || (m.file && !(m.file.image && !m.file.deleted))) return sysLine(m);   // v0.17：图片 / 表情包直接显示在聊天里
   const d = el('div', 'm' + (me && m.name === me.name ? ' own' : '')); d.dataset.id = m.id; d.dataset.ts = m.ts;
   if (me && m.mentions && m.mentions.includes(me.name) && m.name !== me.name) d.classList.add('hit');
   const a = el('div', 'av s'); a.dataset.u = m.name; avatar(a, m); a.style.cursor = 'pointer'; a.onclick = () => avClick(m.name);
@@ -1767,7 +1842,10 @@ function renderMsg(m) {
     q.append(snipText(m.reply)); q.title = '跳到原消息'; q.onclick = () => jumpTo(m.reply.id);
     c.append(q);
   }
-  const b = el('div', 'b'); richText(b, m.text, m.mentions); c.append(b);
+  const b = el('div', 'b');
+  if (m.file) { b.classList.add(m.sticker ? 'stk' : 'bimg'); b.append(picEl(m)); d.dataset.fid = m.file.id; d.classList.add('im'); }
+  else richText(b, m.text, m.mentions);
+  c.append(b);
   const ma = el('div', 'ma');
   const rp = el('button', '', '回复'); rp.type = 'button'; rp.onclick = () => startReply(m); ma.append(rp);
   if (me && (me.admin || (m.name === me.name && Date.now() - m.ts < RECALL_MS))) {
@@ -1777,12 +1855,14 @@ function renderMsg(m) {
   }
   c.append(ma);
   d.append(a, c);
-  b.onclick = () => { const on = !d.classList.contains('act'); document.querySelectorAll('.m.act').forEach(x => x.classList.remove('act')); if (on) d.classList.add('act'); };   // 手机：点一下消息显示 回复/撤回
+  const tog = () => { const on = !d.classList.contains('act'); document.querySelectorAll('.m.act').forEach(x => x.classList.remove('act')); if (on) d.classList.add('act'); };
+  if (m.file) b.oncontextmenu = e => { if (matchMedia('(pointer: coarse)').matches) { e.preventDefault(); tog(); } };   // 手机：长按图片显示 回复/撤回
+  else b.onclick = tog;   // 手机：点一下消息显示 回复/撤回
   return d;
 }
 function add(m, quiet) {
   if (m.id > lastId) lastId = m.id;
-  if (m.file && !m.recalled && me && m.name !== me.name) vaultNew();
+  if (m.file && !m.sticker && !m.recalled && me && m.name !== me.name) vaultNew();
   if (windowMode) { $('#latest').textContent = '有新消息 · 回到最新'; return; }
   const box = $('#msgs');
   if (box.querySelector('[data-id="' + m.id + '"]')) return;
@@ -1843,8 +1923,8 @@ async function backToLatest() {
   const box = $('#msgs'); box.scrollTop = box.scrollHeight;
 }
 function startReply(m) {
-  replyTo = { id: m.id, nick: m.nick || m.name, text: m.text };
-  $('#rbn').textContent = '回复 ' + replyTo.nick; $('#rbt').textContent = m.text.slice(0, 80); $('#rb').hidden = false; $('#t').focus();
+  replyTo = { id: m.id, nick: m.nick || m.name, text: m.text || (m.sticker ? '[表情]' : m.file ? '[图片]' : '') };
+  $('#rbn').textContent = '回复 ' + replyTo.nick; $('#rbt').textContent = replyTo.text.slice(0, 80); $('#rb').hidden = false; $('#t').focus();
 }
 function cancelReply() { replyTo = null; $('#rb').hidden = true; }
 let toastT;
@@ -1864,6 +1944,8 @@ function markDeleted({ id }) {
   if (blobs.has(id)) { URL.revokeObjectURL(blobs.get(id)); blobs.delete(id); }
   document.querySelectorAll('.sys[data-fid="' + id + '"] a').forEach(a => { const x = el('s', '', a.textContent); a.replaceWith(x, '（已删除）'); });
   document.querySelectorAll('.fr[data-fid="' + id + '"]').forEach(r => r.remove());
+  document.querySelectorAll('.pic[data-fid="' + id + '"]').forEach(p => { const g = el('span', 'gone2', '图片已删除'); p.replaceWith(g); });
+  if (LB && LB.list[LB.i] && LB.list[LB.i].id === id) lbClose();
   if (pv && pv.f.id === id) closePreview();
 }
 async function download(f) {
@@ -2585,7 +2667,7 @@ function openSearch() { openDrawer('#sd'); setTimeout(() => $('#sq').focus(), 60
       list.forEach(m => {
         const d = el('div', 'sr'); d.dataset.id = m.id;
         d.append(el('div', 'sh', (m.nick || m.name) + ' · ' + tmFmt(m.ts)));
-        const st = el('div', 'st2'), txt = m.file ? '[文件] ' + m.file.name : m.song ? '点了《' + m.song.title + '》' : m.live ? (m.live.on ? '开始共享屏幕' : '结束了屏幕共享') : m.text, lo = txt.toLowerCase(), ql = q.toLowerCase();
+        const st = el('div', 'st2'), txt = m.file ? (m.sticker ? '[表情]' : m.file.image ? '[图片] ' + m.file.name : '[文件] ' + m.file.name) : m.song ? '点了《' + m.song.title + '》' : m.live ? (m.live.on ? '开始共享屏幕' : '结束了屏幕共享') : m.text, lo = txt.toLowerCase(), ql = q.toLowerCase();
         let i = 0, k;
         while ((k = lo.indexOf(ql, i)) !== -1) { st.append(txt.slice(i, k), el('mark', '', txt.slice(k, k + q.length))); i = k + q.length; }
         st.append(txt.slice(i)); d.append(st);
@@ -2781,6 +2863,331 @@ async function shotStart() {
     return await shotSave(new File([blob], shotName(), { type: 'image/png' }));
   } finally { SHOT.busy = false; }
 }
+
+// ================= v0.17：聊天里的图片（按比例占位、滚到附近才加载、点开看大图） =================
+const PIC_IO = 'IntersectionObserver' in window ? new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { PIC_IO.unobserve(e.target); picLoad(e.target); } }), { root: document.getElementById('msgs'), rootMargin: '700px 0px' }) : null;
+function picBox(w, h, sticker) {   // 聊天里显示多大：普通图片最长 320×320，表情包 140（手机 120）
+  const small = innerWidth <= 640;
+  const MW = sticker ? (small ? 120 : 140) : Math.min(small ? 240 : 320, innerWidth - 120), MH = sticker ? MW : (small ? 300 : 320);
+  if (!(w > 0 && h > 0)) return sticker ? { w: MW, h: MW } : { w: Math.min(MW, 240), h: 180 };
+  let k = Math.min(1, MW / w, MH / h);
+  if (!sticker && w * k < 60) k = Math.min(60 / w, MH / h);   // 很细长的图也别太窄
+  return { w: Math.max(24, Math.round(w * k)), h: Math.max(24, Math.round(h * k)) };
+}
+function picEl(m) {
+  const f = m.file, sz = picBox(f.w, f.h, m.sticker);
+  const p = el('div', 'pic'); p.dataset.fid = f.id; p.style.width = sz.w + 'px'; p.style.aspectRatio = sz.w + ' / ' + sz.h;
+  p.tabIndex = 0; p.setAttribute('role', 'button'); p.setAttribute('aria-label', (m.sticker ? '表情：' : '图片：') + f.name + '（点开看大图）');
+  p.title = m.sticker ? '' : f.name;
+  const img = document.createElement('img'); img.alt = m.sticker ? '[表情]' : f.name; img.decoding = 'async'; img.draggable = false; p.append(img);
+  if (!m.sticker && /\.gif$/i.test(f.name)) p.append(el('span', 'gif', 'GIF'));
+  p.onclick = () => lbOpen(f.id);
+  p.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); lbOpen(f.id); } };
+  if (PIC_IO) requestAnimationFrame(() => PIC_IO.observe(p)); else picLoad(p);
+  return p;
+}
+async function picLoad(p) {
+  const img = p.querySelector('img'); if (!img || img.src) return;
+  try {
+    const u = await getBlob(p.dataset.fid);
+    img.onload = () => { img.classList.add('ok'); p.classList.add('ld'); };
+    img.onerror = () => { p.classList.add('err', 'ld'); p.textContent = '图片打不开'; };
+    img.src = u;
+  } catch (e) { p.classList.add('err', 'ld'); p.textContent = e.message || '图片加载失败'; }
+}
+// 大图查看：滚轮 / 双指缩放、拖动、← → 切换聊天里的图片、下载、Esc 关闭
+let LB = null;
+function lbList() {
+  const seen = new Set(), out = [];
+  document.querySelectorAll('#msgs .m.im .pic[data-fid]').forEach(p => { const id = p.dataset.fid; if (seen.has(id)) return; seen.add(id);
+    const m = p.closest('.m'); out.push({ id, name: p.querySelector('img')?.alt || '图片', who: m?.querySelector('.nm')?.textContent || '', ts: +m?.dataset.ts || 0, sticker: !!p.closest('.stk') }); });
+  return out;
+}
+function lbOpen(id) {
+  const list = lbList(), i = Math.max(0, list.findIndex(x => x.id === id));
+  if (!list.length) return;
+  lbClose();
+  const ov = el('div', 'ilb'); ov.setAttribute('role', 'dialog'); ov.setAttribute('aria-label', '查看图片'); ov.tabIndex = -1;
+  const top = el('div', 'lbt'), nm = el('div', 'nm2'), v = el('div', 'lbv'), img = document.createElement('img'); img.alt = '';
+  const B = (t, title, fn, cls) => { const b = el('button', cls || '', t); b.type = 'button'; b.title = title; b.setAttribute('aria-label', title); b.onclick = e => { e.stopPropagation(); fn(); }; return b; };
+  const zp = el('span', 'zp', '100%');
+  top.append(nm, B('－', '缩小', () => lbZoom(1 / 1.25), 'zbtn'), zp, B('＋', '放大', () => lbZoom(1.25), 'zbtn'), B('适合', '适合屏幕 / 原始大小', () => lbFit(true)), B('下载', '下载原图', () => { const it = LB.list[LB.i]; download({ id: it.id, name: it.name }); }), B('✕', '关闭（Esc）', lbClose));
+  const pl = B('‹', '上一张（←）', () => lbGo(-1), 'nav l'), pr = B('›', '下一张（→）', () => lbGo(1), 'nav r');
+  v.append(img, pl, pr, el('div', 'lbh', '滚轮缩放 · 拖动查看 · 双击放大 / 还原 · ← → 切换 · Esc 关闭'));
+  ov.append(top, v); document.body.append(ov);
+  LB = { ov, v, img, nm, zp, pl, pr, list, i, s: 1, x: 0, y: 0, fit: 1, w: 0, h: 0, prevFocus: document.activeElement };
+  // 拖动 / 双指缩放
+  const pts = new Map(); let last = null, pinch = null, moved = false;
+  v.onpointerdown = e => { if (e.target.closest('button')) return; v.setPointerCapture(e.pointerId); pts.set(e.pointerId, { x: e.clientX, y: e.clientY }); moved = false;
+    if (pts.size === 2) { const [a, b] = [...pts.values()]; pinch = { d: Math.hypot(a.x - b.x, a.y - b.y), s: LB.s }; } else last = { x: e.clientX, y: e.clientY }; v.classList.add('drag'); };
+  v.onpointermove = e => { if (!pts.has(e.pointerId)) return; pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (pts.size === 2 && pinch) { const [a, b] = [...pts.values()]; const r = v.getBoundingClientRect(); lbZoomTo(pinch.s * Math.hypot(a.x - b.x, a.y - b.y) / pinch.d, (a.x + b.x) / 2 - r.left, (a.y + b.y) / 2 - r.top); moved = true; return; }
+    if (last) { const dx = e.clientX - last.x, dy = e.clientY - last.y; if (Math.abs(dx) + Math.abs(dy) > 2) moved = true; LB.x += dx; LB.y += dy; last = { x: e.clientX, y: e.clientY }; lbApply(); } };
+  const up = e => { pts.delete(e.pointerId); if (pts.size < 2) pinch = null; if (!pts.size) { v.classList.remove('drag');
+      if (!moved && e.type === 'pointerup' && e.target === v && LB.s <= LB.fit * 1.01) lbClose(); last = null; } else { const p = [...pts.values()][0]; last = { x: p.x, y: p.y }; } };
+  v.onpointerup = up; v.onpointercancel = up;
+  v.onwheel = e => { e.preventDefault(); const r = v.getBoundingClientRect(); lbZoomTo(LB.s * Math.exp(-e.deltaY * (e.ctrlKey ? .01 : .0018)), e.clientX - r.left, e.clientY - r.top); };
+  v.ondblclick = e => { const r = v.getBoundingClientRect(); if (LB.s > LB.fit * 1.05) lbFit(); else lbZoomTo(Math.max(LB.fit * 2.5, 1), e.clientX - r.left, e.clientY - r.top); };
+  document.addEventListener('keydown', lbKey, true); addEventListener('resize', lbResize);
+  ov.focus(); lbShow();
+}
+function lbKey(e) {
+  if (!LB) return;
+  if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); lbClose(); }
+  else if (e.key === 'ArrowLeft') { e.preventDefault(); lbGo(-1); }
+  else if (e.key === 'ArrowRight') { e.preventDefault(); lbGo(1); }
+  else if (e.key === '+' || e.key === '=') lbZoom(1.25);
+  else if (e.key === '-') lbZoom(1 / 1.25);
+  else if (e.key === '0') lbFit();
+}
+function lbResize() { if (LB) lbFit(); }
+function lbClose() {
+  if (!LB) return; const f = LB.prevFocus; LB.ov.remove(); LB = null;
+  document.removeEventListener('keydown', lbKey, true); removeEventListener('resize', lbResize);
+  if (f && f.focus && document.contains(f)) f.focus({ preventScroll: true });
+}
+function lbGo(d) { if (!LB) return; const n = LB.i + d; if (n < 0 || n >= LB.list.length) return; LB.i = n; lbShow(); }
+async function lbShow() {
+  const L = LB, it = L.list[L.i]; L.nm.textContent = ''; L.nm.append(it.name); if (it.who) L.nm.append(el('small', '', it.who + ' · ' + tmFmt(it.ts)));
+  L.pl.hidden = L.i <= 0; L.pr.hidden = L.i >= L.list.length - 1;
+  L.img.style.opacity = '0';
+  try {
+    const u = await getBlob(it.id); if (LB !== L || L.list[L.i] !== it) return;
+    L.img.onload = () => { if (LB !== L) return; L.w = L.img.naturalWidth; L.h = L.img.naturalHeight; lbFit(); L.img.style.opacity = '1'; };
+    L.img.src = u;
+  } catch (e) { toast(e.message || '图片加载失败'); }
+}
+function lbFit(toggle) {
+  const L = LB; if (!L || !L.w) return; const r = L.v.getBoundingClientRect();
+  L.fit = Math.min(1, (r.width - 40) / L.w, (r.height - 40) / L.h);
+  if (toggle && Math.abs(L.s - L.fit) < .01 && L.fit < 1) { lbZoomTo(1, r.width / 2, r.height / 2); return; }
+  L.s = L.fit; L.x = 0; L.y = 0; lbApply();
+}
+function lbZoom(k) { if (!LB) return; const r = LB.v.getBoundingClientRect(); lbZoomTo(LB.s * k, r.width / 2, r.height / 2); }
+function lbZoomTo(s, cx, cy) {   // 以 (cx, cy) 为中心缩放
+  const L = LB; if (!L || !L.w) return; const r = L.v.getBoundingClientRect();
+  s = Math.max(Math.min(L.fit, .1), Math.min(8, s));
+  const ox = r.width / 2 + L.x - L.w * L.s / 2, oy = r.height / 2 + L.y - L.h * L.s / 2;   // 图片左上角
+  const px = (cx - ox) / L.s, py = (cy - oy) / L.s;
+  const nx = cx - px * s, ny = cy - py * s;
+  L.s = s; L.x = nx + L.w * s / 2 - r.width / 2; L.y = ny + L.h * s / 2 - r.height / 2; lbApply();
+}
+function lbApply() {
+  const L = LB; if (!L) return;
+  if (L.s <= L.fit * 1.001) { L.x = 0; L.y = 0; }
+  L.img.style.width = L.w + 'px'; L.img.style.height = L.h + 'px';
+  L.img.style.transform = `translate(${L.x - L.w * L.s / 2}px, ${L.y - L.h * L.s / 2}px) scale(${L.s})`;
+  L.zp.textContent = Math.round(L.s * 100) + '%';
+}
+
+// ================= v0.17：表情包（图片放在自己电脑的文件夹里，点一下就发） =================
+// 来源三选一：桌面版 1.1+ 用桌面版读文件夹；Chrome / Edge 用 showDirectoryPicker（句柄存 IndexedDB）；
+// 其他浏览器 / 手机：自己挑几张图片存进这台设备的浏览器（IndexedDB）。
+const STK_EXT = /\.(png|jpe?g|gif|webp)$/i, STK_MAX = 10 * 1024 * 1024, STK_LIMIT = 600;
+const STK_MIME = { png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', gif: 'image/gif', webp: 'image/webp' };
+const STK = { mode: undefined, dir: null, items: [], urls: new Map(), q: '', open: false, dirty: true, loading: false, perm: true, err: '' };
+const stkDeskOk = () => !!(DESK && typeof DESK.listStickers === 'function');
+const stkFsOk = () => typeof window.showDirectoryPicker === 'function' && !(DESK && !stkDeskOk());   // 旧桌面版（1.0.0）不允许网页读文件夹
+function stkDb(mode, store, fn) {
+  return new Promise((res, rej) => {
+    const r = indexedDB.open('hush-stk', 1);
+    r.onupgradeneeded = () => { r.result.createObjectStore('kv'); r.result.createObjectStore('local', { keyPath: 'k' }); };
+    r.onerror = () => rej(r.error);
+    r.onsuccess = () => { const db = r.result; let q;
+      try { const tx = db.transaction(store, mode); q = fn(tx.objectStore(store)); tx.oncomplete = () => { db.close(); res(q && q.result); }; tx.onerror = tx.onabort = () => { db.close(); rej(tx.error); }; }
+      catch (e) { db.close(); rej(e); } };
+  });
+}
+async function stkMode() {   // 'desk' | 'dir' | 'local' | null（还没选）
+  if (STK.mode !== undefined) return STK.mode;
+  if (stkDeskOk()) { const d = await DESK.getStickerDir().catch(() => null); STK.dir = d; STK.mode = d ? 'desk' : (localStorage.hush_stk_mode === 'local' ? 'local' : null); return STK.mode; }
+  if (localStorage.hush_stk_mode === 'local') return (STK.mode = 'local');
+  if (stkFsOk()) { const h = await stkDb('readonly', 'kv', st => st.get('dir')).catch(() => null); if (h) { STK.dir = h; return (STK.mode = 'dir'); } }
+  return (STK.mode = null);
+}
+const stkRecent = () => { try { return JSON.parse(localStorage.hush_stk_recent || '[]'); } catch (_) { return []; } };
+function stkUse(k) { const a = stkRecent().filter(x => x !== k); a.unshift(k); localStorage.hush_stk_recent = JSON.stringify(a.slice(0, 16)); }
+function stkClearUrls() { STK.urls.forEach(u => URL.revokeObjectURL(u)); STK.urls.clear(); }
+async function stkScan() {   // 重新读一遍文件夹 / 本机表情
+  const mode = await stkMode(); STK.err = ''; STK.perm = true;
+  let items = [];
+  try {
+    if (mode === 'desk') {
+      const r = await DESK.listStickers(); STK.dir = r.dir || STK.dir;
+      if (r.error) STK.err = r.error;
+      items = (r.items || []).map(x => ({ k: x.name, name: x.name, size: x.size, v: x.size + ':' + x.mtime }));
+    } else if (mode === 'dir') {
+      const h = STK.dir, o = { mode: 'read' };
+      let ok = (await h.queryPermission(o)) === 'granted';
+      if (!ok && actNow()) ok = (await h.requestPermission(o).catch(() => 'denied')) === 'granted';
+      if (!ok) { STK.perm = false; STK.items = []; return; }
+      for await (const [name, e] of h.entries()) {
+        if (e.kind !== 'file' || !STK_EXT.test(name)) continue;
+        items.push({ k: name, name, h: e });
+        if (items.length >= STK_LIMIT * 2) break;
+      }
+      await Promise.all(items.map(async it => { try { const f = await it.h.getFile(); it.size = f.size; it.v = f.size + ':' + f.lastModified; it.file = f; } catch (_) { it.size = -1; } }));
+      items = items.filter(it => it.size > 0 && it.size <= STK_MAX);
+    } else if (mode === 'local') {
+      const all = (await stkDb('readonly', 'local', st => st.getAll()).catch(() => [])) || [];
+      items = all.sort((a, b) => a.added - b.added).map(x => ({ k: x.k, name: x.name, size: x.blob.size, v: x.k, blob: x.blob }));
+    }
+  } catch (e) { STK.err = e.message || String(e); }
+  items.sort((a, b) => a.name.localeCompare(b.name, 'zh-CN', { numeric: true }));
+  const keep = new Set(items.map(it => it.k + '|' + it.v));
+  for (const [k, u] of STK.urls) if (!keep.has(k)) { URL.revokeObjectURL(u); STK.urls.delete(k); }
+  STK.items = items.slice(0, STK_LIMIT); STK.dirty = false;
+}
+async function stkBlob(it) {
+  if (it.blob) return it.blob;
+  if (it.file) return it.file;
+  if (STK.mode === 'desk') {
+    const r = await DESK.readSticker(it.name);
+    if (!r || !r.bytes) throw new Error((r && r.error) || '读不到这张图片');
+    const ext = it.name.split('.').pop().toLowerCase();
+    return new Blob([r.bytes], { type: STK_MIME[ext] || 'application/octet-stream' });
+  }
+  if (it.h) return (it.file = await it.h.getFile());
+  throw new Error('读不到这张图片');
+}
+const stkIO = 'IntersectionObserver' in window ? new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { stkIO.unobserve(e.target); stkThumb(e.target); } }), { rootMargin: '200px' }) : null;
+async function stkThumb(btn) {
+  const it = btn._it; if (!it) return; const key = it.k + '|' + it.v;
+  let u = STK.urls.get(key);
+  if (!u) { try { u = URL.createObjectURL(await stkBlob(it)); STK.urls.set(key, u); } catch (_) { btn.classList.add('busy'); btn.title = '读不到：' + it.name; return; } }
+  const img = btn.querySelector('img'); if (img) img.src = u;
+}
+function stkBtn(it) {
+  const b = el('button'); b.type = 'button'; b.title = it.name.replace(STK_EXT, ''); b._it = it;
+  b.setAttribute('aria-label', '发送表情 ' + b.title);
+  const img = document.createElement('img'); img.alt = ''; img.decoding = 'async'; img.draggable = false; b.append(img);
+  b.onclick = () => stkSend(it, b);
+  if (STK.mode === 'local') b.oncontextmenu = e => { e.preventDefault(); stkRemoveLocal(it); };
+  if (stkIO) requestAnimationFrame(() => stkIO.observe(b)); else stkThumb(b);
+  return b;
+}
+async function stkSend(it, btn) {
+  if (it.size > STK_MAX) return toast('表情包最大 10MB');
+  btn && btn.classList.add('busy');
+  try {
+    const blob = await stkBlob(it);
+    if (blob.size > STK_MAX) throw new Error('表情包最大 10MB');
+    let hash = null;
+    try { if (crypto.subtle) hash = [...new Uint8Array(await crypto.subtle.digest('SHA-256', await blob.arrayBuffer()))].map(x => x.toString(16).padStart(2, '0')).join(''); } catch (_) {}
+    let r = hash ? await fetch('/api/stickers/send', { method: 'POST', headers: { ...hdr(), 'Content-Type': 'application/json' }, body: JSON.stringify({ hash, size: blob.size }) }).then(x => x.json()).catch(() => ({ need: true })) : { need: true };
+    if (r.need) {   // 服务器上还没有这张，传上去（服务器还会再按内容去重一次）
+      r = await fetch('/api/files', { method: 'POST', headers: { ...hdr(), 'Content-Type': 'application/octet-stream', 'X-File-Name': encodeURIComponent(it.name), 'X-Sticker': '1' }, body: blob }).then(x => x.json()).catch(() => ({ error: '网络错误，没发出去' }));
+    }
+    if (!r || r.error) throw new Error((r && r.error) || '发送失败');
+    stkUse(it.k);
+    if (!matchMedia('(pointer: coarse)').matches || !STK.keep) stkClose();
+    if (windowMode) backToLatest();
+  } catch (e) { toast(e.message || '发送失败'); }
+  finally { btn && btn.classList.remove('busy'); }
+}
+async function stkRemoveLocal(it) {
+  if (!confirm('从这台设备的表情里移除「' + it.name + '」？')) return;
+  await stkDb('readwrite', 'local', st => st.delete(it.k)).catch(() => {});
+  STK.dirty = true; stkRender(true);
+}
+async function stkAddLocal(files) {
+  let n = 0, big = 0;
+  for (const f of files) {
+    if (!STK_EXT.test(f.name) && !/^image\/(png|jpeg|gif|webp)$/.test(f.type)) continue;
+    if (f.size > STK_MAX) { big++; continue; }
+    const name = STK_EXT.test(f.name) ? f.name : (f.name || 'sticker') + '.' + (f.type.split('/')[1] || 'png').replace('jpeg', 'jpg');
+    const k = 'l' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+    try { await stkDb('readwrite', 'local', st => st.put({ k, name, blob: f, added: Date.now() + n })); n++; } catch (e) { toast('存不进去：' + e.message); break; }
+  }
+  if (big) toast(big + ' 张超过 10MB，没加进来');
+  localStorage.hush_stk_mode = 'local'; STK.mode = 'local'; STK.dirty = true;
+  if (n) toast('加了 ' + n + ' 张表情'); stkUi(); if (STK.open) stkRender(true);
+}
+$('#stkf').onchange = e => { const fl = [...e.target.files]; e.target.value = ''; if (fl.length) stkAddLocal(fl); };
+async function stkPickSource(fromSettings) {   // 选 / 更换表情包文件夹
+  if (stkDeskOk()) {
+    const d = await DESK.chooseStickerDir().catch(() => null); if (!d) return null;
+    STK.mode = 'desk'; STK.dir = d; localStorage.removeItem('hush_stk_mode'); STK.dirty = true; stkClearUrls();
+    stkUi(); if (fromSettings) toast('表情包文件夹：「' + d.name + '」'); if (STK.open) stkRender(true); return d;
+  }
+  if (stkFsOk()) {
+    try {
+      const h = await window.showDirectoryPicker({ id: 'hush-stk', mode: 'read', startIn: 'pictures' });
+      STK.mode = 'dir'; STK.dir = h; localStorage.removeItem('hush_stk_mode'); STK.dirty = true; stkClearUrls();
+      await stkDb('readwrite', 'kv', st => st.put(h, 'dir')).catch(() => {});
+      stkUi(); if (fromSettings) toast('表情包文件夹：「' + h.name + '」'); if (STK.open) stkRender(true); return h;
+    } catch (e) { if (e && e.name === 'AbortError') return null; toast('不能用文件夹，改成自己挑图片'); }
+  }
+  $('#stkf').click(); return null;   // 不支持选文件夹：挑几张图片存在这台设备上
+}
+function stkToggle() { STK.open ? stkClose() : stkOpenPanel(); }
+function stkClose() { STK.open = false; $('#stkp').hidden = true; $('#stkb').classList.remove('on'); $('#stkb').setAttribute('aria-expanded', 'false'); }
+async function stkOpenPanel() {
+  mpHide && mpHide();
+  STK.open = true; $('#stkp').hidden = false; $('#stkb').classList.add('on'); $('#stkb').setAttribute('aria-expanded', 'true');
+  await stkRender(true);   // 每次打开都重新读一遍文件夹（新加的图片马上能看到）
+  const q = $('#stkp .stkh input'); if (q && !matchMedia('(pointer: coarse)').matches) q.focus({ preventScroll: true });
+}
+async function stkRender(rescan) {
+  const p = $('#stkp'); const mode = await stkMode();
+  if (rescan && mode && !STK.loading) { STK.loading = true; if (!STK.items.length) { p.textContent = ''; p.append(el('div', 'stke', '正在读取表情包…')); } try { await stkScan(); } finally { STK.loading = false; } }
+  if (!STK.open) return;
+  p.textContent = '';
+  if (!mode) {   // 第一次用
+    const e = el('div', 'stke'); e.append(el('b', '', '把表情包放在自己电脑的一个文件夹里'));
+    e.append(el('div', '', stkDeskOk() || stkFsOk() ? '选好文件夹后，里面的 png / jpg / gif / webp 都会出现在这里，点一下就发出去。' : '这个浏览器不能直接读文件夹，可以挑几张图片存在这台设备上。'));
+    const r = el('div', 'row2'), b1 = el('button', 'pill2', stkDeskOk() || stkFsOk() ? '选择文件夹' : '添加图片'); b1.type = 'button'; b1.onclick = () => stkPickSource();
+    r.append(b1);
+    if (stkDeskOk() || stkFsOk()) { const b2 = el('button', 'pill2 ghost', '只挑几张图片'); b2.type = 'button'; b2.onclick = () => $('#stkf').click(); r.append(b2); }
+    e.append(r); p.append(e); return;
+  }
+  const h = el('div', 'stkh'), q = document.createElement('input'); q.placeholder = '按文件名找…'; q.value = STK.q; q.setAttribute('aria-label', '按文件名找表情');
+  q.oninput = () => { STK.q = q.value; stkGrid(); };
+  q.onkeydown = e => { if (e.key === 'Escape') { e.preventDefault(); stkClose(); $('#t').focus(); } else if (e.key === 'Enter') { e.preventDefault(); $('#stkp .stkg button')?.click(); } };
+  const rf = el('button', '', '刷新'); rf.type = 'button'; rf.title = '重新读取文件夹'; rf.onclick = () => stkRender(true);
+  const ch = el('button', '', mode === 'local' ? '添加' : '换文件夹'); ch.type = 'button'; ch.title = mode === 'local' ? '再添加几张图片' : '换一个表情包文件夹';
+  ch.onclick = () => mode === 'local' ? $('#stkf').click() : stkPickSource();
+  h.append(q); if (mode !== 'local') h.append(rf); h.append(ch); p.append(h);
+  if (mode === 'dir' && !STK.perm) {
+    const e = el('div', 'stke'); e.append(el('b', '', '需要再允许一次读取「' + STK.dir.name + '」'), el('div', '', '浏览器重开后会这样，点一下就好。'));
+    const r = el('div', 'row2'), b = el('button', 'pill2', '允许读取'); b.type = 'button'; b.onclick = async () => { await STK.dir.requestPermission({ mode: 'read' }).catch(() => {}); stkRender(true); }; r.append(b); e.append(r); p.append(e); return;
+  }
+  p.append(el('div', 'stks', '最近使用'), el('div', 'stkr'), el('div', 'stks', '全部'), el('div', 'stkg'));
+  const f = el('div', 'stkf'), where = el('span');
+  where.textContent = mode === 'local' ? '存在这台设备的浏览器里 · 右键 / 长按可以移除' : '文件夹：' + (STK.dir && (STK.dir.path || STK.dir.name) || '');
+  if (mode !== 'local') { where.title = STK.dir && (STK.dir.path || STK.dir.name) || ''; }
+  f.append(where); p.append(f);
+  stkGrid();
+}
+function stkGrid() {
+  const p = $('#stkp'), g = p.querySelector('.stkg'), r = p.querySelector('.stkr'); if (!g) return;
+  g.textContent = ''; r.textContent = '';
+  const q = STK.q.trim().toLowerCase(), list = q ? STK.items.filter(it => it.name.toLowerCase().includes(q)) : STK.items;
+  const by = new Map(STK.items.map(it => [it.k, it])), rec = q ? [] : stkRecent().map(k => by.get(k)).filter(Boolean);
+  const rh = r.previousElementSibling; r.hidden = rh.hidden = !rec.length;
+  rec.forEach(it => r.append(stkBtn(it)));
+  const gh = g.previousElementSibling; gh.textContent = '全部'; gh.append(el('span', '', STK.items.length + ' 张' + (STK.items.length >= STK_LIMIT ? '（只显示前 ' + STK_LIMIT + ' 张）' : '')));
+  if (!list.length) {
+    const e = el('div', 'stke'); e.style.gridColumn = '1 / -1';
+    e.textContent = STK.err ? '读取失败：' + STK.err : q ? '没有找到“' + STK.q + '”' : STK.mode === 'local' ? '还没有表情，点“添加”挑几张图片' : '这个文件夹里还没有图片（png / jpg / gif / webp，10MB 以内）';
+    g.append(e); return;
+  }
+  list.forEach(it => g.append(stkBtn(it)));
+}
+async function stkUi() {   // 设置里的“表情包”一行 + 输入栏的按钮
+  $('#stkb').hidden = !('indexedDB' in window) && !stkDeskOk();
+  const row = $('#sstk'); if (!row) return; row.hidden = $('#stkb').hidden; if (row.hidden) return;
+  const mode = await stkMode(), sm = $('#sstks'), chip = $('#sstkd'), b = $('#sstkb');
+  chip.hidden = true;
+  if (mode === 'desk' || mode === 'dir') { sm.textContent = '点输入栏的表情按钮，就能发这个文件夹里的图片'; chip.hidden = false; chip.textContent = STK.dir.name; chip.title = STK.dir.path || STK.dir.name; b.textContent = '更改'; }
+  else if (mode === 'local') { const n = ((await stkDb('readonly', 'local', st => st.count()).catch(() => 0)) || 0); sm.textContent = '存在这台设备上的 ' + n + ' 张表情'; b.textContent = stkDeskOk() || stkFsOk() ? '改用文件夹' : '添加图片'; }
+  else { sm.textContent = stkDeskOk() || stkFsOk() ? '选一个放表情包的文件夹，点一下就能发' : '挑几张图片存在这台设备上，点一下就能发'; b.textContent = stkDeskOk() || stkFsOk() ? '选择文件夹' : '添加图片'; }
+}
+if (stkDeskOk() && DESK.onStickersChanged) DESK.onStickersChanged(() => { STK.dirty = true; if (STK.open) stkRender(true); });
+document.addEventListener('pointerdown', e => { if (STK.open && !e.target.closest('#stkp,#stkb')) stkClose(); }, true);
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && STK.open) { stkClose(); } });
+stkUi();
+
 let att = null;   // 输入框里等待发送的截图
 function attSet(file) { attClear(); att = { file, url: URL.createObjectURL(file) }; $('#atti').src = att.url; $('#attn').textContent = file.name; $('#att').hidden = false; $('#t').focus(); }
 function attClear() { if (att) URL.revokeObjectURL(att.url); att = null; $('#att').hidden = true; }
@@ -2926,7 +3333,7 @@ async function installApp() {
   if (isIOS) { if ($('#setv').hidden) openSettings(); $('#ioshelp').hidden = false; }
 }
 // ----- 设置面板 -----
-function openSettings() { closeDrawers(); notifUi(); instUi(); shotUi(); deskUi(); $('#sgrp').hidden = !(me && me.admin); $('#setv').hidden = false; }
+function openSettings() { closeDrawers(); notifUi(); instUi(); shotUi(); stkUi(); deskUi(); $('#sgrp').hidden = !(me && me.admin); $('#setv').hidden = false; }
 function closeSettings() { $('#setv').hidden = true; $('#ioshelp').hidden = true; }
 // ----- 系统通知：页面在后台 / 没有焦点时才弹；@我 的单独弹并且一定响，普通消息合并成一条 -----
 const NOTIF_OK = 'Notification' in window;
@@ -2953,7 +3360,7 @@ async function notify(m) {
   const quiet = !at && now - lastNote < 8000;   // 8 秒内连续的普通消息只更新通知、不重复响
   lastNote = now;
   const title = at ? who + ' 提到了你' : '群聊 · ' + who;
-  const opt = { body: m.file ? '发送了文件：' + m.file.name : m.text.slice(0, 140), icon: '/icons/icon-192.png', badge: '/icons/badge-96.png',
+  const opt = { body: m.file ? (m.sticker ? '[表情]' : m.file.image ? '[图片]' : '发送了文件：' + m.file.name) : m.text.slice(0, 140), icon: '/icons/icon-192.png', badge: '/icons/badge-96.png',
     tag: at ? 'hush-at-' + m.id : 'hush-chat', renotify: !quiet, silent: quiet, data: { id: m.id }, timestamp: m.ts };
   try {
     const reg = DESK ? null : (swReg || (navigator.serviceWorker && await navigator.serviceWorker.getRegistration()));   // 桌面版直接用系统通知

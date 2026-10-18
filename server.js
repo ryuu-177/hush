@@ -114,6 +114,9 @@ for (const [col, def] of [['nick', 'TEXT'], ['avatar', 'TEXT'], ['color', 'TEXT'
 // v0.9 升级：个人背景、个人音乐仓库、群聊歌单、群聊设置（全部是新增的表 / 字段，旧数据不受影响）
 addCol('users', 'bg', 'TEXT');
 addCol('messages', 'kind', 'TEXT');
+// v0.17：图片尺寸（聊天里按比例占位）、内容哈希（表情包去重）、是否表情包（不进文件仓）
+addCol('files', 'w', 'INTEGER'); addCol('files', 'h', 'INTEGER'); addCol('files', 'hash', 'TEXT'); addCol('files', 'sticker', 'INTEGER DEFAULT 0');
+db.exec('CREATE INDEX IF NOT EXISTS files_hash ON files(hash)');
 db.exec(`
 CREATE TABLE IF NOT EXISTS music(id TEXT PRIMARY KEY, user_id INTEGER, title TEXT, ext TEXT, mime TEXT, size INTEGER, dur REAL, created INTEGER);
 CREATE TABLE IF NOT EXISTS playlist(qid INTEGER PRIMARY KEY, music_id TEXT, user_id INTEGER, k INTEGER, pin INTEGER DEFAULT 0, added INTEGER);
@@ -190,8 +193,16 @@ app.get('/api/desktop-version', (req, res) => {
   const d = deskInfo(); res.set('Cache-Control', 'no-store');
   d ? res.json(d) : res.status(404).json({ error: '服务器上还没有放桌面版' });
 });
+// v0.17：桌面版 1.1.0 起用 electron-updater 在软件里自动更新，它会来取 latest.yml（版本号、文件名、sha512）和 .blockmap
+const DESK_EXTRA = /^(latest\.yml|Hush-Setup-\d+\.\d+\.\d+\.exe\.blockmap)$/;
 app.get('/desktop/:f', (req, res) => {
   const f = String(req.params.f || '');
+  if (DESK_EXTRA.test(f)) {
+    const p = path.join(DESK_DIR, f);
+    if (!fs.existsSync(p)) return res.status(404).end();
+    res.set({ 'Cache-Control': 'no-cache', 'X-Content-Type-Options': 'nosniff', 'Content-Type': f.endsWith('.yml') ? 'text/yaml; charset=utf-8' : 'application/octet-stream' });
+    return res.sendFile(p);
+  }
   if (!DESK_FILE.test(f)) return res.status(404).end();
   const p = path.join(DESK_DIR, f);
   if (!fs.existsSync(p)) return res.status(404).end();
@@ -279,7 +290,73 @@ function previewOf(name) {
   return null;
 }
 for (const f of db.prepare('SELECT id, name FROM files WHERE kind IS NULL').all()) db.prepare('UPDATE files SET kind=? WHERE id=?').run(kindOf(f.name), f.id);
-const fileMeta = f => f && { id: f.id, name: f.name, size: f.size, mime: f.mime, image: f.mime.startsWith('image/'), deleted: !!f.deleted, kind: f.kind || kindOf(f.name), preview: previewOf(f.name), created: f.created };
+// v0.17：读图片文件头拿宽高（PNG / GIF / JPEG / WebP），读不出来就返回 null
+function imageSize(b) {
+  try {
+    if (b.length >= 24 && b.readUInt32BE(0) === 0x89504e47) return { w: b.readUInt32BE(16), h: b.readUInt32BE(20) };
+    if (b.length >= 10 && b.toString('latin1', 0, 3) === 'GIF') return { w: b.readUInt16LE(6), h: b.readUInt16LE(8) };
+    if (b.length >= 30 && b.toString('latin1', 0, 4) === 'RIFF' && b.toString('latin1', 8, 12) === 'WEBP') {
+      const t = b.toString('latin1', 12, 16);
+      if (t === 'VP8X') return { w: 1 + b.readUIntLE(24, 3), h: 1 + b.readUIntLE(27, 3) };
+      if (t === 'VP8 ') return { w: b.readUInt16LE(26) & 0x3fff, h: b.readUInt16LE(28) & 0x3fff };
+      if (t === 'VP8L') { const n = b.readUInt32LE(21); return { w: (n & 0x3fff) + 1, h: ((n >> 14) & 0x3fff) + 1 }; }
+    }
+    if (b[0] === 0xff && b[1] === 0xd8) {
+      let i = 2;
+      while (i + 9 < b.length) {
+        if (b[i] !== 0xff) { i++; continue; }
+        const m = b[i + 1];
+        if (m === 0xd8 || m === 0x01 || (m >= 0xd0 && m <= 0xd7)) { i += 2; continue; }
+        const len = b.readUInt16BE(i + 2);
+        if ((m >= 0xc0 && m <= 0xcf) && m !== 0xc4 && m !== 0xc8 && m !== 0xcc) {
+          let w = b.readUInt16BE(i + 7), h = b.readUInt16BE(i + 5);
+          return { w, h, jpeg: true };
+        }
+        i += 2 + len;
+      }
+    }
+  } catch (_) {}
+  return null;
+}
+// JPEG 的 EXIF 方向 5–8 是旋转 90°，宽高要对调（浏览器显示时会按 EXIF 转正）
+function jpegRotated(b) {
+  try {
+    let i = 2;
+    while (i + 4 < b.length && b[i] === 0xff) {
+      const m = b[i + 1], len = b.readUInt16BE(i + 2);
+      if (m === 0xe1 && b.toString('latin1', i + 4, i + 8) === 'Exif') {
+        const t = i + 10, le = b.toString('latin1', t, t + 2) === 'II';
+        const r16 = o => le ? b.readUInt16LE(o) : b.readUInt16BE(o), r32 = o => le ? b.readUInt32LE(o) : b.readUInt32BE(o);
+        const ifd = t + r32(t + 4), n = r16(ifd);
+        for (let k = 0; k < n; k++) { const e = ifd + 2 + k * 12; if (r16(e) === 0x0112) return r16(e + 8) >= 5; }
+        return false;
+      }
+      if (m === 0xda) break;
+      i += 2 + len;
+    }
+  } catch (_) {}
+  return false;
+}
+function readHead(file, n = 256 * 1024) { try { const fd = fs.openSync(file, 'r'); const b = Buffer.alloc(n); const k = fs.readSync(fd, b, 0, n, 0); fs.closeSync(fd); return b.subarray(0, k); } catch (_) { return null; } }
+function dimsOf(file) {
+  const b = readHead(file); if (!b) return null;
+  const d = imageSize(b); if (!d || !(d.w > 0 && d.h > 0)) return null;
+  if (d.jpeg && jpegRotated(b)) return { w: d.h, h: d.w };
+  return { w: d.w, h: d.h };
+}
+const setDims = db.prepare('UPDATE files SET w=?, h=? WHERE id=?');
+const fileMeta = f => {
+  if (!f) return f;
+  const image = f.mime.startsWith('image/');
+  if (image && !f.deleted && f.w == null) {   // 老图片：第一次用到时补上宽高（读不出来记 0，不再重复读）
+    const d = dimsOf(path.join(UPLOAD_DIR, f.id)) || { w: 0, h: 0 };
+    setDims.run(d.w, d.h, f.id); f.w = d.w; f.h = d.h;
+  }
+  const o = { id: f.id, name: f.name, size: f.size, mime: f.mime, image, deleted: !!f.deleted, kind: f.kind || kindOf(f.name), preview: previewOf(f.name), created: f.created };
+  if (image && f.w > 0 && f.h > 0) { o.w = f.w; o.h = f.h; }
+  if (f.sticker) o.sticker = true;
+  return o;
+};
 const fileById = db.prepare('SELECT * FROM files WHERE id=?');
 
 // ---------- 消息输出（v0.7：带 id / 回复 / 撤回 / 提及） ----------
@@ -293,7 +370,7 @@ function snippet(r) {
   if (r.recalled) return { ...base, recalled: true, text: '' };
   if (r.mkind === 'song') return { ...base, text: '点了《' + r.text + '》' };
   if (r.mkind === 'live') return { ...base, text: r.text === '1' ? '开始共享屏幕' : '结束了屏幕共享' };
-  if (r.file_id) { const f = fileById.get(r.file_id); return { ...base, text: '', file: f ? f.name : '文件' }; }
+  if (r.file_id) { const f = fileById.get(r.file_id); return { ...base, text: '', file: f ? f.name : '文件', image: !!(f && f.mime.startsWith('image/')), sticker: r.mkind === 'sticker' }; }
   return { ...base, text: [...r.text].slice(0, 80).join('') };
 }
 function msgOut(r) {
@@ -305,6 +382,7 @@ function msgOut(r) {
   if (r.mkind === 'song') { o.song = { title: r.text }; return o; }   // v0.9：点歌系统行
   if (r.mkind === 'live') { o.text = ''; o.live = { on: r.text === '1' }; return o; }   // v0.11：共享屏幕系统行
   if (r.file_id) o.file = fileMeta(fileById.get(r.file_id)) || { id: r.file_id, name: '文件', size: 0, deleted: true };
+  if (r.mkind === 'sticker') o.sticker = true;   // v0.17：表情包（不带气泡，小图）
   if (r.reply_to) o.reply = snippet(msgRow.get(r.reply_to)) || { id: r.reply_to, gone: true };
   if (r.mentions) { try { o.mentions = JSON.parse(r.mentions); } catch (_) {} }
   return o;
@@ -328,6 +406,10 @@ app.post('/api/files', (req, res) => {
   const name = safeName(req.headers['x-file-name']);
   const ext = (name.match(/\.([A-Za-z0-9]+)$/) || [])[1]?.toLowerCase();
   const mime = IMAGE_TYPES[ext] || 'application/octet-stream';
+  const sticker = req.headers['x-sticker'] === '1';   // v0.17：表情包
+  if (sticker && (!IMAGE_TYPES[ext] || len > STICKER_MAX)) { req.resume(); return res.status(400).json({ error: '表情包只能是 10MB 以内的 png / jpg / gif / webp' }); }
+  if (sticker && !stickerRate(u.id)) { req.resume(); return res.status(429).json({ error: '发得太快了，歇一下' }); }
+  const hasher = crypto.createHash('sha256');
   const id = crypto.randomBytes(16).toString('hex');
   const tmp = path.join(UPLOAD_DIR, id + '.part');
   const out = fs.createWriteStream(tmp);
@@ -339,7 +421,8 @@ app.post('/api/files', (req, res) => {
     if (!res.headersSent) res.status(code).json({ error });
   };
   req.on('data', c => {
-    size += c.length;
+    size += c.length; hasher.update(c);
+    if (sticker && size > STICKER_MAX) bail(413, '表情包最大 10MB');
     if (size > MAX_FILE) bail(413, '文件太大，最大 ' + MAX_FILE_MB + 'MB');
     if (size > MAX_FILE * 2) req.destroy();   // 没有 Content-Length 还一直发，就断开
   });
@@ -348,15 +431,49 @@ app.post('/api/files', (req, res) => {
   out.on('finish', () => {
     if (done) return; done = true;
     if (!size) { fs.rm(tmp, { force: true }, () => {}); return res.status(400).json({ error: '不能上传空文件' }); }
+    const hash = hasher.digest('hex'), ts = Date.now();
+    if (sticker) {   // 同一张表情服务器上只存一份
+      const ex = stickerByHash.get(hash, size);
+      if (ex) { fs.rm(tmp, { force: true }, () => {}); return res.json(sendSticker(u.id, ex.id)); }
+    }
     fs.renameSync(tmp, path.join(UPLOAD_DIR, id));
-    const ts = Date.now();
-    db.prepare('INSERT INTO files(id,user_id,name,size,mime,created,kind) VALUES(?,?,?,?,?,?,?)').run(id, u.id, name, size, mime, ts, kindOf(name));
+    const d = mime.startsWith('image/') ? dimsOf(path.join(UPLOAD_DIR, id)) : null;
+    if (sticker && !d) { fs.rm(path.join(UPLOAD_DIR, id), { force: true }, () => {}); return res.status(400).json({ error: '这不是有效的图片' }); }
+    db.prepare('INSERT INTO files(id,user_id,name,size,mime,created,kind,w,h,hash,sticker) VALUES(?,?,?,?,?,?,?,?,?,?,?)')
+      .run(id, u.id, name, size, mime, ts, kindOf(name), d ? d.w : (mime.startsWith('image/') ? 0 : null), d ? d.h : (mime.startsWith('image/') ? 0 : null), hash, sticker ? 1 : 0);
+    if (sticker) return res.json(sendSticker(u.id, id));
     const r = db.prepare('INSERT INTO messages(user_id,text,ts,file_id) VALUES(?,?,?,?)').run(u.id, '', ts, id);
     const f = fileMeta(fileById.get(id));
     io.emit('msg', msgOut(msgRow.get(Number(r.lastInsertRowid))));
     res.json(f);
   });
   req.pipe(out);
+});
+
+// ---------- 表情包（v0.17）：先按哈希问一下，服务器已经有这张就不用再传 ----------
+const STICKER_MAX = 10 * 1024 * 1024;
+const stickerByHash = db.prepare("SELECT id FROM files WHERE hash=? AND size=? AND deleted=0 AND mime LIKE 'image/%' ORDER BY sticker DESC, created LIMIT 1");
+const stickerTimes = new Map();
+function stickerRate(uid) {   // 每人 10 秒内最多 8 张
+  const now = Date.now(), a = (stickerTimes.get(uid) || []).filter(t => now - t < 10000);
+  if (a.length >= 8) { stickerTimes.set(uid, a); return false; }
+  a.push(now); stickerTimes.set(uid, a); return true;
+}
+function sendSticker(uid, fid) {
+  const r = db.prepare("INSERT INTO messages(user_id,text,ts,file_id,kind) VALUES(?,?,?,?,'sticker')").run(uid, '', Date.now(), fid);
+  addXp(uid, 1);
+  io.emit('msg', msgOut(msgRow.get(Number(r.lastInsertRowid))));
+  return { ok: true, id: fid, reused: true };
+}
+app.post('/api/stickers/send', (req, res) => {
+  const u = userOf(req);
+  if (!u) return res.status(401).json({ error: '请先登录' });
+  const hash = String((req.body || {}).hash || ''), size = Number((req.body || {}).size) || 0;
+  if (!/^[a-f0-9]{64}$/.test(hash) || !(size > 0 && size <= STICKER_MAX)) return res.status(400).json({ error: '参数不对' });
+  const ex = stickerByHash.get(hash, size);
+  if (!ex) return res.json({ need: true });
+  if (!stickerRate(u.id)) return res.status(429).json({ error: '发得太快了，歇一下' });
+  res.json(sendSticker(u.id, ex.id));
 });
 
 // 下载：必须登录；一律加 nosniff 和沙箱 CSP。只有白名单图片可以 inline，其余全部强制下载
@@ -381,7 +498,7 @@ app.get('/api/files/:id', (req, res) => {
 // 文件仓列表：分类 / 搜索 / 排序 / 分页
 app.get('/api/files', (req, res) => {
   if (!userOf(req)) return res.status(401).json({ error: '请先登录' });
-  const q = req.query, where = ['f.deleted=0'], args = [];
+  const q = req.query, where = ['f.deleted=0', 'COALESCE(f.sticker,0)=0'], args = [];   // v0.17：表情包不进文件仓
   if (['image', 'doc', 'media', 'other'].includes(q.cat)) { where.push('f.kind=?'); args.push(q.cat); }
   if (q.q) { where.push("f.name LIKE ? ESCAPE '\\'"); args.push('%' + String(q.q).slice(0, 100).replace(/[\\%_]/g, c => '\\' + c) + '%'); }
   if (q.id) { where.push('f.id=?'); args.push(String(q.id)); }
@@ -390,7 +507,7 @@ app.get('/api/files', (req, res) => {
   const w = where.join(' AND ');
   const total = db.prepare(`SELECT COUNT(*) n FROM files f WHERE ${w}`).get(...args).n;
   const rows = db.prepare(`SELECT f.*, u.name uname, u.nick unick FROM files f LEFT JOIN users u ON u.id=f.user_id WHERE ${w} ORDER BY ${order}, f.rowid DESC LIMIT ? OFFSET ?`).all(...args, limit, offset);
-  const latest = db.prepare('SELECT MAX(created) t FROM files WHERE deleted=0').get().t || 0;
+  const latest = db.prepare('SELECT MAX(created) t FROM files WHERE deleted=0 AND COALESCE(sticker,0)=0').get().t || 0;
   res.json({ total, latest, items: rows.map(r => ({ ...fileMeta(r), uploader: { name: r.uname, nick: r.unick || r.uname } })) });
 });
 
@@ -1075,7 +1192,9 @@ io.on('connection', socket => {
     if (!row || row.recalled) return no('消息不存在或已撤回');
     if (!u.is_admin && (row.user_id !== uid || Date.now() - row.ts > RECALL_MS)) return no(row.user_id !== uid ? '只能撤回自己的消息' : '超过 2 分钟，不能撤回了');
     db.prepare("UPDATE messages SET recalled=1, recalled_by=?, text='', mentions=NULL WHERE id=?").run(uid, row.id);
-    if (row.file_id) {
+    // v0.17：表情包可能被很多条消息共用，只有没人再用时才删文件
+    const shared = row.file_id && db.prepare('SELECT COUNT(*) n FROM messages WHERE file_id=? AND recalled=0 AND id<>?').get(row.file_id, row.id).n > 0;
+    if (row.file_id && !shared) {
       db.prepare('UPDATE files SET deleted=1 WHERE id=?').run(row.file_id);
       fs.rm(path.join(UPLOAD_DIR, row.file_id), { force: true }, () => {});
       io.emit('file:deleted', { id: row.file_id });
