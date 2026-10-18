@@ -172,6 +172,32 @@ app.get('/sw.js', (req, res) => res.set({ ...noCache, 'Content-Type': 'text/java
 app.get('/manifest.webmanifest', (req, res) => res.set({ ...noCache, 'Content-Type': 'application/manifest+json; charset=utf-8' }).sendFile(path.join(PUB, 'manifest.webmanifest')));
 // 离线页用它判断服务器是否恢复（不需要登录，只返回版本号）
 app.get('/api/ping', (req, res) => res.set('Cache-Control', 'no-store').json({ ok: true, v: VERSION }));
+// ---------- 桌面版更新（v0.16） ----------
+// 在程序目录建 desktop 文件夹，放进安装包和 latest.json：{"version":"1.0.0","file":"Hush-Setup-1.0.0.exe","notes":"更新说明"}
+// 桌面版启动时会来问 /api/desktop-version，有新版本就提示下载；网页版设置里也会出现“下载 Windows 桌面版”。
+const DESK_DIR = path.join(__dirname, 'desktop');
+const DESK_FILE = /^Hush-Setup-\d+\.\d+\.\d+\.exe$/;
+function deskInfo() {
+  try {
+    const j = JSON.parse(fs.readFileSync(path.join(DESK_DIR, 'latest.json'), 'utf8'));
+    const v = String(j.version || ''), f = path.basename(String(j.file || ''));
+    if (!/^\d+\.\d+\.\d+$/.test(v)) return null;
+    const ok = DESK_FILE.test(f) && fs.existsSync(path.join(DESK_DIR, f));
+    return { version: v, url: ok ? '/desktop/' + f : null, notes: String(j.notes || '').slice(0, 1000) };
+  } catch (_) { return null; }
+}
+app.get('/api/desktop-version', (req, res) => {
+  const d = deskInfo(); res.set('Cache-Control', 'no-store');
+  d ? res.json(d) : res.status(404).json({ error: '服务器上还没有放桌面版' });
+});
+app.get('/desktop/:f', (req, res) => {
+  const f = String(req.params.f || '');
+  if (!DESK_FILE.test(f)) return res.status(404).end();
+  const p = path.join(DESK_DIR, f);
+  if (!fs.existsSync(p)) return res.status(404).end();
+  res.set({ 'Cache-Control': 'no-cache', 'X-Content-Type-Options': 'nosniff' });
+  res.download(p, f);
+});
 app.use(express.static(PUB));
 
 // ---------- 防暴力尝试：同一来源 10 分钟内最多失败 10 次 ----------

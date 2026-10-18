@@ -8,3 +8,6 @@ uploads/
 .cloudflared/
 *.pem
 cert.pem
+desktop/
+*.exe
+turn.json

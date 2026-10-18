@@ -489,8 +489,8 @@ aside h4{margin:22px 0 6px;font-size:12px;font-weight:600;letter-spacing:.02em}
 /* 消息气泡 */
 #msgs{gap:16px}
 .h{margin-bottom:3px}
-.b{padding:9px 14px;border-radius:16px 16px 16px 5px;border-color:color-mix(in srgb,var(--line) 70%,transparent);box-shadow:var(--sh1)}
-.own .b{border-radius:16px 16px 5px 16px;border-color:transparent;background:linear-gradient(160deg,var(--ac),color-mix(in srgb,var(--ac) 80%,#000))}
+.b{padding:9px 14px;border-radius:5px 16px 16px 16px;border-color:color-mix(in srgb,var(--line) 70%,transparent);box-shadow:var(--sh1)}
+.own .b{border-radius:16px 5px 16px 16px;border-color:transparent;background:linear-gradient(160deg,var(--ac),color-mix(in srgb,var(--ac) 80%,#000))}
 .qt{border-radius:10px}
 /* 输入区 */
 #f{gap:10px;align-items:center}
@@ -1024,11 +1024,11 @@ aside .me + .bar,.bar{border-radius:99px;overflow:hidden}
 /* ---- 聊天气泡：圆润液态玻璃 ---- */
 #msgs{gap:22px}
 .m .b,.m.own .b{position:relative;isolation:isolate;padding:11px 18px 12px;color:var(--ef-tx1);
-  background:var(--lq-bubble)!important;border:1px solid var(--lq-edge)!important;border-radius:20px 20px 20px 6px!important;
+  background:var(--lq-bubble)!important;border:1px solid var(--lq-edge)!important;border-radius:6px 20px 20px 20px!important;
   -webkit-backdrop-filter:blur(calc(18px*var(--lq-bk,1))) saturate(1.8);backdrop-filter:blur(calc(18px*var(--lq-bk,1))) saturate(1.8);
   box-shadow:inset 0 1px 0 var(--lq-spec),inset 0 -10px 18px -14px var(--lq-tint),0 0 0 .5px var(--lq-line),var(--lq-drop)!important;
   -webkit-mask:none;mask:none;transition:transform .35s var(--ease),box-shadow .3s}
-.m.own .b{background:var(--lq-bubble-own)!important;border-radius:20px 20px 6px 20px!important;
+.m.own .b{background:var(--lq-bubble-own)!important;border-radius:20px 6px 20px 20px!important;
   box-shadow:inset 0 1px 0 rgba(255,255,255,.7),inset 0 -10px 18px -14px #8fa11c,0 0 0 .5px rgba(80,95,0,.2),0 10px 24px -14px var(--lq-lime-glow)!important}
 .m .b::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;border-radius:inherit!important;
   background:radial-gradient(120% 80% at 18% 0%,var(--lq-spec),transparent 48%);opacity:.75}
@@ -1143,8 +1143,8 @@ input,textarea,select,.nesf{transition:border-color .35s var(--lq-out),box-shado
 
 /* ---- 消息：从气泡尾巴的方向“长”出来 ---- */
 .m{animation:none}
-.m .b{animation:bubIn .7s var(--lq-spring) both;transform-origin:0% 100%}
-.m.own .b{transform-origin:100% 100%}
+.m .b{animation:bubIn .7s var(--lq-spring) both;transform-origin:0% 0%}
+.m.own .b{transform-origin:100% 0%}
 .m .h,.m .av{animation:inU .6s var(--lq-out) both}
 @keyframes bubIn{from{opacity:0;transform:scale(.86) translateY(10px);filter:blur(calc(4px*var(--lq-bk,1)))}55%{opacity:1;filter:none}to{opacity:1;transform:none;filter:none}}
 .sys{animation:inU .6s var(--lq-out) both}
@@ -1181,8 +1181,8 @@ input,textarea,select,.nesf{transition:border-color .35s var(--lq-out),box-shado
   .mnav .av{width:34px!important;height:34px!important}
   #msgs{padding:18px 12px 12px!important;gap:16px!important}
   .m{gap:8px}.m .av.s{width:28px!important;height:28px!important;font-size:11px!important}
-  .m .b,.m.own .b{font-size:15.5px;line-height:1.65;padding:10px 15px 11px!important;border-radius:22px 22px 22px 7px!important}
-  .m.own .b{border-radius:22px 22px 7px 22px!important}
+  .m .b,.m.own .b{font-size:15.5px;line-height:1.65;padding:10px 15px 11px!important;border-radius:7px 22px 22px 22px!important}
+  .m.own .b{border-radius:22px 7px 22px 22px!important}
   .h{font-size:9.5px!important;margin-bottom:4px}
   /* 贴底 Dock */
   #f{margin:0 10px calc(env(safe-area-inset-bottom) + 10px)!important;padding:6px!important;gap:4px!important;align-items:center!important;border-radius:30px!important;
@@ -1272,6 +1272,21 @@ button:where(:not(.tgl,.ib2,.ib3,.mnav,.sw button,.tabs button,.seg button)):whe
 @media(pointer:coarse){.shotb{display:none!important}}
 @media(prefers-reduced-motion:reduce){.att,.shcard,.shov{animation:none}}
 .slots{flex-wrap:nowrap}.slots i{flex:1 1 0;min-width:6px;max-width:26px}
+/* ===== v0.16：截图保存位置更显眼 / 桌面版 ===== */
+.shrow{flex-wrap:wrap}
+.shrow .stx{min-width:150px}
+.shdir{display:inline-flex;align-items:center;gap:6px;margin-top:5px;max-width:100%;padding:3px 10px;border-radius:999px;font:600 12px/1.5 var(--sans,inherit);color:var(--ef-tx1,var(--fg));background:color-mix(in srgb,var(--ef-acd,var(--ac)) 16%,transparent);border:1px solid color-mix(in srgb,var(--ef-acd,var(--ac)) 40%,transparent);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;align-self:flex-start}
+.shdir::before{content:"";flex:none;width:13px;height:10px;border-radius:2px 2px 3px 3px;background:currentColor;opacity:.55;-webkit-mask:linear-gradient(#000,#000);clip-path:polygon(0 18%,40% 18%,52% 0,100% 0,100% 100%,0 100%)}
+.sbtns{display:flex;gap:6px;flex:none;margin-left:auto}
+.pill2.ghost{background:none!important;border-color:transparent!important;box-shadow:none!important;color:var(--ef-tx3,var(--mut))!important;font-weight:500}
+.pill2.ghost:hover{color:var(--ef-tx1,var(--fg))!important}
+a.pill2{text-decoration:none;display:inline-flex;align-items:center}
+.srow.flash{animation:sflash 1.6s ease}
+@keyframes sflash{0%,60%{box-shadow:0 0 0 2px var(--ef-acd,var(--ac)),var(--lq-drop,none)}100%{box-shadow:none}}
+.shcard .shlinks{grid-area:links;display:flex;gap:14px;justify-content:flex-start;align-items:center;font-size:11.5px}
+.shcard .shlinks a{color:var(--ef-tx3,var(--mut));cursor:pointer;text-decoration:underline;text-underline-offset:3px;text-decoration-color:color-mix(in srgb,currentColor 40%,transparent)}
+.shcard .shlinks a:hover{color:var(--ef-tx1,var(--fg))}
+.shcard{grid-template-areas:"img tx x" "links links links" "acts acts acts"}
 </style>
 <script src="/lq-glass.js"></script>
 </head>
@@ -1497,13 +1512,18 @@ button:where(:not(.tgl,.ib2,.ib3,.mnav,.sw button,.tabs button,.seg button)):whe
         <div class="stx"><b>安装 Hush</b><small id="sinsts"></small></div>
         <button class="pill2" id="binst" type="button" onclick="installApp()">安装</button>
       </div>
+      <div class="srow shrow" id="sshot" hidden>
+        <div class="si"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8V5.5A1.5 1.5 0 0 1 5.5 4H8M16 4h2.5A1.5 1.5 0 0 1 20 5.5V8M20 16v2.5a1.5 1.5 0 0 1-1.5 1.5H16M8 20H5.5A1.5 1.5 0 0 1 4 18.5V16"/><circle cx="12" cy="12" r="2.6"/></svg></div>
+        <div class="stx"><b>截图保存位置</b><small id="sshots"></small><span class="shdir" id="sshotd" hidden></span></div>
+        <div class="sbtns"><button class="pill2 ghost" id="sshotr" type="button" hidden onclick="shotResetDir()">恢复默认</button><button class="pill2" id="sshotb" type="button" onclick="shotPickDir(true)">更改</button></div>
+      </div>
+      <div class="srow" id="sdesk" hidden>
+        <div class="si"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg></div>
+        <div class="stx"><b>Windows 桌面版</b><small id="sdesks">一键截图、不用每次选屏幕，开机就能收消息</small></div>
+        <a class="pill2" id="sdeskb" href="#" download>下载</a>
+      </div>
       <div class="ios" id="ioshelp" hidden><ol><li>点浏览器的 <b>分享</b> 按钮 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M8 7l4-4 4 4"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg></li><li>往下滑，选择 <b>添加到主屏幕</b></li><li>回到主屏幕，点 Hush 图标打开</li></ol></div>
       <button class="srow mrow" id="sgrp" type="button" hidden onclick="closeSettings();openGroupSettings()"><div class="si"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/></svg></div><div class="stx"><b>群聊设置</b><small>群聊音乐、切歌、点歌数量</small></div><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg></button>
-      <div class="srow" id="sshot" hidden>
-        <div class="si"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8V5.5A1.5 1.5 0 0 1 5.5 4H8M16 4h2.5A1.5 1.5 0 0 1 20 5.5V8M20 16v2.5a1.5 1.5 0 0 1-1.5 1.5H16M8 20H5.5A1.5 1.5 0 0 1 4 18.5V16"/><circle cx="12" cy="12" r="2.6"/></svg></div>
-        <div class="stx"><b>截图保存位置</b><small id="sshots"></small></div>
-        <button class="pill2" id="sshotb" type="button" onclick="shotPickDir(true)">选择</button>
-      </div>
       <button class="srow out" type="button" onclick="closeSettings();logout()">退出登录</button>
       <div class="ver">Hush v__APP_VERSION__<br><small style="opacity:.7">字体：Space Grotesk（OFL）</small></div>
     </div>
@@ -2581,7 +2601,10 @@ function openSearch() { openDrawer('#sd'); setTimeout(() => $('#sq').focus(), 60
 // → 只抓一帧，马上停止共享 → 全屏拖动框选 → PNG 存到自己选的文件夹（Chrome / Edge 电脑版）
 //   其他浏览器改成普通下载 → 可以一键放进输入框，按发送才会发出。手机上没有这个功能，按钮自动隐藏。
 const SHOT = { dir: undefined, busy: false };
-const shotCan = () => !!(navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia) && !matchMedia('(pointer: coarse)').matches;
+// v0.16：在 Hush 桌面版里，用桌面版自己的截图（不用选屏幕，直接截鼠标所在的屏幕）和保存（记住的文件夹）
+const DESK = (window.hushDesktop && typeof window.hushDesktop.captureScreen === 'function') ? window.hushDesktop : null;
+const shotCan = () => !!DESK || (!!(navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia) && !matchMedia('(pointer: coarse)').matches);
+const shotDl = () => localStorage.hush_shot_dl === '1';   // 用户选了“恢复默认”：网页版改成浏览器下载
 const shotFs = () => typeof window.showDirectoryPicker === 'function';
 const actNow = () => !navigator.userActivation || navigator.userActivation.isActive;
 function shotDb(mode, fn) {   // 文件夹“句柄”只能存在 IndexedDB 里（只存在这台电脑的浏览器里）
@@ -2601,9 +2624,13 @@ async function shotDir() {
   return SHOT.dir;
 }
 async function shotPickDir(fromSettings) {
+  if (DESK) {
+    const p = await DESK.chooseSaveDir().catch(() => null); if (!p) return null;
+    shotUi(); if (fromSettings) toast('以后截图保存到「' + p.name + '」'); return p;
+  }
   try {
     const d = await window.showDirectoryPicker({ id: 'hush-shot', mode: 'readwrite', startIn: 'pictures' });
-    SHOT.dir = d; await shotDb('readwrite', st => st.put(d, 'dir')).catch(() => {});
+    SHOT.dir = d; localStorage.removeItem('hush_shot_dl'); await shotDb('readwrite', st => st.put(d, 'dir')).catch(() => {});
     shotUi(); if (fromSettings) toast('以后截图保存到「' + d.name + '」');
     return d;
   } catch (e) { if (e && e.name !== 'AbortError') toast('没法用这个文件夹：' + e.message); return null; }
@@ -2612,12 +2639,27 @@ async function shotPerm(d, ask) {
   const o = { mode: 'readwrite' };
   try { if ((await d.queryPermission(o)) === 'granted') return true; return ask ? (await d.requestPermission(o)) === 'granted' : false; } catch (_) { return false; }
 }
+async function shotResetDir() {
+  if (DESK) { const p = await DESK.resetSaveDir().catch(() => null); shotUi(); if (p) toast('恢复默认：保存到「' + p.name + '」'); return; }
+  SHOT.dir = null; localStorage.hush_shot_dl = '1'; await shotDb('readwrite', st => st.delete('dir')).catch(() => {});
+  shotUi(); toast('恢复默认：截图下载到浏览器的下载文件夹');
+}
 async function shotUi() {
   const r = $('#sshot'); if (!r) return;
-  r.hidden = !(shotCan() && shotFs()); if (r.hidden) return;
-  const d = await shotDir();
-  $('#sshots').textContent = d ? '保存到「' + d.name + '」' : '还没选，第一次截图时会让你选';
-  $('#sshotb').textContent = d ? '更改' : '选择';
+  r.hidden = !shotCan(); if (r.hidden) return;
+  const sm = $('#sshots'), chip = $('#sshotd'), b = $('#sshotb'), rs = $('#sshotr');
+  let name = null, title = '', note = '', canPick = true, canReset = false;
+  if (DESK) {
+    const p = await DESK.getSaveDir().catch(() => null);
+    if (p) { name = p.name; title = p.path; canReset = !p.isDefault; note = '截图后自动存到这里'; } else note = '还没选，第一次截图时会让你选';
+  } else if (shotFs()) {
+    const d = shotDl() ? null : await shotDir();
+    if (d) { name = d.name; canReset = true; note = '截图后自动存到这里（浏览器重开后可能要点一次“允许”）'; }
+    else if (shotDl()) note = '现在：浏览器默认的下载文件夹';
+    else note = '还没选，第一次截图时会让你选';
+  } else { note = '这个浏览器不能选文件夹，截图会下载到默认的下载文件夹'; canPick = false; }
+  sm.textContent = note; chip.hidden = !name; chip.textContent = name || ''; chip.title = title || name || '';
+  b.hidden = !canPick; b.textContent = name ? '更改' : '选择文件夹'; rs.hidden = !canReset;
 }
 const p2 = n => String(n).padStart(2, '0');
 const shotName = (t = new Date()) => 'Hush-' + t.getFullYear() + p2(t.getMonth() + 1) + p2(t.getDate()) + '-' + p2(t.getHours()) + p2(t.getMinutes()) + p2(t.getSeconds()) + '.png';
@@ -2633,6 +2675,13 @@ async function shotGrab() {
     c.getContext('2d').drawImage(v, 0, 0); v.srcObject = null;
     return c;
   } finally { s.getTracks().forEach(t => t.stop()); }   // 只要一帧：立刻停止共享
+}
+async function shotGrabDesk() {   // 桌面版：先把 Hush 窗口藏起来，截鼠标所在的整块屏幕（原始分辨率），再把窗口铺满那块屏幕用来框选
+  const r = await DESK.captureScreen();
+  if (!r || !r.png) throw new Error((r && r.error) || '没有拿到画面');
+  const bmp = await createImageBitmap(new Blob([r.png], { type: 'image/png' }));
+  const c = document.createElement('canvas'); c.width = bmp.width; c.height = bmp.height; c.getContext('2d').drawImage(bmp, 0, 0); bmp.close && bmp.close();
+  return c;
 }
 function shotCrop(src) {   // 全屏框选；返回裁好的 canvas，取消返回 null
   return new Promise(done => {
@@ -2678,8 +2727,15 @@ function shotCrop(src) {   // 全屏框选；返回裁好的 canvas，取消返�
 }
 async function shotWrite(d, file) { const h = await d.getFileHandle(file.name, { create: true }); const w = await h.createWritable(); await w.write(file); await w.close(); }
 function shotDownload(file) { const a = document.createElement('a'), u = URL.createObjectURL(file); a.href = u; a.download = file.name; document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(u), 5000); }
+async function shotSaveDesk(file) {
+  const r = await DESK.saveScreenshot(file.name, new Uint8Array(await file.arrayBuffer())).catch(e => ({ ok: false, error: e.message }));
+  if (r && r.ok) return shotCard(file, 'ok', null, r.dir, r.path);
+  if (r && r.error) toast('保存失败：' + r.error);
+  return shotCard(file, 'pick');
+}
 async function shotSave(file) {
-  if (!shotFs()) { shotDownload(file); return shotCard(file, 'ok', null, ''); }
+  if (DESK) return shotSaveDesk(file);
+  if (!shotFs() || shotDl()) { shotDownload(file); return shotCard(file, 'ok', null, ''); }
   let d = await shotDir();
   if (!d && actNow()) d = await shotPickDir();          // 第一次：松开鼠标后直接让你选文件夹
   if (!d) return shotCard(file, 'pick');
@@ -2687,7 +2743,7 @@ async function shotSave(file) {
   try { await shotWrite(d, file); return shotCard(file, 'ok', null, d.name); }
   catch (e) { toast('保存失败：' + e.message); return shotCard(file, 'pick'); }
 }
-function shotCard(file, state, d, where) {
+function shotCard(file, state, d, where, fpath) {
   document.querySelector('.shcard')?.remove();
   const c = el('div', 'shcard'), img = document.createElement('img'), u = URL.createObjectURL(file); img.src = u; img.alt = '';
   let tm = null; const close = () => { clearTimeout(tm); c.remove(); URL.revokeObjectURL(u); };
@@ -2697,6 +2753,7 @@ function shotCard(file, state, d, where) {
   const acts = el('div', 'shacts'), btn = (t, cls, fn, title) => { const b = el('button', cls, t); b.type = 'button'; if (title) b.title = title; b.onclick = fn; acts.append(b); return b; };
   if (state !== 'ok') {
     btn(state === 'pick' ? '选择文件夹' : '允许并保存', 'primary', async () => {
+      if (DESK) { const p = await shotPickDir(); if (!p) return; close(); return shotSaveDesk(file); }
       const dd = state === 'pick' ? await shotPickDir() : ((await shotPerm(d, true)) ? d : null); if (!dd) return;
       try { await shotWrite(dd, file); close(); shotCard(file, 'ok', null, dd.name); } catch (e) { toast('保存失败：' + e.message); }
     });
@@ -2704,7 +2761,10 @@ function shotCard(file, state, d, where) {
   }
   btn('放进输入框', state === 'ok' ? 'primary' : '', () => { attSet(file); close(); }, '放到输入框里，按发送才会发出');
   const x = el('button', 'x', '✕'); x.type = 'button'; x.title = '关闭'; x.onclick = close;
-  c.append(img, tx, x, acts); document.body.append(c);
+  const links = el('div', 'shlinks'), link = (t, fn) => { const a = el('a', '', t); a.tabIndex = 0; a.onclick = fn; a.onkeydown = e => { if (e.key === 'Enter') fn(); }; links.append(a); };
+  if (state === 'ok' && (DESK || shotFs())) link('更改保存位置', async () => { clearTimeout(tm); await shotPickDir(true); });   // v0.16：卡片上直接改
+  if (state === 'ok' && DESK && fpath && DESK.showInFolder) link('在文件夹中显示', () => DESK.showInFolder(fpath));
+  c.append(img, tx, x); if (links.children.length) c.append(links); c.append(acts); document.body.append(c);
   if (state === 'ok') { tm = setTimeout(close, 12000); c.onpointerenter = () => clearTimeout(tm); }
   return state;
 }
@@ -2712,8 +2772,11 @@ async function shotStart() {
   if (SHOT.busy || !shotCan()) return; SHOT.busy = true;
   try {
     let src;
-    try { src = await shotGrab(); } catch (e) { if (e && e.name !== 'NotAllowedError' && e.name !== 'AbortError') toast('截图失败：' + e.message); return; }
-    const out = await shotCrop(src); if (!out) return;
+    try { src = DESK ? await shotGrabDesk() : await shotGrab(); }
+    catch (e) { if (DESK) DESK.endCapture().catch(() => {}); if (e && e.name !== 'NotAllowedError' && e.name !== 'AbortError') toast('截图失败：' + e.message); return; }
+    let out;
+    try { out = await shotCrop(src); } finally { if (DESK) await DESK.endCapture().catch(() => {}); }   // 桌面版：选完就把窗口恢复原样
+    if (!out) return;
     const blob = await new Promise(r => out.toBlob(r, 'image/png')); if (!blob) return toast('截图失败');
     return await shotSave(new File([blob], shotName(), { type: 'image/png' }));
   } finally { SHOT.busy = false; }
@@ -2722,6 +2785,14 @@ let att = null;   // 输入框里等待发送的截图
 function attSet(file) { attClear(); att = { file, url: URL.createObjectURL(file) }; $('#atti').src = att.url; $('#attn').textContent = file.name; $('#att').hidden = false; $('#t').focus(); }
 function attClear() { if (att) URL.revokeObjectURL(att.url); att = null; $('#att').hidden = true; }
 $('#shotb').hidden = !shotCan();
+if (DESK) { document.documentElement.classList.add('desk'); $('#shotb').title = '截图（框选鼠标所在的屏幕，保存到本机）'; if (DESK.onCaptureHotkey) DESK.onCaptureHotkey(() => shotStart()); }
+async function deskUi() {   // 网页版（Windows 电脑）：服务器上放了桌面版安装包时，设置里显示“下载”
+  const r = $('#sdesk'); if (!r) return; r.hidden = true;
+  if (DESK || !/Windows/.test(navigator.userAgent) || matchMedia('(pointer: coarse)').matches) return;
+  const j = await fetch('/api/desktop-version').then(x => x.ok ? x.json() : null).catch(() => null);
+  if (!j || !j.url) return;
+  $('#sdeskb').href = j.url; $('#sdesks').textContent = 'v' + j.version + ' · 一键截图、不用每次选屏幕'; r.hidden = false;
+}
 
 // ================= @提及 自动补全（v0.7，v0.15 加强） =================
 let users = [], mpSel = 0, mpList = [], usersAt = 0;
@@ -2839,7 +2910,7 @@ function updateReady() {
 addEventListener('beforeinstallprompt', e => { e.preventDefault(); installEvt = e; instUi(); if (me) maybeTip(); });
 addEventListener('appinstalled', () => { installEvt = null; localStorage.hush_tip_install = '1'; hideTip(); instUi(); toast('已安装，可以从桌面或主屏幕打开 Hush'); });
 function instUi() {
-  const st = isStandalone();
+  const st = isStandalone() || !!DESK;   // 桌面版不用再“安装”
   $('#sinst').hidden = st; if (st) $('#ioshelp').hidden = true;
   $('#sinsts').textContent = installEvt ? '从桌面直接打开，独立窗口' : isIOS ? '用 Safari 添加到主屏幕' : '在浏览器菜单里选“安装 Hush”或“添加到主屏幕”';
   $('#binst').hidden = !installEvt && !isIOS;
@@ -2855,7 +2926,7 @@ async function installApp() {
   if (isIOS) { if ($('#setv').hidden) openSettings(); $('#ioshelp').hidden = false; }
 }
 // ----- 设置面板 -----
-function openSettings() { closeDrawers(); notifUi(); instUi(); shotUi(); $('#sgrp').hidden = !(me && me.admin); $('#setv').hidden = false; }
+function openSettings() { closeDrawers(); notifUi(); instUi(); shotUi(); deskUi(); $('#sgrp').hidden = !(me && me.admin); $('#setv').hidden = false; }
 function closeSettings() { $('#setv').hidden = true; $('#ioshelp').hidden = true; }
 // ----- 系统通知：页面在后台 / 没有焦点时才弹；@我 的单独弹并且一定响，普通消息合并成一条 -----
 const NOTIF_OK = 'Notification' in window;
@@ -2885,7 +2956,7 @@ async function notify(m) {
   const opt = { body: m.file ? '发送了文件：' + m.file.name : m.text.slice(0, 140), icon: '/icons/icon-192.png', badge: '/icons/badge-96.png',
     tag: at ? 'hush-at-' + m.id : 'hush-chat', renotify: !quiet, silent: quiet, data: { id: m.id }, timestamp: m.ts };
   try {
-    const reg = swReg || (navigator.serviceWorker && await navigator.serviceWorker.getRegistration());
+    const reg = DESK ? null : (swReg || (navigator.serviceWorker && await navigator.serviceWorker.getRegistration()));   // 桌面版直接用系统通知
     if (reg && reg.showNotification) return await reg.showNotification(title, opt);
   } catch (_) {}
   try { const n = new Notification(title, opt); n.onclick = () => { window.focus(); jumpTo(m.id); n.close(); }; } catch (_) {}   // 没有 service worker 时（比如局域网 http 地址）
