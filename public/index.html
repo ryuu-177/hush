@@ -1240,6 +1240,38 @@ button:where(:not(.tgl,.ib2,.ib3,.mnav,.sw button,.tabs button,.seg button)):whe
 @media(min-width:641px){.ov .sheet{max-height:calc(100dvh - 40px);overflow-y:auto}}
 /* v0.14.0 补丁：很窄的手机（≤360px）上，顶栏的正在播放胶囊不再盖住“群聊”标题 */
 @media(max-width:360px){.tb #tbt{flex:0 1 auto;min-width:3.2em;overflow:hidden;white-space:nowrap}.tb .np:not(.idle){max-width:34vw}}
+/* ===== v0.15：截图 / 待发送附件 / @提及 ===== */
+.att{display:flex;align-items:center;gap:10px;margin:0 clamp(18px,4vw,64px) 4px;padding:6px 8px 6px 6px;border-radius:999px;border:1px solid var(--lq-edge,var(--line));background:var(--lq-panel,var(--card));-webkit-backdrop-filter:var(--lq-blur);backdrop-filter:var(--lq-blur);box-shadow:inset 0 1px 0 var(--lq-spec,transparent),var(--lq-drop,none);font-size:12.5px;animation:pop .25s ease}
+.att img{width:38px;height:38px;object-fit:cover;border-radius:50%;border:1px solid var(--lq-edge,var(--line));flex:none;background:var(--bg)}
+.att .q{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--ef-tx2,var(--mut))}.att .q b{color:var(--ef-tx1,var(--fg));margin-right:6px}
+.att small{color:var(--ef-tx3,var(--mut));font-size:11px;white-space:nowrap}
+.att button{border:0!important;background:none!important;box-shadow:none!important;padding:4px 8px!important;color:var(--ef-tx3,var(--mut));min-height:0!important}
+@media(max-width:640px){.att{margin:0 12px 4px}.att small{display:none}}
+.shov{position:fixed;inset:0;z-index:60;background:#060807;cursor:crosshair;touch-action:none;user-select:none;-webkit-user-select:none;animation:shIn .18s ease}
+.shov canvas{position:absolute;display:block}
+.shov .shdim{position:absolute;inset:0;background:rgba(6,8,7,.38);pointer-events:none;transition:opacity .15s}
+.shov.has .shdim{opacity:0}
+.shsel{position:absolute;border:1px solid rgba(255,255,255,.95);box-shadow:0 0 0 1px rgba(0,0,0,.35),0 0 0 100vmax rgba(6,8,7,.52);border-radius:2px;pointer-events:none}
+.shsel::after{content:"";position:absolute;inset:-1px;border:1px solid var(--ef-acd,#d9e84f);opacity:.9;border-radius:2px}
+.shsz{position:absolute;left:0;top:-26px;padding:3px 8px;border-radius:999px;font:600 11px/1.4 var(--mono,ui-monospace,monospace);letter-spacing:.06em;color:#111613;background:var(--lq-lime,#d9e84f);white-space:nowrap;box-shadow:0 4px 12px -4px rgba(0,0,0,.5)}
+.shsel.lo .shsz{top:auto;bottom:-26px}
+.shtip{position:absolute;left:50%;top:18px;transform:translateX(-50%);padding:7px 14px;border-radius:999px;font-size:12px;letter-spacing:.04em;color:#ecf0e8;background:rgba(20,24,23,.62);border:1px solid rgba(255,255,255,.14);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);pointer-events:none;white-space:nowrap;transition:opacity .2s}
+.shov.drag .shtip{opacity:0}
+@keyframes shIn{from{opacity:0}to{opacity:1}}
+.shcard{position:fixed;right:max(18px,env(safe-area-inset-right));bottom:calc(92px + env(safe-area-inset-bottom));z-index:30;width:min(360px,calc(100vw - 36px));display:grid;grid-template-columns:52px 1fr auto;grid-template-areas:"img tx x" "acts acts acts";gap:10px 12px;align-items:center;padding:12px;border-radius:var(--lq-r-lg,18px);border:1px solid var(--lq-edge,var(--line));background:var(--lq-panel,var(--card));-webkit-backdrop-filter:var(--lq-blur);backdrop-filter:var(--lq-blur);box-shadow:inset 0 1px 0 var(--lq-spec,transparent),var(--lq-drop-lg,0 12px 32px #0003);animation:pop .25s ease;font-size:13px}
+.shcard img{grid-area:img;width:52px;height:52px;object-fit:cover;border-radius:12px;border:1px solid var(--lq-edge,var(--line));background:var(--bg)}
+.shcard .shtx{grid-area:tx;min-width:0;display:flex;flex-direction:column;gap:2px}
+.shcard .shtx b{font-weight:700}.shcard .shtx small{color:var(--ef-tx3,var(--mut));font-size:11.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.shcard .x{grid-area:x;align-self:start;border:0!important;background:none!important;box-shadow:none!important;padding:2px 6px!important;min-height:0!important;color:var(--ef-tx3,var(--mut))}
+.shcard .shacts{grid-area:acts;display:flex;gap:8px;justify-content:flex-end}
+.shcard .shacts button{padding:7px 14px!important;font-size:12.5px!important;min-height:0!important;border-radius:999px}
+.mp .mph{margin:6px 12px 4px;font-size:11px;letter-spacing:.06em;color:var(--ef-tx3,var(--mut))}
+.mp{max-height:min(340px,50vh);overflow-y:auto}
+.h .atme{display:inline-block;margin-left:6px;padding:0 7px;border-radius:999px;font:700 10px/1.6 var(--sans,inherit);letter-spacing:.06em;color:var(--lq-lime-ink,#1a2210);background:var(--lq-lime,#d9e84f);vertical-align:1px}
+.h .nm{cursor:pointer}
+@media(pointer:coarse){.shotb{display:none!important}}
+@media(prefers-reduced-motion:reduce){.att,.shcard,.shov{animation:none}}
+.slots{flex-wrap:nowrap}.slots i{flex:1 1 0;min-width:6px;max-width:26px}
 </style>
 <script src="/lq-glass.js"></script>
 </head>
@@ -1316,13 +1348,15 @@ button:where(:not(.tgl,.ib2,.ib3,.mnav,.sw button,.tabs button,.seg button)):whe
     <div id="msgs"></div>
     <button class="latest" id="latest" hidden onclick="backToLatest()">回到最新消息</button>
     <div id="ups"></div>
+    <div class="att" id="att" hidden><img id="atti" alt=""><div class="q"><b>截图</b><span id="attn"></span></div><small>按发送才会发出</small><button type="button" onclick="attClear()" title="移除">✕</button></div>
     <div class="rb" id="rb" hidden><div class="q"><b id="rbn"></b><span id="rbt"></span></div><button onclick="cancelReply()" title="取消回复">✕</button></div>
     <form id="f">
       <div class="mp" id="mp" hidden></div>
       <button type="button" class="ib2 vfab" id="vfab" onclick="openVault()" title="文件仓"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8 12 3 3 8v8l9 5 9-5z"/><path d="M3 8l9 5 9-5M12 13v8"/></svg><i class="dot vdot" hidden></i></button>
       <button type="button" title="发送文件（也可以拖进来或粘贴）" onclick="$('#ff').click()">📎</button>
       <input id="ff" type="file" multiple hidden>
-      <input id="t" placeholder="说点什么，可拖入或粘贴文件" autocomplete="off">
+      <input id="t" placeholder="说点什么… 输入 @ 可以提到某人" autocomplete="off">
+      <button type="button" class="shotb" id="shotb" title="截图（框选屏幕区域，保存到本机）" aria-label="截图" hidden onclick="shotStart()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8V5.5A1.5 1.5 0 0 1 5.5 4H8M16 4h2.5A1.5 1.5 0 0 1 20 5.5V8M20 16v2.5a1.5 1.5 0 0 1-1.5 1.5H16M8 20H5.5A1.5 1.5 0 0 1 4 18.5V16"/><circle cx="12" cy="12" r="2.6"/></svg></button>
       <button class="primary">发送</button>
     </form>
   </section>
@@ -1339,6 +1373,7 @@ button:where(:not(.tgl,.ib2,.ib3,.mnav,.sw button,.tabs button,.seg button)):whe
       <div class="bio" id="pbio"></div>
       <div class="acts">
         <button class="primary" id="pwatch" hidden><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.5-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5z"/></svg>观看</button>
+        <button id="pat" type="button" title="在输入框里 @TA">@TA</button>
         <button id="pcall"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"/></svg>语音通话</button>
       </div>
     </div>
@@ -1464,6 +1499,11 @@ button:where(:not(.tgl,.ib2,.ib3,.mnav,.sw button,.tabs button,.seg button)):whe
       </div>
       <div class="ios" id="ioshelp" hidden><ol><li>点浏览器的 <b>分享</b> 按钮 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M8 7l4-4 4 4"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg></li><li>往下滑，选择 <b>添加到主屏幕</b></li><li>回到主屏幕，点 Hush 图标打开</li></ol></div>
       <button class="srow mrow" id="sgrp" type="button" hidden onclick="closeSettings();openGroupSettings()"><div class="si"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/></svg></div><div class="stx"><b>群聊设置</b><small>群聊音乐、切歌、点歌数量</small></div><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg></button>
+      <div class="srow" id="sshot" hidden>
+        <div class="si"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8V5.5A1.5 1.5 0 0 1 5.5 4H8M16 4h2.5A1.5 1.5 0 0 1 20 5.5V8M20 16v2.5a1.5 1.5 0 0 1-1.5 1.5H16M8 20H5.5A1.5 1.5 0 0 1 4 18.5V16"/><circle cx="12" cy="12" r="2.6"/></svg></div>
+        <div class="stx"><b>截图保存位置</b><small id="sshots"></small></div>
+        <button class="pill2" id="sshotb" type="button" onclick="shotPickDir(true)">选择</button>
+      </div>
       <button class="srow out" type="button" onclick="closeSettings();logout()">退出登录</button>
       <div class="ver">Hush v__APP_VERSION__<br><small style="opacity:.7">字体：Space Grotesk（OFL）</small></div>
     </div>
@@ -1554,6 +1594,7 @@ async function viewProfile(name) {
   $('#pbio').textContent = p.bio || '这个人很懒，什么都没写。'; $('#pbio').classList.toggle('empty', !p.bio);
   const self = p.name === me.name;
   $('#pcall').hidden = self;
+  $('#pat').hidden = self; $('#pat').onclick = () => { $('#pv').hidden = true; atInsert(p.name); };
   $('#pcall').onclick = () => { $('#pv').hidden = true; startCall(p.name); };
   $('#pwatch').hidden = self || !liveSet.has(p.name);
   $('#pwatch').dataset.u = p.name;
@@ -1655,11 +1696,14 @@ const el = (tag, cls, txt) => { const e = document.createElement(tag); if (cls) 
 function snipText(r) { return r.recalled ? '原消息已撤回' : r.gone ? '原消息不存在' : r.file ? '[文件] ' + r.file : r.text; }
 function richText(box, text, mentions) {   // 只用 textContent 拼 DOM，不解析 HTML
   const set = new Set(mentions || []); let i = 0;
-  text.replace(/@([^\s@]{1,16})/g, (all, name, at) => {
-    if (!set.has(name)) return all;
+  text.replace(/@([^\s@]{1,16})/g, (all, cand, at) => {
+    let name = null;   // v0.15：取最长的、被服务器认出来的用户名（“@小刘你好” → @小刘）
+    if (at > 0 && /[A-Za-z0-9._%+-]/.test(text[at - 1])) return all;   // 和服务器同样的规则
+    for (let k = cand.length; k >= 1; k--) if (!/[A-Za-z0-9_]/.test(cand[k] || '') && set.has(cand.slice(0, k))) { name = cand.slice(0, k); break; }
+    if (!name) return all;
     if (at > i) box.append(text.slice(i, at));
     const sp = el('span', 'at', '@' + (people[name]?.nick || name)); sp.title = '@' + name; sp.dataset.at = name; box.append(sp);
-    i = at + all.length; return all;
+    i = at + 1 + name.length; return all;
   });
   if (i < text.length) box.append(text.slice(i));
 }
@@ -1693,8 +1737,9 @@ function renderMsg(m) {
   const a = el('div', 'av s'); a.dataset.u = m.name; avatar(a, m); a.style.cursor = 'pointer'; a.onclick = () => avClick(m.name);
   const c = el('div', 'c');
   const h = el('div', 'h');
-  const n = el('span', 'nm', m.nick || m.name); n.dataset.u = m.name; n.title = '@' + m.name; n.onclick = () => viewProfile(m.name);
+  const n = el('span', 'nm', m.nick || m.name); n.dataset.u = m.name; n.title = '点一下 @' + (m.nick || m.name) + '（点头像看资料）'; n.onclick = () => atInsert(m.name);
   h.append(n, '  Lv.' + m.level + '  ' + tmFmt(m.ts));
+  if (d.classList.contains('hit')) h.append(el('span', 'atme', '@你'));
   c.append(h);
   if (m.reply) {
     const q = el('button', 'qt'); q.type = 'button'; q.dataset.ref = m.reply.id;
@@ -1728,6 +1773,9 @@ function add(m, quiet) {
 function onIncoming(m) {
   add(m);
   if (m.song || m.live) return;   // v0.9：点歌 / 共享屏幕系统行不算未读、不弹通知
+  if (me && m.name !== me.name && !m.recalled && m.mentions && m.mentions.includes(me.name)) {   // v0.15：被 @ 时轻轻响一下；人在页面上就弹个小提示
+    atPing(); if (!away()) toast((m.nick || m.name) + ' 提到了你');
+  }
   bump(m); notify(m);   // v0.8：未读角标 + 系统通知（页面在后台时）
 }
 function applyRecall(m) {
@@ -1838,9 +1886,10 @@ $('#t').addEventListener('paste', e => { const fl = e.clipboardData?.files; if (
 
 $('#f').onsubmit = e => {
   e.preventDefault(); mpHide();
-  const v = $('#t').value.trim(); if (!v) return;
+  const v = $('#t').value.trim(); if (!v && !att) return;
   sentOnce = true; setTimeout(maybeTip, 1500);   // v0.8：发过消息后，才礼貌地提示一次“开启通知”
-  socket.emit('msg', replyTo ? { text: v, reply: replyTo.id } : v);
+  if (v) socket.emit('msg', replyTo ? { text: v, reply: replyTo.id } : v);
+  if (att) { upload(att.file); attClear(); }   // v0.15：放进输入框的截图，按发送时才上传
   $('#t').value = ''; cancelReply();
   if (windowMode) backToLatest();
 };
@@ -2527,32 +2576,197 @@ function openSearch() { openDrawer('#sd'); setTimeout(() => $('#sq').focus(), 60
   };
 }
 
-// ================= @提及 自动补全（v0.7） =================
-let users = [], mpSel = 0, mpList = [];
+// ================= 截图（v0.15） =================
+// 点输入栏的截图键 → 浏览器弹出自己的“选择要共享的屏幕 / 窗口”（每次都会问，这是浏览器规定）
+// → 只抓一帧，马上停止共享 → 全屏拖动框选 → PNG 存到自己选的文件夹（Chrome / Edge 电脑版）
+//   其他浏览器改成普通下载 → 可以一键放进输入框，按发送才会发出。手机上没有这个功能，按钮自动隐藏。
+const SHOT = { dir: undefined, busy: false };
+const shotCan = () => !!(navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia) && !matchMedia('(pointer: coarse)').matches;
+const shotFs = () => typeof window.showDirectoryPicker === 'function';
+const actNow = () => !navigator.userActivation || navigator.userActivation.isActive;
+function shotDb(mode, fn) {   // 文件夹“句柄”只能存在 IndexedDB 里（只存在这台电脑的浏览器里）
+  return new Promise((res, rej) => {
+    const r = indexedDB.open('hush-shot', 1);
+    r.onupgradeneeded = () => r.result.createObjectStore('kv');
+    r.onerror = () => rej(r.error);
+    r.onsuccess = () => {
+      const db = r.result; let q;
+      try { const tx = db.transaction('kv', mode); q = fn(tx.objectStore('kv')); tx.oncomplete = () => { db.close(); res(q && q.result); }; tx.onerror = tx.onabort = () => { db.close(); rej(tx.error); }; }
+      catch (e) { db.close(); rej(e); }   // 比如存不进去的对象：不要卡住
+    };
+  });
+}
+async function shotDir() {
+  if (SHOT.dir === undefined) { try { SHOT.dir = (await shotDb('readonly', st => st.get('dir'))) || null; } catch (_) { SHOT.dir = null; } }
+  return SHOT.dir;
+}
+async function shotPickDir(fromSettings) {
+  try {
+    const d = await window.showDirectoryPicker({ id: 'hush-shot', mode: 'readwrite', startIn: 'pictures' });
+    SHOT.dir = d; await shotDb('readwrite', st => st.put(d, 'dir')).catch(() => {});
+    shotUi(); if (fromSettings) toast('以后截图保存到「' + d.name + '」');
+    return d;
+  } catch (e) { if (e && e.name !== 'AbortError') toast('没法用这个文件夹：' + e.message); return null; }
+}
+async function shotPerm(d, ask) {
+  const o = { mode: 'readwrite' };
+  try { if ((await d.queryPermission(o)) === 'granted') return true; return ask ? (await d.requestPermission(o)) === 'granted' : false; } catch (_) { return false; }
+}
+async function shotUi() {
+  const r = $('#sshot'); if (!r) return;
+  r.hidden = !(shotCan() && shotFs()); if (r.hidden) return;
+  const d = await shotDir();
+  $('#sshots').textContent = d ? '保存到「' + d.name + '」' : '还没选，第一次截图时会让你选';
+  $('#sshotb').textContent = d ? '更改' : '选择';
+}
+const p2 = n => String(n).padStart(2, '0');
+const shotName = (t = new Date()) => 'Hush-' + t.getFullYear() + p2(t.getMonth() + 1) + p2(t.getDate()) + '-' + p2(t.getHours()) + p2(t.getMinutes()) + p2(t.getSeconds()) + '.png';
+async function shotGrab() {
+  const s = await navigator.mediaDevices.getDisplayMedia({ video: { frameRate: 5 }, audio: false, selfBrowserSurface: 'include', surfaceSwitching: 'exclude' });
+  try {
+    const v = document.createElement('video'); v.muted = true; v.playsInline = true; v.srcObject = s;
+    await v.play();
+    if (!v.videoWidth) await new Promise(r => { v.onloadedmetadata = r; setTimeout(r, 1500); });
+    await new Promise(r => { if ('requestVideoFrameCallback' in v) v.requestVideoFrameCallback(() => r()); setTimeout(r, 400); });
+    if (!v.videoWidth) throw new Error('没有拿到画面');
+    const c = document.createElement('canvas'); c.width = v.videoWidth; c.height = v.videoHeight;
+    c.getContext('2d').drawImage(v, 0, 0); v.srcObject = null;
+    return c;
+  } finally { s.getTracks().forEach(t => t.stop()); }   // 只要一帧：立刻停止共享
+}
+function shotCrop(src) {   // 全屏框选；返回裁好的 canvas，取消返回 null
+  return new Promise(done => {
+    const ov = el('div', 'shov'), cv = document.createElement('canvas'), dim = el('div', 'shdim'), sel = el('div', 'shsel'), sz = el('span', 'shsz');
+    const tip = el('div', 'shtip', '拖动框选区域 · 松开保存 · 双击或 Enter 截整张 · Esc 取消');
+    sel.hidden = true; sel.append(sz); ov.append(cv, dim, sel, tip); document.body.append(ov);
+    const W = innerWidth, H = innerHeight, k = Math.min(W / src.width, H / src.height);
+    const dw = src.width * k, dh = src.height * k, ox = (W - dw) / 2, oy = (H - dh) / 2;
+    cv.width = src.width; cv.height = src.height; cv.getContext('2d').drawImage(src, 0, 0);
+    Object.assign(cv.style, { left: ox + 'px', top: oy + 'px', width: dw + 'px', height: dh + 'px' });
+    let st = null, rect = null;
+    const cx = x => Math.max(ox, Math.min(ox + dw, x)), cy = y => Math.max(oy, Math.min(oy + dh, y));
+    const draw = () => {
+      ov.classList.toggle('has', !!rect); sel.hidden = !rect; if (!rect) return;
+      Object.assign(sel.style, { left: rect.x + 'px', top: rect.y + 'px', width: rect.w + 'px', height: rect.h + 'px' });
+      sel.classList.toggle('lo', rect.y < 34);
+      sz.textContent = Math.round(rect.w / k) + ' × ' + Math.round(rect.h / k);
+    };
+    const finish = r => {
+      document.removeEventListener('keydown', key, true); ov.remove();
+      if (!r) return done(null);
+      const sx = Math.max(0, Math.round((r.x - ox) / k)), sy = Math.max(0, Math.round((r.y - oy) / k));
+      const sw = Math.max(1, Math.min(src.width - sx, Math.round(r.w / k))), sh = Math.max(1, Math.min(src.height - sy, Math.round(r.h / k)));
+      const out = document.createElement('canvas'); out.width = sw; out.height = sh;
+      out.getContext('2d').drawImage(src, sx, sy, sw, sh, 0, 0, sw, sh); done(out);
+    };
+    const full = () => finish({ x: ox, y: oy, w: dw, h: dh });
+    const ok = r => r && r.w >= 6 && r.h >= 6;
+    ov.onpointerdown = e => { if (e.button) return; try { ov.setPointerCapture(e.pointerId); } catch (_) {} st = { x: cx(e.clientX), y: cy(e.clientY) }; rect = null; draw(); };
+    ov.onpointermove = e => {
+      if (!st) return; const x = cx(e.clientX), y = cy(e.clientY);
+      rect = { x: Math.min(st.x, x), y: Math.min(st.y, y), w: Math.abs(x - st.x), h: Math.abs(y - st.y) }; ov.classList.add('drag'); draw();
+    };
+    ov.onpointerup = () => { if (!st) return; st = null; ov.classList.remove('drag'); if (ok(rect)) finish(rect); else { rect = null; draw(); } };
+    ov.ondblclick = full;
+    ov.oncontextmenu = e => { e.preventDefault(); finish(null); };
+    function key(e) {
+      if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); finish(null); }
+      else if (e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); ok(rect) ? finish(rect) : full(); }
+    }
+    document.addEventListener('keydown', key, true);
+  });
+}
+async function shotWrite(d, file) { const h = await d.getFileHandle(file.name, { create: true }); const w = await h.createWritable(); await w.write(file); await w.close(); }
+function shotDownload(file) { const a = document.createElement('a'), u = URL.createObjectURL(file); a.href = u; a.download = file.name; document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(u), 5000); }
+async function shotSave(file) {
+  if (!shotFs()) { shotDownload(file); return shotCard(file, 'ok', null, ''); }
+  let d = await shotDir();
+  if (!d && actNow()) d = await shotPickDir();          // 第一次：松开鼠标后直接让你选文件夹
+  if (!d) return shotCard(file, 'pick');
+  if (!(await shotPerm(d, actNow()))) return shotCard(file, 'perm', d);   // 浏览器重开后可能要再允许一次
+  try { await shotWrite(d, file); return shotCard(file, 'ok', null, d.name); }
+  catch (e) { toast('保存失败：' + e.message); return shotCard(file, 'pick'); }
+}
+function shotCard(file, state, d, where) {
+  document.querySelector('.shcard')?.remove();
+  const c = el('div', 'shcard'), img = document.createElement('img'), u = URL.createObjectURL(file); img.src = u; img.alt = '';
+  let tm = null; const close = () => { clearTimeout(tm); c.remove(); URL.revokeObjectURL(u); };
+  const tx = el('div', 'shtx');
+  if (state === 'ok') tx.append(el('b', '', where ? '截图已保存' : '截图已下载'), el('small', '', where ? where + ' / ' + file.name : file.name));
+  else tx.append(el('b', '', '截图还没保存'), el('small', '', state === 'pick' ? '选一个文件夹，以后都存到那里' : '需要再允许一次访问「' + d.name + '」'));
+  const acts = el('div', 'shacts'), btn = (t, cls, fn, title) => { const b = el('button', cls, t); b.type = 'button'; if (title) b.title = title; b.onclick = fn; acts.append(b); return b; };
+  if (state !== 'ok') {
+    btn(state === 'pick' ? '选择文件夹' : '允许并保存', 'primary', async () => {
+      const dd = state === 'pick' ? await shotPickDir() : ((await shotPerm(d, true)) ? d : null); if (!dd) return;
+      try { await shotWrite(dd, file); close(); shotCard(file, 'ok', null, dd.name); } catch (e) { toast('保存失败：' + e.message); }
+    });
+    btn('下载', '', () => { shotDownload(file); close(); shotCard(file, 'ok', null, ''); });
+  }
+  btn('放进输入框', state === 'ok' ? 'primary' : '', () => { attSet(file); close(); }, '放到输入框里，按发送才会发出');
+  const x = el('button', 'x', '✕'); x.type = 'button'; x.title = '关闭'; x.onclick = close;
+  c.append(img, tx, x, acts); document.body.append(c);
+  if (state === 'ok') { tm = setTimeout(close, 12000); c.onpointerenter = () => clearTimeout(tm); }
+  return state;
+}
+async function shotStart() {
+  if (SHOT.busy || !shotCan()) return; SHOT.busy = true;
+  try {
+    let src;
+    try { src = await shotGrab(); } catch (e) { if (e && e.name !== 'NotAllowedError' && e.name !== 'AbortError') toast('截图失败：' + e.message); return; }
+    const out = await shotCrop(src); if (!out) return;
+    const blob = await new Promise(r => out.toBlob(r, 'image/png')); if (!blob) return toast('截图失败');
+    return await shotSave(new File([blob], shotName(), { type: 'image/png' }));
+  } finally { SHOT.busy = false; }
+}
+let att = null;   // 输入框里等待发送的截图
+function attSet(file) { attClear(); att = { file, url: URL.createObjectURL(file) }; $('#atti').src = att.url; $('#attn').textContent = file.name; $('#att').hidden = false; $('#t').focus(); }
+function attClear() { if (att) URL.revokeObjectURL(att.url); att = null; $('#att').hidden = true; }
+$('#shotb').hidden = !shotCan();
+
+// ================= @提及 自动补全（v0.7，v0.15 加强） =================
+let users = [], mpSel = 0, mpList = [], usersAt = 0;
+// v0.15：@ 前面不用空格也能弹出（中文里常见“你好@小刘”），但邮箱 a@b.com 这种不会
+const AT_RE = /(^|[^A-Za-z0-9._%+\-])@([^\s@]{0,16})$/;
+function atInsert(name) {   // 点昵称 / 资料卡的“@TA”：把 @用户名 放进输入框
+  const t = $('#t'), pos = t.selectionStart ?? t.value.length, pre = t.value.slice(0, pos), post = t.value.slice(pos);
+  const ins = (pre && !/\s$/.test(pre) ? ' ' : '') + '@' + name + ' ';
+  t.value = pre + ins + post; const c = (pre + ins).length; t.focus(); t.setSelectionRange(c, c); mpHide();
+}
+function atPing() {   // 很轻的“叮”两声
+  try {
+    const c = ctx(); if (!c) return; const t0 = c.currentTime + .02;
+    [988, 1319].forEach((f, i) => { const o = c.createOscillator(), g = c.createGain(), t = t0 + i * .1; o.type = 'sine'; o.frequency.value = f;
+      g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.07, t + .012); g.gain.exponentialRampToValueAtTime(.0001, t + .32);
+      o.connect(g); g.connect(c.destination); o.start(t); o.stop(t + .34); });
+  } catch (_) {}
+}
 async function loadUsers() {
+  usersAt = Date.now();
   const r = await fetch('/api/users', { headers: hdr() }).then(r => r.ok ? r.json() : null).catch(() => null);
   if (r) { users = r.users || r; users.forEach(u => { people[u.name] = Object.assign(people[u.name] || {}, u); }); }
 }
 function mpHide() { $('#mp').hidden = true; mpList = []; }
 function mpShow() {
-  const t = $('#t'), pre = t.value.slice(0, t.selectionStart), m = /(^|\s)@([^\s@]{0,16})$/.exec(pre);
+  const t = $('#t'), pre = t.value.slice(0, t.selectionStart), m = AT_RE.exec(pre);
   if (!m) return mpHide();
+  if (Date.now() - usersAt > 60000) loadUsers().then(() => { if (!$('#mp').hidden) mpShow(); });   // 有新成员时也能找到
   const q = m[2].toLowerCase();
-  mpList = users.filter(u => u.name !== me?.name && (u.name.toLowerCase().includes(q) || (u.nick || '').toLowerCase().includes(q))).slice(0, 6);
+  mpList = users.filter(u => u.name !== me?.name && (u.name.toLowerCase().includes(q) || (u.nick || '').toLowerCase().includes(q))).slice(0, 8);
   if (!mpList.length) return mpHide();
   mpSel = Math.min(mpSel, mpList.length - 1);
   const box = $('#mp'); box.innerHTML = '';
+  box.append(el('p', 'mph', matchMedia('(pointer: coarse)').matches ? '提到谁？点一下选择' : '提到谁？↑↓ 选择 · Enter 确认'));
   mpList.forEach((u, i) => {
     const d = el('div', i === mpSel ? 'on' : ''); const a = el('div', 'av s'); avatar(a, u, true);
     d.append(a, el('span', '', u.nick || u.name), el('small', '', '@' + u.name));
-    d.onmousedown = e => { e.preventDefault(); mpPick(i); };
+    d.onpointerdown = e => { e.preventDefault(); mpPick(i); };
     box.append(d);
   });
   box.hidden = false;
 }
 function mpPick(i) {
   const u = mpList[i]; if (!u) return;
-  const t = $('#t'), pos = t.selectionStart, pre = t.value.slice(0, pos).replace(/@([^\s@]{0,16})$/, '@' + u.name + ' ');
+  const t = $('#t'), pos = t.selectionStart, pre = t.value.slice(0, pos).replace(/@([^\s@]{0,16})$/, () => '@' + u.name + ' ');
   t.value = pre + t.value.slice(pos); t.setSelectionRange(pre.length, pre.length); mpHide(); t.focus();
 }
 $('#t').addEventListener('input', () => { mpSel = 0; mpShow(); });
@@ -2641,7 +2855,7 @@ async function installApp() {
   if (isIOS) { if ($('#setv').hidden) openSettings(); $('#ioshelp').hidden = false; }
 }
 // ----- 设置面板 -----
-function openSettings() { closeDrawers(); notifUi(); instUi(); $('#sgrp').hidden = !(me && me.admin); $('#setv').hidden = false; }
+function openSettings() { closeDrawers(); notifUi(); instUi(); shotUi(); $('#sgrp').hidden = !(me && me.admin); $('#setv').hidden = false; }
 function closeSettings() { $('#setv').hidden = true; $('#ioshelp').hidden = true; }
 // ----- 系统通知：页面在后台 / 没有焦点时才弹；@我 的单独弹并且一定响，普通消息合并成一条 -----
 const NOTIF_OK = 'Notification' in window;
@@ -3143,7 +3357,7 @@ function renderLib() {
   const box = $('#mlib'), L = MS.lib; box.innerHTML = '';
   if (!L) return box.append(el('div', 'mnote', '加载中…'));
   const q = el('div', 'quota'), qt = el('div', 'qt2'), sl = el('div', 'slots');
-  for (let i = 0; i < L.cap; i++) { const s = el('i', i < L.used ? 'u' : i < L.quota ? '' : 'l'); s.title = i < L.used ? '已使用' : i < L.quota ? '可用' : 'Lv.' + (i * 10) + ' 解锁'; sl.append(s); }
+  for (let i = 0; i < L.cap; i++) { const s = el('i', i < L.used ? 'u' : i < L.quota ? '' : 'l'); s.title = i < L.used ? '已使用' : i < L.quota ? '可用' : 'Lv.' + ((i - 4) * 4) + ' 解锁'; sl.append(s); }
   const msg = el('b', '', '已用 ' + L.used + '/' + L.quota); msg.id = 'mquota';
   qt.append(msg, sl, el('small', '', L.next ? 'Lv.' + L.next + ' 解锁第 ' + (L.quota + 1) + ' 首' : '已解锁全部 ' + L.cap + ' 首'));
   const ub = el('button', 'pill2'); ub.type = 'button'; ub.id = 'mupb'; ub.innerHTML = svg('up', 2); ub.append(' 上传'); ub.style.display = 'inline-flex'; ub.style.alignItems = 'center'; ub.style.gap = '6px';

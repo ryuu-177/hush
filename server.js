@@ -472,9 +472,10 @@ const MUSIC_MAX = MUSIC_MAX_MB * 1024 * 1024;
 const MUSIC_DIR = path.join(UPLOAD_DIR, 'music'), BG_DIR = path.join(UPLOAD_DIR, 'bg');
 fs.mkdirSync(MUSIC_DIR, { recursive: true }); fs.mkdirSync(BG_DIR, { recursive: true });
 // 音乐仓库数量按等级：Lv.1~9 一首，Lv.10~19 两首，Lv.20 起三首（最多 3 首）
-const MUSIC_CAP = 3;
-const musicQuota = L => Math.min(MUSIC_CAP, 1 + Math.floor(L / 10));
-const nextUnlock = L => musicQuota(L) >= MUSIC_CAP ? null : (Math.floor(L / 10) + 1) * 10;
+// v0.15：基础 5 首，每升 4 级多 1 首，最多 10 首（Lv.4 → 6 首 … Lv.20 起 10 首）
+const MUSIC_BASE = 5, MUSIC_STEP = 4, MUSIC_CAP = 10;
+const musicQuota = L => Math.min(MUSIC_CAP, MUSIC_BASE + Math.floor(Math.max(0, L) / MUSIC_STEP));
+const nextUnlock = L => musicQuota(L) >= MUSIC_CAP ? null : (Math.floor(Math.max(0, L) / MUSIC_STEP) + 1) * MUSIC_STEP;
 // 支持的音乐格式（扩展名 -> 类型 + 文件头家族）。wma / aiff 等主流浏览器播放不了，不收
 const MUSIC_TYPES = {
   mp3: ['audio/mpeg', 'mpeg'], aac: ['audio/aac', 'mpeg'], flac: ['audio/flac', 'flac'], wav: ['audio/wav', 'wav'],
@@ -1023,7 +1024,13 @@ io.on('connection', socket => {
     let reply = parseInt(o.reply) || null;
     if (reply && !db.prepare('SELECT 1 FROM messages WHERE id=?').get(reply)) reply = null;
     // @提及：只认真实存在的用户名
-    const ments = [...new Set([...text.matchAll(/@([^\s@]{1,16})/g)].map(x => x[1]))].filter(n => userByName.get(n)).slice(0, 20);
+    // v0.15：中文后面常常不加空格（“@小刘你好”），所以取 @ 后面“最长的、真实存在的用户名”
+    //       规则：@ 前面不能紧挨英文字母 / 数字（排除邮箱），用户名后面紧跟的也不能是英文字母 / 数字（“@bobby” 不会算成 @bob）
+    const ments = [...new Set([...text.matchAll(/@([^\s@]{1,16})/g)].map(x => {
+      if (x.index > 0 && /[A-Za-z0-9._%+-]/.test(text[x.index - 1])) return null;
+      for (let k = x[1].length; k >= 1; k--) if (!/[A-Za-z0-9_]/.test(x[1][k] || '') && userByName.get(x[1].slice(0, k))) return x[1].slice(0, k);
+      return null;
+    }).filter(Boolean))].slice(0, 20);
     const r = db.prepare('INSERT INTO messages(user_id,text,ts,reply_to,mentions) VALUES(?,?,?,?,?)').run(socket.userId, text, ts, reply, ments.length ? JSON.stringify(ments) : null);
     let u = userById.get(socket.userId);
     if (ts - (lastXp.get(u.id) || 0) > 5000) {
