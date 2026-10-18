@@ -5,7 +5,7 @@
 const VERSION = '__APP_VERSION__';
 const CACHE = 'hush-shell-' + VERSION;
 const SHELL = [
-  '/', '/offline.html', '/manifest.webmanifest',
+  '/offline.html', '/manifest.webmanifest',
   '/icons/favicon.svg', '/icons/favicon-32.png', '/icons/icon-192.png', '/icons/icon-512.png',
   '/icons/maskable-192.png', '/icons/apple-touch-icon.png', '/icons/badge-96.png',
   '/lq-glass.js', '/bg/hush-light.svg', '/bg/hush-dark.svg', '/bg/hush-m-light.svg', '/bg/hush-m-dark.svg',
@@ -36,18 +36,8 @@ self.addEventListener('fetch', e => {
   const url = new URL(req.url);
   if (url.origin !== location.origin || BYPASS.test(url.pathname)) return;
 
-  if (req.mode === 'navigate') {
-    e.respondWith((async () => {
-      let r = null;
-      try { r = await fetch(req, { cache: 'no-store' }); } catch (_) {}
-      if (!down(r)) {
-        if (r.ok && url.pathname === '/') caches.open(CACHE).then(c => c.put('/', r.clone())).catch(() => {});
-        return r;
-      }
-      return (await caches.match('/offline.html')) || r || Response.error();
-    })());
-    return;
-  }
+  // v0.18：页面导航不经过 service worker，直接请求服务器（服务器按桌面版的 User-Agent 决定给聊天程序还是门户；断网时桌面版自己显示离线页）
+  if (req.mode === 'navigate') return;
 
   if (FONTS.test(url.pathname) && !SHELL.includes(url.pathname)) {
     e.respondWith((async () => {
@@ -70,16 +60,5 @@ self.addEventListener('fetch', e => {
   }
 });
 
-// 点系统通知：已有窗口就切过去并定位到那条消息，没有就打开 Hush
-self.addEventListener('notificationclick', e => {
-  e.notification.close();
-  const id = e.notification.data && e.notification.data.id;
-  e.waitUntil((async () => {
-    const list = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
-    const w = list.find(c => new URL(c.url).origin === location.origin);
-    if (w) { await w.focus().catch(() => {}); w.postMessage({ type: 'open', id }); return; }
-    await self.clients.openWindow('/' + (id ? '?msg=' + id : ''));
-  })());
-});
-
+// v0.18：不再处理系统通知（桌面版用系统通知，网页版不能聊天）
 self.addEventListener('message', e => { if (e.data === 'skipWaiting') self.skipWaiting(); });

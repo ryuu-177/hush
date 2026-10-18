@@ -1,0 +1,345 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Hush · 账号</title>
+<meta name="description" content="Hush 账号：登录、注册、个人信息，下载 Hush 桌面版">
+<meta name="theme-color" content="#e9eae2" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#111413" media="(prefers-color-scheme: dark)">
+<meta name="color-scheme" content="light dark">
+<meta name="format-detection" content="telephone=no">
+<meta name="referrer" content="same-origin">
+<link rel="icon" href="/icons/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/icons/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<link rel="preload" as="font" type="font/woff2" crossorigin href="/fonts/font-002.woff2">
+<style>
+/* 字体：和聊天程序同一套（服务器启动时从 index.html 里复制过来） */
+/*__FONTS__*/
+:root{
+  --bg1:#e9eae2;--bg2:#f4f3eb;--tx1:#1c2923;--tx2:#536359;--tx3:#6c7c70;--ac:#d9e84f;--acd:#a6b929;--ink:#111613;--bd:#c4cdbf;--red:#c8364b;--green:#497e49;
+  --sans:"Space Grotesk","HarmonyOS Sans SC","PingFang SC","Source Han Sans SC","Noto Sans SC","Microsoft YaHei",system-ui,sans-serif;
+  --mono:"Space Grotesk","SFMono-Regular","Cascadia Code",Consolas,"PingFang SC","Microsoft YaHei",monospace;
+  --bp:url("/bg/hush-light.svg");--bpm:url("/bg/hush-m-light.svg");
+  --glass:linear-gradient(180deg,rgb(255 255 255/.80),rgb(255 255 255/.58));
+  --glass2:linear-gradient(180deg,rgb(255 255 255/.62),rgb(255 255 255/.36));
+  --edge:rgb(255 255 255/.9);--line:rgb(28 41 35/.12);--spec:rgb(255 255 255/.95);
+  --drop:0 2px 4px rgb(28 41 35/.04),0 30px 70px -28px rgb(28 41 35/.45);
+  --field:rgb(255 255 255/.62);--field-bd:rgb(28 41 35/.14);
+  --lime:linear-gradient(180deg,#eaf58f,#d6e64c 52%,#c8da3c);--lime-glow:rgb(150 172 20/.55);--lime-ink:#1a2210;
+  --blur:blur(calc(26px*var(--lq-bk,1))) saturate(1.7);
+  --out:cubic-bezier(.16,1,.3,1);
+  color-scheme:light;
+}
+@media(prefers-color-scheme:dark){:root{
+  --bg1:#111413;--bg2:#181d1c;--tx1:#ecf0e8;--tx2:#adb7af;--tx3:#829187;--acd:#d9e84f;--bd:#343e39;--red:#f0596f;--green:#a4cf96;
+  --bp:url("/bg/hush-dark.svg");--bpm:url("/bg/hush-m-dark.svg");
+  --glass:linear-gradient(180deg,rgb(34 41 39/.86),rgb(20 25 24/.80));
+  --glass2:linear-gradient(180deg,rgb(236 240 232/.08),rgb(236 240 232/.03));
+  --edge:rgb(236 240 232/.13);--line:rgb(0 0 0/.45);--spec:rgb(255 255 255/.16);
+  --drop:0 2px 6px rgb(0 0 0/.3),0 34px 80px -26px rgb(0 0 0/.95);
+  --field:rgb(0 0 0/.22);--field-bd:rgb(236 240 232/.12);
+  --lime:linear-gradient(180deg,#e3ef7c,#cfe046 52%,#b9cc30);--lime-glow:rgb(217 232 79/.32);
+  color-scheme:dark}}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%}
+body{font:14px/1.6 var(--sans);color:var(--tx1);background:var(--bg1);letter-spacing:.01em;-webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums}
+[hidden]{display:none!important}
+::selection{background:var(--ac);color:var(--ink)}
+:focus-visible{outline:2px solid var(--acd);outline-offset:2px}
+.bgp{position:fixed;inset:0;z-index:0;pointer-events:none;background-color:var(--bg1);background-image:var(--bp);background-size:1600px 1000px;opacity:.85;animation:bpIn 1.6s var(--out) both}
+.bgp::after{content:"";position:absolute;inset:0;background:radial-gradient(120% 90% at 60% 40%,transparent 50%,color-mix(in srgb,var(--bg1) 72%,transparent))}
+@keyframes bpIn{from{opacity:0;transform:scale(1.03)}to{opacity:.85;transform:none}}
+@keyframes inU{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.glass{position:relative;background:var(--glass);border:1px solid var(--edge);border-radius:28px;box-shadow:inset 0 1px 0 var(--spec),0 0 0 .5px var(--line),var(--drop);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur)}
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){.glass{background:var(--bg2)}}
+.wrap{position:relative;z-index:1;min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;padding:calc(18px + env(safe-area-inset-top)) clamp(14px,4vw,40px) calc(22px + env(safe-area-inset-bottom))}
+header{display:flex;align-items:center;gap:12px;max-width:1080px;width:100%;margin:0 auto 18px}
+header img{width:34px;height:34px;border-radius:10px;box-shadow:0 4px 14px -6px rgb(0 0 0/.4)}
+header b{font:700 20px var(--sans);letter-spacing:-.01em}
+header .k{font:600 10px var(--mono);letter-spacing:.22em;color:var(--tx3);text-transform:uppercase;margin-left:auto}
+.mono{font:600 10px var(--mono);letter-spacing:.22em;color:var(--tx3);text-transform:uppercase}
+button,input{font:inherit;color:inherit}
+input{width:100%;padding:12px 16px;border-radius:999px;border:1px solid var(--field-bd);background:var(--field);outline:none;transition:border-color .2s,box-shadow .2s}
+input:focus{border-color:color-mix(in srgb,var(--acd) 70%,transparent);box-shadow:0 0 0 4px color-mix(in srgb,var(--ac) 22%,transparent)}
+input::placeholder{color:var(--tx3)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:11px 18px;border-radius:999px;border:1px solid var(--edge);background:var(--glass2);box-shadow:inset 0 1px 0 var(--spec),0 0 0 .5px var(--line);cursor:pointer;font-weight:600;white-space:nowrap;text-decoration:none;color:inherit;transition:transform .35s var(--out),filter .2s}
+.btn:hover{filter:brightness(1.04)}.btn:active{transform:scale(.97)}
+.btn[disabled]{opacity:.55;cursor:default}
+.btn.pri{background:var(--lime);color:var(--lime-ink);border-color:rgb(255 255 255/.6);box-shadow:inset 0 1px 0 rgb(255 255 255/.7),0 10px 26px -12px var(--lime-glow)}
+.btn.dan{color:var(--red)}
+.err{min-height:20px;font-size:13px;color:var(--red)}
+.mut{color:var(--tx3)}
+/* ---- 登录 / 注册 ---- */
+#auth{flex:1;display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,420px);gap:clamp(20px,5vw,70px);align-items:center;max-width:1080px;width:100%;margin:0 auto}
+.hero{animation:inU .9s var(--out) both}
+.hero .big{font:700 clamp(76px,12vw,170px)/.84 var(--sans);letter-spacing:-.06em;margin:14px 0 0}
+.hero .big i{font-style:normal;color:var(--acd)}
+.hero .cn{font:700 clamp(19px,2vw,26px)/1.35 var(--sans);letter-spacing:.05em;margin-top:20px}
+.hero .note{margin-top:16px;max-width:440px;color:var(--tx2);line-height:1.7}
+.card{padding:30px 28px 24px;display:flex;flex-direction:column;gap:12px;animation:inU .9s var(--out) .12s both}
+.card h1{margin:0;font:700 26px var(--sans)}
+.tabs{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:4px;border-radius:999px;background:color-mix(in srgb,var(--tx1) 6%,transparent);border:1px solid var(--line);margin:4px 0 6px}
+.tabs button{border:0;background:transparent;padding:9px;border-radius:999px;cursor:pointer;color:var(--tx3);font-weight:600}
+.tabs button.on{background:var(--glass);color:var(--tx1);box-shadow:inset 0 1px 0 var(--spec),0 0 0 .5px var(--line),0 6px 16px -10px rgb(0 0 0/.4)}
+.card .go{margin-top:4px;padding:13px}
+.card .small{font-size:12px;color:var(--tx3);line-height:1.6;margin:2px 4px 0}
+/* ---- 个人信息 ---- */
+#prof{max-width:1080px;width:100%;margin:0 auto;display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:16px;align-items:start}
+#prof>*{animation:inU .8s var(--out) both}#prof>*:nth-child(2){animation-delay:.06s}#prof>*:nth-child(3){animation-delay:.12s}#prof>*:nth-child(4){animation-delay:.18s}
+.pc{padding:24px}
+.who{display:flex;gap:18px;align-items:center}
+.av{width:88px;height:88px;flex:none;border-radius:50%;display:grid;place-items:center;font:700 34px var(--sans);color:#fff;background:#457a6e;overflow:hidden;box-shadow:0 0 0 3px var(--edge),0 12px 28px -12px rgb(0 0 0/.5)}
+.av img{width:100%;height:100%;object-fit:cover}
+.who h2{margin:0;font:700 26px/1.2 var(--sans);word-break:break-word}
+.who .un{color:var(--tx3);margin-top:2px}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:999px;font-size:12px;font-weight:600;border:1px solid var(--line);background:var(--glass2);margin-top:8px}
+.pill.adm{background:var(--lime);color:var(--lime-ink);border-color:transparent}
+.bio{margin:14px 0 0;color:var(--tx2)}
+.lvl{margin-top:20px;padding:16px 18px;border-radius:20px;background:var(--glass2);border:1px solid var(--line)}
+.lvl .top{display:flex;align-items:baseline;gap:10px}
+.lvl .top b{font:700 28px var(--sans);letter-spacing:-.02em}
+.lvl .top span{margin-left:auto;color:var(--tx3);font-size:13px}
+.bar{height:10px;border-radius:6px;background:color-mix(in srgb,var(--tx1) 10%,transparent);overflow:hidden;margin-top:10px}
+.bar i{display:block;height:100%;border-radius:6px;background:var(--lime);box-shadow:0 0 14px var(--lime-glow);width:0;transition:width 1.2s var(--out)}
+.lvl .sub{margin-top:8px;font-size:12.5px;color:var(--tx3)}
+.kv{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:16px}
+.kv>div{padding:12px 14px;border-radius:16px;background:var(--glass2);border:1px solid var(--line);min-width:0}
+.kv span{display:block;font-size:12px;color:var(--tx3)}
+.kv b{display:block;font-size:17px;margin-top:2px;overflow-wrap:anywhere}
+.kv .bar{height:6px;margin-top:8px}
+.dl{padding:24px;display:flex;flex-direction:column;gap:12px;overflow:hidden}
+.dl::before{content:"";position:absolute;inset:-40% -30% auto auto;width:280px;height:280px;border-radius:50%;background:radial-gradient(circle,color-mix(in srgb,var(--ac) 40%,transparent),transparent 70%);pointer-events:none;opacity:.7}
+.dl h3{margin:0;font:700 22px/1.25 var(--sans);position:relative}
+.dl p{margin:0;color:var(--tx2);position:relative}
+.dl .btn.pri{padding:16px 22px;font-size:16px;position:relative}
+.dl .btn.pri svg{width:20px;height:20px}
+.hint{position:relative;font-size:12.5px;line-height:1.7;color:var(--tx2);padding:12px 14px;border-radius:16px;background:var(--glass2);border:1px solid var(--line)}
+.hint b{color:var(--tx1)}
+.hint.warn{border-color:color-mix(in srgb,var(--acd) 55%,transparent)}
+.col{display:flex;flex-direction:column;gap:16px}
+.ed{padding:22px 24px;display:flex;flex-direction:column;gap:10px}
+.ed h3{margin:0 0 4px;font:700 17px var(--sans)}
+.ed label{font-size:12px;color:var(--tx3);margin:4px 6px -4px}
+.ed .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.ed .row .btn{flex:none}
+.avedit{display:flex;gap:12px;align-items:center}
+.avedit .av{width:52px;height:52px;font-size:20px;box-shadow:0 0 0 2px var(--edge)}
+.avedit input{flex:1;min-width:0}
+.foot{max-width:1080px;width:100%;margin:18px auto 0;display:flex;gap:10px;align-items:center;flex-wrap:wrap;color:var(--tx3);font-size:12px}
+.foot .btn{margin-left:auto}
+.toast{position:fixed;left:50%;bottom:calc(26px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:9;padding:10px 18px;border-radius:999px;background:var(--glass);border:1px solid var(--edge);box-shadow:var(--drop);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);font-weight:600;animation:inU .4s var(--out) both;max-width:calc(100% - 28px);text-align:center}
+@media(max-width:860px){
+  #auth{grid-template-columns:1fr;align-content:end;gap:18px}
+  .hero .big{font-size:84px}
+  .hero .note{display:none}
+  #prof{grid-template-columns:1fr}
+  .bgp{background-image:var(--bpm);background-size:cover}
+}
+@media(max-width:520px){
+  .wrap{padding-left:12px;padding-right:12px}
+  header .k{display:none}
+  .card{padding:24px 20px 20px}
+  .pc,.dl,.ed{padding:20px 18px}
+  .av{width:72px;height:72px;font-size:28px}
+  .who h2{font-size:22px}
+  .kv b{font-size:15px}
+}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+<script src="/lq-glass.js"></script>
+</head>
+<body>
+<div class="bgp" aria-hidden="true"></div>
+<div class="wrap">
+  <header><img src="/icons/icon-192.png" alt=""><b>Hush</b><span class="k">Account / 账号</span></header>
+
+  <main id="auth" hidden>
+    <div class="hero">
+      <div class="mono">HUSH / PRIVATE CHANNEL · INVITE ONLY</div>
+      <p class="big">Hush<i>.</i></p>
+      <div class="cn">嘘，小声聊。只属于你们的频道。</div>
+      <p class="note">网页只用来登录、注册和查看账号信息。聊天、语音、听歌都在 Hush 桌面版里。</p>
+    </div>
+    <form class="card glass" id="af" autocomplete="on" onsubmit="event.preventDefault();go()">
+      <span class="mono">Access / 身份验证</span>
+      <h1 id="ah">登录 Hush</h1>
+      <div class="tabs" role="tablist"><button type="button" id="tl" class="on" role="tab" onclick="mode('login')">登录</button><button type="button" id="tr" role="tab" onclick="mode('register')">注册</button></div>
+      <input id="name" placeholder="用户名" maxlength="16" autocomplete="username" required>
+      <input id="pw" type="password" placeholder="密码，至少 6 位" autocomplete="current-password" required>
+      <input id="inv" placeholder="邀请码（找管理员要）" maxlength="12" autocomplete="off" hidden>
+      <div class="err" id="err" role="alert"></div>
+      <button class="btn pri go" id="gob" type="submit">登录</button>
+      <p class="small">登录后可以看到你的等级、经验和音乐仓库，并下载 Windows 桌面版。</p>
+    </form>
+  </main>
+
+  <main id="prof" hidden>
+    <section class="pc glass" aria-label="个人信息">
+      <div class="who"><div class="av" id="pav"></div><div style="min-width:0"><h2 id="pnick"></h2><div class="un" id="pname"></div><span class="pill" id="prole"></span></div></div>
+      <p class="bio" id="pbio" hidden></p>
+      <div class="lvl"><div class="top"><span class="mono" style="margin:0">Level</span><b id="plv"></b><span id="pxp"></span></div><div class="bar"><i id="pbar"></i></div><div class="sub" id="pnext"></div></div>
+      <div class="kv">
+        <div><span>加入时间</span><b id="pjoin"></b></div>
+        <div><span>身份</span><b id="prole2"></b></div>
+        <div><span>音乐仓库</span><b id="pmus"></b><div class="bar"><i id="pmbar"></i></div></div>
+        <div><span>发过的消息</span><b id="pmsg"></b></div>
+        <div><span>上传的文件</span><b id="pfil"></b></div>
+        <div><span>点过的歌</span><b id="psong"></b></div>
+      </div>
+    </section>
+    <div class="col">
+      <section class="dl glass" aria-label="下载桌面版">
+        <span class="mono" style="position:relative">Desktop / 桌面版</span>
+        <h3>聊天请用 Hush 桌面版</h3>
+        <p id="dlv">网页版已经不能聊天了。下载 Windows 桌面版，用同一个账号登录就能继续聊。</p>
+        <a class="btn pri" id="dlb" href="#" download><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0l-5-5m5 5l5-5M4 19h16"/></svg><span>下载 Hush for Windows</span></a>
+        <div class="hint" id="nowin" hidden></div>
+        <div class="hint"><b>第一次打开时</b>如果出现“Windows 已保护你的电脑”（SmartScreen），点 <b>“更多信息”</b> → <b>“仍要运行”</b> 就行。装好以后桌面版会自己检查更新。</div>
+      </section>
+      <section class="ed glass" aria-label="修改资料">
+        <h3>修改资料</h3>
+        <div class="avedit"><div class="av" id="eav"></div><input id="eavt" maxlength="16" placeholder="头像：一个表情或 1~2 个字"><button class="btn" type="button" onclick="$('#eavf').click()">上传图片</button><input type="file" id="eavf" accept="image/png,image/jpeg,image/webp,image/gif" hidden></div>
+        <label for="enick">昵称</label><input id="enick" maxlength="16">
+        <label for="ebio">签名</label><input id="ebio" maxlength="60" placeholder="一句话介绍自己（可以不填）">
+        <div class="err" id="eerr"></div>
+        <div class="row"><button class="btn pri" type="button" id="esave" onclick="saveProfile()">保存资料</button></div>
+      </section>
+      <section class="ed glass" aria-label="修改密码">
+        <h3>修改密码</h3>
+        <input id="pold" type="password" placeholder="旧密码" autocomplete="current-password">
+        <input id="pnew" type="password" placeholder="新密码，至少 6 位" autocomplete="new-password">
+        <input id="pnew2" type="password" placeholder="再输一次新密码" autocomplete="new-password">
+        <div class="err" id="perr"></div>
+        <div class="row"><button class="btn" type="button" id="psave" onclick="savePw()">修改密码</button><span class="mut" style="font-size:12px">改完后其他设备需要重新登录</span></div>
+      </section>
+    </div>
+  </main>
+
+  <div class="foot" id="foot" hidden><span>Hush v__APP_VERSION__ · 网页只用于账号；聊天请用桌面版</span><button class="btn dan" type="button" onclick="logout()">退出登录</button></div>
+</div>
+<script>
+const $ = s => document.querySelector(s);
+// 万一桌面版打开了门户（比如被旧的缓存挡住）：清掉 service worker 后重新打开一次，还不行就提示
+if (window.hushDesktop) {
+  if (!sessionStorage.hush_portal_retry) {
+    sessionStorage.hush_portal_retry = '1';
+    (navigator.serviceWorker ? navigator.serviceWorker.getRegistrations() : Promise.resolve([])).then(l => Promise.all(l.map(r => r.unregister()))).catch(() => {}).then(() => location.replace('/?r=' + Date.now()));
+  } else addEventListener('DOMContentLoaded', () => toast('桌面版没被服务器认出来，请在托盘菜单里“检查更新”'));
+}
+// v0.18：网页不再安装成 PWA、不再弹通知：把以前注册过的 service worker 和缓存都清掉
+if ('serviceWorker' in navigator) navigator.serviceWorker.getRegistrations().then(l => l.forEach(r => r.unregister())).catch(() => {});
+if (window.caches) caches.keys().then(ks => ks.forEach(k => k.startsWith('hush-shell-') && caches.delete(k))).catch(() => {});
+addEventListener('beforeinstallprompt', e => e.preventDefault());
+let M = 'login', me = null, newAv = null;
+const hdr = () => ({ Authorization: 'Bearer ' + localStorage.token, 'Content-Type': 'application/json' });
+const show = v => { $('#auth').hidden = v !== 'auth'; $('#prof').hidden = $('#foot').hidden = v !== 'prof'; };
+function toast(t) { document.querySelectorAll('.toast').forEach(x => x.remove()); const d = document.createElement('div'); d.className = 'toast'; d.setAttribute('role', 'status'); d.textContent = t; document.body.append(d); setTimeout(() => d.remove(), 2600); }
+function mode(m) {
+  M = m; const r = m === 'register';
+  $('#tl').classList.toggle('on', !r); $('#tr').classList.toggle('on', r);
+  $('#tl').setAttribute('aria-selected', !r); $('#tr').setAttribute('aria-selected', r);
+  $('#inv').hidden = !r; $('#ah').textContent = r ? '注册 Hush 账号' : '登录 Hush'; $('#gob').textContent = r ? '注册' : '登录';
+  $('#pw').autocomplete = r ? 'new-password' : 'current-password'; $('#err').textContent = '';
+}
+async function api(path, opt = {}) {
+  let r, d = {};
+  try { r = await fetch(path, { ...opt, headers: { ...hdr(), ...(opt.headers || {}) } }); } catch (_) { return { ok: false, status: 0, d: { error: '连不上服务器，请稍后再试' } }; }
+  try { d = await r.json(); } catch (_) {}
+  return { ok: r.ok, status: r.status, d };
+}
+async function go() {
+  const b = $('#gob'); if (b.disabled) return; b.disabled = true; $('#err').textContent = '';
+  const { ok, d } = await api('/api/' + M, { method: 'POST', body: JSON.stringify({ name: $('#name').value.trim(), password: $('#pw').value, invite: $('#inv').value }) });
+  b.disabled = false;
+  if (!ok) { $('#err').textContent = d.error || '出错了，请重试'; return; }
+  localStorage.token = d.token; $('#pw').value = ''; $('#inv').value = '';
+  await load(true);
+  if (M === 'register') toast('注册成功，欢迎来到 Hush');
+}
+function avatar(el, u) {
+  el.textContent = ''; el.style.background = u.color || '';
+  const a = u.avatar || '';
+  if (a.startsWith('data:image/')) { const i = new Image(); i.alt = ''; i.src = a; el.append(i); }
+  else el.textContent = a || [...(u.nick || u.name || '?')][0].toUpperCase();
+}
+const fmtDate = t => { const d = new Date(t); return d.getFullYear() + ' 年 ' + (d.getMonth() + 1) + ' 月 ' + d.getDate() + ' 日'; };
+async function load(fresh) {
+  if (!localStorage.token) return show('auth');
+  const { ok, status, d } = await api('/api/me');
+  if (!ok) { if (status === 401) { localStorage.removeItem('token'); show('auth'); } else { show('auth'); $('#err').textContent = d.error || '加载失败'; } return; }
+  me = d; render(); show('prof'); if (fresh) scrollTo(0, 0);
+}
+function render() {
+  const u = me;
+  avatar($('#pav'), u); avatar($('#eav'), newAv ? { ...u, avatar: newAv } : u);
+  $('#pnick').textContent = u.nick; $('#pname').textContent = '@' + u.name;
+  const adm = u.role === 'admin';
+  $('#prole').textContent = adm ? '管理员' : '成员'; $('#prole').classList.toggle('adm', adm); $('#prole2').textContent = adm ? '管理员' : '普通成员';
+  $('#pbio').hidden = !u.bio; $('#pbio').textContent = u.bio;
+  const span = Math.max(1, u.to - u.from), pct = Math.max(0, Math.min(100, (u.xp - u.from) / span * 100));
+  $('#plv').textContent = 'Lv.' + u.level; $('#pxp').textContent = u.xp + ' / ' + u.to + ' 经验';
+  requestAnimationFrame(() => { $('#pbar').style.width = pct.toFixed(1) + '%'; });
+  $('#pnext').textContent = '再获得 ' + Math.max(0, u.to - u.xp) + ' 经验升到 Lv.' + (u.level + 1) + ' · 每天第一次登录 +20，聊天 +2';
+  $('#pjoin').textContent = u.created ? (u.createdEst ? '约 ' : '') + fmtDate(u.created) : '—';
+  const m = u.music || {};
+  $('#pmus').textContent = m.used + ' / ' + m.quota + ' 首';
+  requestAnimationFrame(() => { $('#pmbar').style.width = Math.min(100, m.used / Math.max(1, m.quota) * 100) + '%'; });
+  $('#pmus').title = m.next ? 'Lv.' + m.next + ' 时多 1 首（最多 ' + m.cap + ' 首）' : '已经是最多的 ' + m.cap + ' 首';
+  const s = u.stats || {};
+  $('#pmsg').textContent = (s.messages || 0).toLocaleString(); $('#pfil').textContent = (s.files || 0).toLocaleString(); $('#psong').textContent = (s.songs || 0).toLocaleString();
+  if (document.activeElement !== $('#enick')) $('#enick').value = u.nick;
+  if (document.activeElement !== $('#ebio')) $('#ebio').value = u.bio || '';
+  if (!newAv && document.activeElement !== $('#eavt')) $('#eavt').value = u.avatar && !u.avatar.startsWith('data:') ? u.avatar : '';
+}
+async function desk() {
+  const win = /Windows/i.test(navigator.userAgent) && !/Windows Phone/i.test(navigator.userAgent);
+  const n = $('#nowin');
+  if (!win) { n.hidden = false; n.classList.add('warn'); n.innerHTML = '<b>你现在用的不是 Windows 电脑。</b>Hush 目前只有 Windows 桌面版能聊天（手机、Mac 暂时不行）。可以先 <a href="#" id="cpl">复制下载链接</a>，到 Windows 电脑上打开。'; $('#cpl').onclick = e => { e.preventDefault(); const u = $('#dlb').href; (navigator.clipboard ? navigator.clipboard.writeText(u) : Promise.reject()).then(() => toast('下载链接已复制'), () => prompt('复制这个链接：', u)); }; }
+  try {
+    const r = await fetch('/api/desktop-version', { cache: 'no-store' }); const d = r.ok ? await r.json() : null;
+    if (d && d.url) { $('#dlb').href = d.url; $('#dlb').querySelector('span').textContent = '下载 Hush for Windows · ' + d.version; }
+    else { $('#dlb').removeAttribute('href'); $('#dlb').setAttribute('aria-disabled', 'true'); $('#dlb').style.opacity = .55; $('#dlb').querySelector('span').textContent = '桌面版安装包还没放上来'; }
+  } catch (_) {}
+}
+// 头像图片：裁成正方形、缩到 256px 再上传（服务器上限约 200KB）
+$('#eavf').onchange = async e => {
+  const f = e.target.files[0]; e.target.value = ''; if (!f) return;
+  try {
+    const bmp = await createImageBitmap(f); const S = 256, k = Math.min(bmp.width, bmp.height);
+    const c = document.createElement('canvas'); c.width = c.height = S;
+    c.getContext('2d').drawImage(bmp, (bmp.width - k) / 2, (bmp.height - k) / 2, k, k, 0, 0, S, S);
+    let q = .88, url = c.toDataURL('image/webp', q);
+    if (!url.startsWith('data:image/webp')) url = c.toDataURL('image/jpeg', q);
+    while (url.length > 190 * 1024 && q > .4) { q -= .12; url = c.toDataURL(url.startsWith('data:image/webp') ? 'image/webp' : 'image/jpeg', q); }
+    newAv = url; $('#eavt').value = ''; render(); toast('头像已选好，点“保存资料”生效');
+  } catch (_) { toast('这张图片读不出来，换一张试试'); }
+};
+$('#eavt').oninput = () => { newAv = null; avatar($('#eav'), { ...me, avatar: $('#eavt').value.trim() }); };
+async function saveProfile() {
+  const b = $('#esave'); b.disabled = true; $('#eerr').textContent = '';
+  const av = newAv != null ? newAv : $('#eavt').value.trim() || (me.avatar && me.avatar.startsWith('data:') && !$('#eavt').value ? me.avatar : '');
+  const { ok, d } = await api('/api/profile', { method: 'PUT', body: JSON.stringify({ nick: $('#enick').value, bio: $('#ebio').value, color: me.color || '', avatar: av }) });
+  b.disabled = false;
+  if (!ok) { $('#eerr').textContent = d.error || '保存失败'; return; }
+  newAv = null; $('#enick').blur(); $('#ebio').blur(); await load(); toast('资料已保存');
+}
+async function savePw() {
+  $('#perr').textContent = '';
+  if ($('#pnew').value !== $('#pnew2').value) { $('#perr').textContent = '两次输入的新密码不一样'; return; }
+  const b = $('#psave'); b.disabled = true;
+  const { ok, d } = await api('/api/password', { method: 'POST', body: JSON.stringify({ old: $('#pold').value, password: $('#pnew').value }) });
+  b.disabled = false;
+  if (!ok) { $('#perr').textContent = d.error || '修改失败'; return; }
+  ['#pold', '#pnew', '#pnew2'].forEach(s => $(s).value = '');
+  toast(d.others ? '密码已修改，其他 ' + d.others + ' 处登录已退出' : '密码已修改');
+}
+async function logout() { await api('/api/logout', { method: 'POST' }); localStorage.removeItem('token'); me = null; newAv = null; mode('login'); show('auth'); toast('已退出登录'); }
+$('#pw').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); go(); } });
+addEventListener('pageshow', e => { if (e.persisted) load(); });
+document.addEventListener('visibilitychange', () => { if (!document.hidden && me) load(); });
+desk(); load();
+</script>
+</body>
+</html>

@@ -113,6 +113,8 @@ for (const [col, def] of [['nick', 'TEXT'], ['avatar', 'TEXT'], ['color', 'TEXT'
 }
 // v0.9 升级：个人背景、个人音乐仓库、群聊歌单、群聊设置（全部是新增的表 / 字段，旧数据不受影响）
 addCol('users', 'bg', 'TEXT');
+// v0.18：注册时间（老账号没有记录：用最早的消息 / 文件 / 歌曲时间估一个，标记为“约”）
+addCol('users', 'created', 'INTEGER'); addCol('users', 'created_est', 'INTEGER DEFAULT 0');
 addCol('messages', 'kind', 'TEXT');
 // v0.17：图片尺寸（聊天里按比例占位）、内容哈希（表情包去重）、是否表情包（不进文件仓）
 addCol('files', 'w', 'INTEGER'); addCol('files', 'h', 'INTEGER'); addCol('files', 'hash', 'TEXT'); addCol('files', 'sticker', 'INTEGER DEFAULT 0');
@@ -159,7 +161,24 @@ function newSession(id) {
 
 // ---------- 账号接口 ----------
 const app = express();
-app.use(express.json({ limit: '400kb' }));
+
+// ---------- v0.18：只有 Hush 桌面版能聊天，网页只能登录 / 注册 / 看个人信息 ----------
+// 桌面版（Electron）的 User-Agent 里自带 “Hush/版本号 … Electron/版本号”，1.1.x 不用更新就有。
+// 聊天连接（socket.io）还要求页面在握手里带 client:'desktop'（只有桌面版的页面会带）。
+// 这不是密码：懂技术的人可以伪造 User-Agent，这一点可以接受；仓库里也不放任何密钥。
+// 临时恢复网页聊天（比如桌面版出问题时）：启动前设置环境变量 WEB_CHAT=1。
+const WEB_CHAT = process.env.WEB_CHAT === '1';
+const APP_UA = /\bHush\/\d+\.\d+\.\d+\b.*\bElectron\/\d+/;
+const isApp = req => WEB_CHAT || APP_UA.test(String((req.headers && req.headers['user-agent']) || ''));
+const DESK_ONLY = '网页版已不能聊天，请下载并使用 Hush 桌面版';
+// 浏览器也能用的接口（登录、注册、个人信息、改资料 / 密码、邀请码、版本号）；其余 /api 一律只给桌面版
+const WEB_OK = [['GET', /^\/ping$/], ['GET', /^\/desktop-version$/], ['POST', /^\/(register|login|logout|password)$/], ['GET', /^\/me$/], ['PUT', /^\/profile$/], ['*', /^\/invites(\/[^/]*)?$/]];
+app.use('/api', (req, res, next) => {
+  if (isApp(req) || WEB_OK.some(([m, r]) => (m === '*' || m === req.method || (m === 'GET' && req.method === 'HEAD')) && r.test(req.path))) return next();
+  req.resume();
+  res.status(403).set('Cache-Control', 'no-store').json({ error: DESK_ONLY, code: 'desktop-only' });
+});
+app.use(express.json({ limit: '400kb' }));   // 放在把关之后：被拒的请求连请求体都不解析
 
 // ---------- v0.8：PWA（可安装成软件）----------
 // 版本号只写在 package.json 里；首页和 service worker 里的 __APP_VERSION__ 会被替换成它。
@@ -167,11 +186,16 @@ app.use(express.json({ limit: '400kb' }));
 const VERSION = require('./package.json').version;
 const PUB = path.join(__dirname, 'public');
 const withVersion = f => fs.readFileSync(path.join(PUB, f), 'utf8').split('__APP_VERSION__').join(VERSION);
-const pages = { index: withVersion('index.html'), sw: withVersion('sw.js') };
+const pages = { index: withVersion('index.html'), sw: withVersion('sw.js'), swOff: withVersion('sw-off.js') };
+// 门户页的字体声明直接从 index.html 里复制，两边永远一致
+pages.portal = withVersion('portal.html').replace('/*__FONTS__*/', (pages.index.match(/@font-face\s*\{[^}]*\}/g) || []).join('\n'));
 const noCache = { 'Cache-Control': 'no-cache' };
-app.get(['/', '/index.html'], (req, res) => res.set({ ...noCache, 'Content-Type': 'text/html; charset=utf-8' }).send(pages.index));
+// v0.18：桌面版打开首页 → 聊天程序；浏览器 → 账号门户（登录 / 注册 / 个人信息 / 下载桌面版）
+app.get(['/', '/index.html'], (req, res) => res.set({ ...noCache, Vary: 'User-Agent', 'Content-Type': 'text/html; charset=utf-8' }).send(isApp(req) ? pages.index : pages.portal));
+app.get('/portal.html', (req, res) => res.redirect(302, '/'));
 // service worker 必须放在根目录、不能被缓存，否则升级后新版本要很久才生效
-app.get('/sw.js', (req, res) => res.set({ ...noCache, 'Content-Type': 'text/javascript; charset=utf-8', 'Service-Worker-Allowed': '/' }).send(pages.sw));
+// v0.18：浏览器拿到的是“注销自己”的版本：清掉旧缓存、注销，不再弹通知、不再能安装成 PWA
+app.get('/sw.js', (req, res) => res.set({ ...noCache, Vary: 'User-Agent', 'Content-Type': 'text/javascript; charset=utf-8', 'Service-Worker-Allowed': '/' }).send(isApp(req) ? pages.sw : pages.swOff));
 app.get('/manifest.webmanifest', (req, res) => res.set({ ...noCache, 'Content-Type': 'application/manifest+json; charset=utf-8' }).sendFile(path.join(PUB, 'manifest.webmanifest')));
 // 离线页用它判断服务器是否恢复（不需要登录，只返回版本号）
 app.get('/api/ping', (req, res) => res.set('Cache-Control', 'no-store').json({ ok: true, v: VERSION }));
@@ -1043,7 +1067,7 @@ app.post('/api/register', (req, res) => {
         return res.status(403).json({ error: '邀请码无效、已被使用或已过期' });
       }
     }
-    const r = db.prepare('INSERT INTO users(name,salt,hash,is_admin) VALUES(?,?,?,?)').run(name, salt, hashPw(pw, salt), first ? 1 : 0);
+    const r = db.prepare('INSERT INTO users(name,salt,hash,is_admin,created) VALUES(?,?,?,?,?)').run(name, salt, hashPw(pw, salt), first ? 1 : 0, Date.now());
     const id = Number(r.lastInsertRowid);
     if (!first) db.prepare('UPDATE invites SET used_by=?, used_at=? WHERE code=?').run(id, Date.now(), code);
     db.exec('COMMIT');
@@ -1065,6 +1089,50 @@ app.post('/api/login', (req, res) => {
   res.json({ token: newSession(u.id) });
 });
 
+// ---------- v0.18：账号门户用的接口（浏览器和桌面版都能用） ----------
+const bearer = req => (req.headers.authorization || '').replace('Bearer ', '');
+// 老账号补一个估算的注册时间：最早的消息 / 文件 / 歌曲；都没有就用现在
+for (const u of db.prepare('SELECT id FROM users WHERE created IS NULL').all()) {
+  const t = Math.min(...[db.prepare('SELECT MIN(ts) t FROM messages WHERE user_id=?').get(u.id).t, db.prepare('SELECT MIN(created) t FROM files WHERE user_id=?').get(u.id).t, db.prepare('SELECT MIN(created) t FROM music WHERE user_id=?').get(u.id).t].filter(Boolean).concat(Date.now()));
+  db.prepare('UPDATE users SET created=?, created_est=1 WHERE id=?').run(t, u.id);
+}
+app.get('/api/me', (req, res) => {
+  const u = userOf(req);
+  if (!u) return res.status(401).json({ error: '请先登录' });
+  const L = level(u.xp), q = sql => db.prepare(sql).get(u.id).n;
+  const music = { used: q('SELECT COUNT(*) n FROM music WHERE user_id=?'), quota: musicQuota(L), cap: MUSIC_CAP, next: nextUnlock(L) };
+  const stats = {
+    messages: q("SELECT COUNT(*) n FROM messages WHERE user_id=? AND COALESCE(recalled,0)=0 AND COALESCE(kind,'') NOT IN ('song','live')"),
+    files: q('SELECT COUNT(*) n FROM files WHERE user_id=? AND deleted=0 AND COALESCE(sticker,0)=0'),
+    songs: q("SELECT COUNT(*) n FROM messages WHERE user_id=? AND kind='song'")
+  };
+  res.set('Cache-Control', 'no-store').json({ ...info(u), role: u.is_admin ? 'admin' : 'member', created: u.created || null, createdEst: !!u.created_est, music, stats, app: isApp(req), webChat: WEB_CHAT });
+});
+// 改密码：要先输对旧密码；改完后其他设备上的登录全部失效（当前这个保留）
+app.post('/api/password', (req, res) => {
+  if (limited(req)) return res.status(429).json({ error: '尝试次数过多，请 10 分钟后再试' });
+  const u = userOf(req);
+  if (!u) return res.status(401).json({ error: '请先登录' });
+  const old = String((req.body || {}).old || ''), pw = String((req.body || {}).password || '');
+  const ok = crypto.timingSafeEqual(Buffer.from(hashPw(old, u.salt), 'hex'), Buffer.from(u.hash, 'hex'));
+  if (!ok) { fail(req); return res.status(403).json({ error: '旧密码不对' }); }
+  if (pw.length < 6) return res.status(400).json({ error: '新密码至少 6 位' });
+  if (pw.length > 200) return res.status(400).json({ error: '新密码太长了' });
+  const salt = crypto.randomBytes(16).toString('hex');
+  db.prepare('UPDATE users SET salt=?, hash=? WHERE id=?').run(salt, hashPw(pw, salt), u.id);
+  const keep = bearer(req);
+  const gone = db.prepare('SELECT token FROM sessions WHERE user_id=? AND token<>?').all(u.id, keep).map(r => r.token);
+  db.prepare('DELETE FROM sessions WHERE user_id=? AND token<>?').run(u.id, keep);
+  for (const s of io.sockets.sockets.values()) if (gone.includes(s.data.token)) s.disconnect(true);
+  res.json({ ok: true, others: gone.length });
+});
+// 退出登录：作废当前这个登录（别的设备不受影响）
+app.post('/api/logout', (req, res) => {
+  const t = bearer(req);
+  if (t) db.prepare('DELETE FROM sessions WHERE token=?').run(t);
+  res.json({ ok: true });
+});
+
 // ---------- 实时聊天 ----------
 const server = http.createServer(app);
 const io = new Server(server);
@@ -1073,9 +1141,14 @@ const onlineIds = new Map();   // socket.id -> 用户 id
 const lastXp = new Map();   // 用户 id -> 上次得经验的时间
 
 io.use((socket, next) => {
-  const u = userByToken.get(String(socket.handshake.auth.token || ''));
+  // v0.18：只接受桌面版（User-Agent 带 Hush/… Electron/…，并且页面握手里说明 client:'desktop'）。
+  // 升级那一刻桌面版里还开着的旧页面（v0.17 及以前）握手里没有 client，只要 User-Agent 是桌面版就放行，
+  // 不然它会一直连不上，直到用户手动刷新。浏览器的 User-Agent 不带 Hush/Electron，照样被拒。
+  const a = socket.handshake.auth || {};
+  if (!WEB_CHAT && !(isApp(socket.handshake) && (a.client === 'desktop' || a.client === undefined))) return next(new Error('desktop-only'));
+  const u = userByToken.get(String(a.token || ''));
   if (!u) return next(new Error('auth'));
-  socket.userId = u.id;
+  socket.userId = u.id; socket.data.token = String(a.token);
   next();
 });
 
@@ -1343,5 +1416,6 @@ io.on('connection', socket => {
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, '0.0.0.0', () => {
   console.log('Hush v' + VERSION + ' 已启动：http://localhost:' + PORT);
+  console.log(WEB_CHAT ? '注意：WEB_CHAT=1，网页版也能聊天（临时模式）' : '只有 Hush 桌面版能聊天；网页只能登录 / 注册 / 看个人信息');
   if (turnConf()) { console.log('已配置 Cloudflare TURN（语音 / 直播打不通时自动中转）'); iceFor(); }
 });

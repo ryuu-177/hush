@@ -1602,6 +1602,11 @@ a.pill2{text-decoration:none;display:inline-flex;align-items:center}
         <div class="stx"><b>消息通知</b><small id="snotifs"></small></div>
         <button class="tgl" id="tnotif" type="button" role="switch" aria-checked="false" aria-label="消息通知" onclick="toggleNotify()"><i></i></button>
       </div>
+      <div class="srow" id="sauto" hidden>
+        <div class="si"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v8"/><path d="M6.4 6.4a8 8 0 1 0 11.2 0"/></svg></div>
+        <div class="stx"><b>开机自动启动</b><small id="sautos"></small></div>
+        <button class="tgl" id="tauto" type="button" role="switch" aria-checked="false" aria-label="开机自动启动" onclick="toggleAuto()"><i></i></button>
+      </div>
       <div class="srow" id="sinst">
         <div class="si"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="13" rx="2.5"/><path d="M8 21h8M12 7.5v6M9.5 11l2.5 2.5 2.5-2.5"/></svg></div>
         <div class="stx"><b>安装 Hush</b><small id="sinsts"></small></div>
@@ -1765,10 +1770,11 @@ async function auth(kind) {
 
 function start() {
   if (!localStorage.token) return show('auth');
-  socket = io({ auth: cb => cb({ token: localStorage.token, since: lastId && !windowMode ? lastId : 0 }) });
+  socket = io({ auth: cb => cb({ token: localStorage.token, since: lastId && !windowMode ? lastId : 0, client: window.hushDesktop ? 'desktop' : 'web' }) });   // v0.18：服务器只接受桌面版
   netInit();
   socket.on('connect_error', e => {
     if (e.message === 'auth') { localStorage.removeItem('token'); socket.close(); show('auth'); }
+    if (e.message === 'desktop-only') { socket.close(); show('auth'); $('#err').textContent = '网页版已不能聊天，请使用 Hush 桌面版。'; }
   });
   socket.on('me', u => {
     me = u;
@@ -2175,7 +2181,8 @@ async function delInvite(code) {
   if ($('#code').textContent === code) $('#code').textContent = '';
   loadInvites();
 }
-function logout() { musicStop(); endLocal(); leaveRoomLocal(); stopLive(); if (viewer) closeViewer(); localStorage.removeItem('token'); socket.close(); hideTip(); setUnread(0); show('auth'); }
+function logout() { fetch('/api/logout', { method: 'POST', headers: hdr() }).catch(() => {});   // v0.18：服务器上也作废这次登录
+  musicStop(); endLocal(); leaveRoomLocal(); stopLive(); if (viewer) closeViewer(); localStorage.removeItem('token'); socket.close(); hideTip(); setUnread(0); show('auth'); }
 
 // ================= 语音通话（WebRTC，v0.4） =================
 let ice = null, iceAt = 0, iceLife = 0, local = null, call = null, rpcs = new Map(), muted = false, roomInfo = { max: 6, members: [] };
@@ -2711,6 +2718,7 @@ function openSearch() { openDrawer('#sd'); setTimeout(() => $('#sq').focus(), 60
 const SHOT = { dir: undefined, busy: false };
 // v0.16：在 Hush 桌面版里，用桌面版自己的截图（不用选屏幕，直接截鼠标所在的屏幕）和保存（记住的文件夹）
 const DESK = (window.hushDesktop && typeof window.hushDesktop.captureScreen === 'function') ? window.hushDesktop : null;
+try { sessionStorage.removeItem('hush_portal_retry'); } catch (_) {}   // v0.18：门户页的“桌面版重试”标记
 const shotCan = () => !!DESK || (!!(navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia) && !matchMedia('(pointer: coarse)').matches);
 const shotDl = () => localStorage.hush_shot_dl === '1';   // 用户选了“恢复默认”：网页版改成浏览器下载
 const shotFs = () => typeof window.showDirectoryPicker === 'function';
@@ -3475,7 +3483,23 @@ async function installApp() {
   if (isIOS) { if ($('#setv').hidden) openSettings(); $('#ioshelp').hidden = false; }
 }
 // ----- 设置面板 -----
-function openSettings() { closeDrawers(); notifUi(); instUi(); shotUi(); stkUi(); deskUi(); $('#sgrp').hidden = !(me && me.admin); $('#setv').hidden = false; }
+// ----- v0.18：开机自动启动（桌面版 1.2.0 起；1.1.x 提示更新）-----
+async function autoUi(v) {
+  const r = $('#sauto'), t = $('#tauto'); r.hidden = !DESK; if (!DESK) return;
+  if (typeof DESK.getAutoStart !== 'function') { t.hidden = true; $('#sautos').textContent = '把桌面版更新到 1.2.0 就能设置（托盘菜单 → 检查更新）'; return; }
+  t.hidden = false;
+  const a = v || await DESK.getAutoStart().catch(() => null) || { on: false, supported: false };
+  t.classList.toggle('on', !!a.on); t.setAttribute('aria-checked', String(!!a.on)); t.disabled = !a.supported;
+  $('#sautos').textContent = !a.supported ? '只有安装版可以设置' : a.on ? '开机后在托盘里待命，不弹窗口，照样收消息' : '已关闭：开机后需要手动打开 Hush';
+}
+async function toggleAuto() {
+  if (!DESK || typeof DESK.setAutoStart !== 'function') return;
+  const on = $('#tauto').classList.contains('on');
+  const a = await DESK.setAutoStart(!on).catch(() => null);
+  autoUi(a || undefined); if (a) toast(a.on ? '已开启开机自动启动' : '已关闭开机自动启动');
+}
+if (DESK && typeof DESK.onAutoStartChanged === 'function') DESK.onAutoStartChanged(v => { if (!$('#setv').hidden) autoUi(v); });   // 托盘菜单里改了，设置页同步
+function openSettings() { closeDrawers(); notifUi(); autoUi(); instUi(); shotUi(); stkUi(); deskUi(); $('#sgrp').hidden = !(me && me.admin); $('#setv').hidden = false; }
 function closeSettings() { $('#setv').hidden = true; $('#ioshelp').hidden = true; }
 // ----- 系统通知：页面在后台 / 没有焦点时才弹；@我 的单独弹并且一定响，普通消息合并成一条 -----
 const NOTIF_OK = 'Notification' in window;
@@ -3504,11 +3528,9 @@ async function notify(m) {
   const title = at ? who + ' 提到了你' : '群聊 · ' + who;
   const opt = { body: m.file ? (m.sticker ? '[表情]' : m.file.image ? '[图片]' : '发送了文件：' + m.file.name) : m.text.slice(0, 140), icon: '/icons/icon-192.png', badge: '/icons/badge-96.png',
     tag: at ? 'hush-at-' + m.id : 'hush-chat', renotify: !quiet, silent: quiet, data: { id: m.id }, timestamp: m.ts };
-  try {
-    const reg = DESK ? null : (swReg || (navigator.serviceWorker && await navigator.serviceWorker.getRegistration()));   // 桌面版直接用系统通知
-    if (reg && reg.showNotification) return await reg.showNotification(title, opt);
-  } catch (_) {}
-  try { const n = new Notification(title, opt); n.onclick = () => { window.focus(); jumpTo(m.id); n.close(); }; } catch (_) {}   // 没有 service worker 时（比如局域网 http 地址）
+  // v0.18：只有桌面版弹系统通知（网页版不再弹通知，service worker 也不再显示通知）
+  if (!DESK) return;
+  try { const n = new Notification(title, opt); n.onclick = () => { window.focus(); jumpTo(m.id); n.close(); }; } catch (_) {}
 }
 // ----- 未读数：标题 “(3) Hush”，安装后图标上也有数字角标 -----
 let unread = 0;
