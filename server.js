@@ -233,6 +233,8 @@ app.get('/desktop/:f', (req, res) => {
   res.set({ 'Cache-Control': 'no-cache', 'X-Content-Type-Options': 'nosniff' });
   res.download(p, f);
 });
+// v0.19.1：桌面版 1.3.0 的桌面歌词小窗口是本地页面，要跨域用歌词字体（开源字体，公开的），这里允许跨域读取
+app.use('/fonts/lyric', (req, res, next) => { res.set('Access-Control-Allow-Origin', '*'); next(); });
 app.use(express.static(PUB));
 
 // ---------- 防暴力尝试：同一来源 10 分钟内最多失败 10 次 ----------

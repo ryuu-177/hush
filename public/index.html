@@ -1380,7 +1380,7 @@ a.pill2{text-decoration:none;display:inline-flex;align-items:center}
 .pmenu button svg{width:16px;height:16px;opacity:.75;flex:none}
 .pmenu button:hover,.pmenu button:focus-visible{background:color-mix(in srgb,var(--ef-tx1,#222) 8%,transparent)}
 /* ===== v0.19：歌词（歌词页 + 悬浮歌词）、音乐设置、设置页重新整理 ===== */
-:root{--ly-font:"LXGW WenKai",var(--sans);--lyf-size:17px;--lyf-op:.92}
+:root{--ly-font:"Microsoft YaHei UI","Microsoft YaHei","微软雅黑","PingFang SC","Hiragino Sans GB","Noto Sans CJK SC","Noto Sans SC","Source Han Sans SC",system-ui,sans-serif;--lyf-size:17px;--lyf-op:.92}
 /* 歌词页（群聊歌单抽屉里的第三页） */
 .mtabs button[hidden]{display:none}
 #mly{display:flex;flex-direction:column;padding:0;overflow:hidden;min-height:0}
@@ -1527,6 +1527,25 @@ aside .link + .link{margin-top:0}
   .lyl{font-size:18px}
 }
 @media(max-width:380px){.lyfonts{grid-template-columns:1fr}.scard .seg button{font-size:11.5px;padding:7px 2px}}
+/* ===== v0.19.1：桌面歌词设置（只有桌面版 1.3.0 起显示） ===== */
+#sdl{display:flex;flex-direction:column;gap:8px}
+#sdl[hidden]{display:none}
+#dlcard.off{opacity:.45;pointer-events:none}
+.tgl:disabled{opacity:.4;cursor:default}
+/* ===== v0.19.1：输入框的焦点只留一圈 =====
+   以前：输入框自己有 2px 的描边（:focus-visible）+ 外面一圈光，搜索框里面的小输入框还被套上了自己的底色、边框，和外面的胶囊叠成两圈。
+   现在：单独的输入框 = 边框变黄绿 + 一圈很淡的光；包在胶囊里的输入框（点歌搜索、窄窗口的消息框）什么都不画，只让外面的胶囊亮。键盘 Tab 进来也一样看得到。 */
+:root{--fx-ring:0 0 0 3px var(--ef-acs),0 0 16px -6px color-mix(in srgb,var(--ef-ac) 55%,transparent)}
+input:not([type=range]):not([type=checkbox]):not([type=radio]):not([type=color]):not([type=file]):focus-visible,textarea:focus-visible,select:focus-visible{outline:none!important}
+input:not([type=range]):not([type=checkbox]):not([type=radio]):not([type=color]):not([type=file]):focus,textarea:focus,select:focus{border-color:color-mix(in srgb,var(--ef-acd) 75%,transparent)!important;box-shadow:inset 0 1px 2px rgba(0,0,0,.06),var(--fx-ring)!important}
+#f input#t:focus{border-color:color-mix(in srgb,var(--ef-acd) 75%,transparent)!important;box-shadow:inset 0 1px 0 var(--lq-spec),var(--fx-ring)!important}
+.nesf input#nesq,.nesf input#nesq:focus,.nesf input#nesq:focus-visible,.nesf input#nesq:hover{
+  background:transparent!important;border:0!important;border-radius:0!important;box-shadow:none!important;outline:none!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important;padding:0!important;height:100%}
+.nesf:focus-within{border-color:color-mix(in srgb,var(--ef-acd) 75%,transparent)!important;box-shadow:inset 0 1px 2px rgba(0,0,0,.06),var(--fx-ring)!important}
+@media(max-width:640px){
+  #f input#t:not([type=range]),#f input#t:focus,#f input#t:focus-visible{background:transparent!important;border:0!important;box-shadow:none!important;outline:none!important}
+  #f:focus-within{border-color:color-mix(in srgb,var(--ef-acd) 75%,transparent)!important;box-shadow:inset 0 1px 0 var(--lq-spec),var(--fx-ring),0 18px 40px -18px rgba(0,0,0,.45)!important}
+}
 </style>
 <script src="/lq-glass.js"></script>
 </head>
@@ -1801,6 +1820,24 @@ aside .link + .link{margin-top:0}
             <div class="stx"><b>显示翻译</b><small>外文歌有中文翻译时，显示在原文下面</small></div>
             <button class="tgl" id="tlyt" type="button" role="switch" aria-checked="false" aria-label="显示翻译"><i></i></button>
           </div>
+          <div id="sdl" hidden>
+            <div class="sgh">DESKTOP<span>桌面歌词（桌面版）</span></div>
+            <div class="srow">
+              <div class="si"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="3.5" width="19" height="13" rx="2"/><path d="M7 21h10M12 16.5V21M6.5 11.5h7M6.5 8.5h11"/></svg></div>
+              <div class="stx"><b>桌面歌词</b><small>在所有窗口最上面显示正在唱的那一句；Hush 缩到托盘、最小化也能看</small></div>
+              <button class="tgl" id="tdl" type="button" role="switch" aria-checked="false" aria-label="桌面歌词"><i></i></button>
+            </div>
+            <div class="srow">
+              <div class="si"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2.2"/><path d="M8.5 11V8a3.5 3.5 0 0 1 7 0v3"/></svg></div>
+              <div class="stx"><b>锁定桌面歌词</b><small>锁定后鼠标能点穿它，不挡游戏和别的窗口；鼠标移上去点锁形按钮可以解锁</small></div>
+              <button class="tgl" id="tdll" type="button" role="switch" aria-checked="false" aria-label="锁定桌面歌词"><i></i></button>
+            </div>
+            <div class="scard" id="dlcard">
+              <div class="rrow"><label>第二行</label><div class="seg" id="dlline" role="radiogroup" aria-label="桌面歌词第二行"><button type="button" role="radio" data-v="auto">翻译优先</button><button type="button" role="radio" data-v="next">下一句</button><button type="button" role="radio" data-v="none">不显示</button></div></div>
+              <div class="rrow"><label for="dlsz">桌面歌词大小 <b id="dlszv"></b></label><div class="rg"><span>小</span><input type="range" id="dlsz" min="100" max="400" step="5"><span>大</span></div></div>
+              <div class="srx"><button class="pill2 ghost" id="dlreset" type="button">位置和大小恢复默认</button><small>字体和不透明度跟下面的歌词设置一样</small></div>
+            </div>
+          </div>
           <div class="sgh">POSITION<span>悬浮歌词的位置</span></div>
           <div class="scard">
             <div class="lymock" id="lymock" aria-hidden="true"><div class="mk-tb"></div><div class="mk-np"></div><div class="mk-m" style="top:32px;width:44%"></div><div class="mk-m" style="top:48px;width:30%;left:auto;right:12px"></div><div class="mk-m" style="top:64px;width:38%"></div><div class="mk-f"></div><div class="mk-ly" id="mkly">晚风吹过窗台</div></div>
@@ -1814,7 +1851,7 @@ aside .link + .link{margin-top:0}
           </div>
           <div class="sgh">FONT<span>歌词字体</span></div>
           <div class="lyfonts" id="lyfonts" role="radiogroup" aria-label="歌词字体"></div>
-          <p class="snote">歌词字体都是开源免费字体（SIL Open Font License 1.1），跟着 Hush 一起发布，只有用到的字才会下载。授权说明在 <a href="/fonts/README.txt" target="_blank" rel="noopener">fonts/README.txt</a>。<br>这些设置只保存在这台电脑上。</p>
+          <p class="snote">默认的「标准」用电脑自带的字体（Windows 是微软雅黑，Mac 是苹方），不用下载。另外三款是开源免费字体（SIL Open Font License 1.1），跟着 Hush 一起发布，只有用到的字才会下载。授权说明在 <a href="/fonts/README.txt" target="_blank" rel="noopener">fonts/README.txt</a>。<br>这些设置只保存在这台电脑上。</p>
         </section>
         <section class="spane" data-p="look" role="tabpanel" hidden>
           <div class="sgh">GLASS<span>界面外观</span></div>
@@ -3980,7 +4017,7 @@ function mPlay() {
 }
 function mTick() {
   const c = mCur(); clearTimeout(MS.timer);
-  mProgress(); lyKick();
+  mProgress(); lyKick(); dlPush();
   if (!c || mMuted() || MS.preview || MS.unsup === c.qid) return;
   if (MS.src !== c.qid) { if (!MS.loading) mApply(); return; }
   if (mus.readyState < 1) return;
@@ -4358,24 +4395,30 @@ function musicStop() { stopPreview(true); mus.pause(); mus.removeAttribute('src'
 // 歌词来源（服务器决定）：自己上传的 .lrc > 歌曲文件里内嵌的 > 网易云（网易云的歌）> LRCLIB；都没有就显示“暂无歌词”。
 // 时间用的是群聊的播放位置 mPos()，和大家一起暂停、拖进度；静音了也照样能看。
 const LYC_KEY = 'hush_lyrics_v1';
-const LYC_DEF = { float: true, view: true, tr: true, pos: 'cap', fx: 0.5, fy: 0.3, size: 17, op: 92, font: 'wk' };
+const LYC_DEF = { float: true, view: true, tr: true, pos: 'cap', fx: 0.5, fy: 0.3, size: 17, op: 92, font: 'std', fv: 2 };
+// v0.19.1：默认改成最常见的系统字体（Windows 微软雅黑 / Mac 苹方），不用下载
+const LY_STD = '"Microsoft YaHei UI","Microsoft YaHei","微软雅黑","PingFang SC","Hiragino Sans GB","Noto Sans CJK SC","Noto Sans SC","Source Han Sans SC",system-ui,sans-serif';
 const LY_FONTS = [
-  { k: 'wk', name: '霞鹜文楷', fam: '"LXGW WenKai"', note: '温润的楷体，默认', by: 'LXGW' },
+  { k: 'std', name: '标准（微软雅黑）', fam: LY_STD, note: '电脑自带的标准字体，默认', by: '', sys: true },
+  { k: 'wk', name: '霞鹜文楷', fam: '"LXGW WenKai"', note: '温润的楷体', by: 'LXGW' },
   { k: 'zq', name: '朱雀仿宋', fam: '"Zhuque Fangsong"', note: '清秀的仿宋，像书页', by: 'JadeFoci' },
   { k: 'smiley', name: '得意黑', fam: '"Smiley Sans"', note: '俏皮的窄斜体（简体字）', by: 'atelierAnchor' },
-  { k: 'ui', name: '跟随界面', fam: '', note: '和聊天文字一样', by: '' }
+  { k: 'ui', name: '跟随界面', fam: '', note: '和聊天文字一样', by: '', sys: true }
 ];
 const LY_POS = { cap: '靠近音乐胶囊', top: '顶部', mid: '中间', bot: '底部', free: '自定义（拖动过）' };
 const LY_SRC = { tag: '内嵌', lrc: '我传的 LRC', lrclib: 'LRCLIB', netease: '网易云' };
 const LY_LEAD = 0.12;   // 提前一点点亮下一句，看起来更跟拍
-let LYC = (() => { try { const o = JSON.parse(localStorage.getItem(LYC_KEY) || 'null'); return { ...LYC_DEF, ...(o && typeof o === 'object' ? o : {}) }; } catch (_) { return { ...LYC_DEF }; } })();
+let LYC = (() => { try { const o = JSON.parse(localStorage.getItem(LYC_KEY) || 'null'); return { ...LYC_DEF, ...(o && typeof o === 'object' ? o : {}), fv: o && typeof o === 'object' ? o.fv : undefined }; } catch (_) { return { ...LYC_DEF, fv: undefined }; } })();
 function lycSave() { try { localStorage.setItem(LYC_KEY, JSON.stringify(LYC)); } catch (_) {} }
+// v0.19.1：以前默认（或者存的就是默认）的霞鹜文楷 → 换成新的标准字体；自己选过朱雀仿宋 / 得意黑 / 跟随界面的不动
+if (LYC.fv !== 2) { if (!LYC.font || LYC.font === 'wk' || !LY_FONTS.some(f => f.k === LYC.font)) LYC.font = 'std'; LYC.fv = 2; lycSave(); }
 const LYS = { k: null, d: null, loading: false, idx: -2, follow: true, raf: 0, fk: null, vk: null, edit: false, jump: true };
 MICON.lyr = '<path d="M4 6h9M4 10h9M4 14h6"/><path d="M17 17.5V6.5l4-1.2"/><circle cx="15" cy="17.5" r="2.2"/>';
 MICON.more = '<circle cx="5.5" cy="12" r="1.3" fill="currentColor"/><circle cx="12" cy="12" r="1.3" fill="currentColor"/><circle cx="18.5" cy="12" r="1.3" fill="currentColor"/>';
 MICON.back = '<path d="M12 5v14M6 13l6 6 6-6"/>';
-function lyFontCss() {
+function lyFontCss(force) {
   if ($('#lyfcss')) return;
+  if (!force && (LY_FONTS.find(x => x.k === LYC.font) || LY_FONTS[0]).sys) return;   // 系统字体不用下载字体文件
   const l = document.createElement('link'); l.id = 'lyfcss'; l.rel = 'stylesheet'; l.href = '/fonts/lyric/lyric-fonts.css?v=__APP_VERSION__'; document.head.append(l);
 }
 function lycApply() {
@@ -4385,6 +4428,7 @@ function lycApply() {
   r.setProperty('--lyf-op', (Math.min(100, Math.max(35, +LYC.op || 92)) / 100).toFixed(2));
   const tb = $('#mtabs [data-t="ly"]'); if (tb) tb.hidden = !LYC.view;
   if (!LYC.view && MS.tab === 'ly' && $('#md').classList.contains('open')) mTab('pl');
+  if (!f.sys && (LYS.d || $('#lyf').hidden === false)) lyFontCss();
   LYS.vk = null; LYS.fk = null; lyRender();
 }
 // ----- 取歌词 -----
@@ -4406,7 +4450,7 @@ async function lyLoad(force) {
 function lyIdx(lines, t) { let lo = 0, hi = lines.length - 1, a = -1; while (lo <= hi) { const m = (lo + hi) >> 1; if (lines[m].t <= t) { a = m; lo = m + 1; } else hi = m - 1; } return a; }
 const lySync = () => !!(LYS.d && LYS.d.kind === 'sync' && LYS.d.lines && LYS.d.lines.length);
 const lyViewOpen = () => MS.tab === 'ly' && $('#md').classList.contains('open') && LYC.view;
-function lyNeed() { return lySync() && !!mCur() && (!$('#lyf').hidden || lyViewOpen()); }
+function lyNeed() { return !(DLS && DLS.hidden) && lySync() && !!mCur() && (!$('#lyf').hidden || lyViewOpen()); }   // 1.3.0：Hush 窗口藏起来时不用逐帧刷新
 function lyLoop() {
   LYS.raf = 0; if (!lyNeed()) return;
   lyStep();
@@ -4505,6 +4549,8 @@ function lyfUpdate() {
   } else if (was) lyfPlace();
   if (was) lyKick();
 }
+const lyfUpdate0 = lyfUpdate;
+lyfUpdate = function () { lyfUpdate0(); dlPush(); };
 function lyfAnchor() {
   const sec = $('#app > section') || document.body, sr = sec.getBoundingClientRect();
   const top = ($('#msgs') || sec).getBoundingClientRect().top, bot = ($('#f') || sec).getBoundingClientRect().top;
@@ -4601,7 +4647,7 @@ function setTab(p) {
   $('#stabs').querySelectorAll('button').forEach(b => { const on = b.dataset.p === p; b.classList.toggle('on', on); b.setAttribute('aria-selected', String(on)); });
   document.querySelectorAll('#spanes .spane').forEach(s => s.hidden = s.dataset.p !== p);
   $('#spanes').scrollTop = 0;
-  if (p === 'mus') { lyFontCss(); lycUi(); }
+  if (p === 'mus') { lyFontCss(true); lycUi(); dlUi(); }
 }
 $('#stabs').onclick = e => { const b = e.target.closest('button'); if (b) setTab(b.dataset.p); };
 function lycUi() {
@@ -4621,6 +4667,7 @@ function lycUi() {
     const c = el('div', 'lyfo'); c.dataset.k = f.k; c.tabIndex = 0; c.setAttribute('role', 'radio');
     const pv = el('div', 'pv', '晚风吹过窗台'); pv.style.fontFamily = f.fam ? f.fam + ',var(--sans)' : 'var(--sans)';
     c.append(pv, el('b', '', f.name), el('small', '', f.note + (f.by ? ' · OFL' : '')));
+    if (f.sys) pv.style.fontFamily = f.fam || 'var(--sans)';
     c.onclick = () => { LYC.font = f.k; lycSave(); lycApply(); lycUi(); };
     c.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); c.click(); } };
     box.append(c);
@@ -4641,6 +4688,59 @@ document.addEventListener('keydown', e => {
   if ((e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey && (e.key === 'f' || e.key === 'F') && me && !$('#app').hidden) { e.preventDefault(); closeSettings(); openSearch(); }
 });
 function lySock(m) { if (!m) return; if (m.k === LYS.k) lyLoad(true); if (MS.lib && MS.lib.items.some(s => s.id === m.k) && $('#md').classList.contains('open') && MS.tab === 'lib') loadLib(); }
+// ================= v0.19.1：桌面歌词（Hush 桌面版 1.3.0 起） =================
+// 网页只负责“告诉”桌面版：正在放哪首、放到第几秒、歌词有哪些行、字体字号；桌面版自己的歌词小窗口按时间切换每一句。
+// 只在放歌、并且有带时间轴的歌词时显示；暂停 / 静音 / 没歌词就淡出。旧的 1.2.0 没有这个功能，设置里也不显示。
+var DL = (window.hushDesktop && typeof window.hushDesktop.pushLyric === 'function' && typeof window.hushDesktop.setDeskLyric === 'function') ? window.hushDesktop : null;
+var DLS = { sig: '', lk: '', ser: 0, dref: null, anc: 0, hidden: false, cfg: null };
+function dlPush() {
+  if (!DL || !DLS) return;
+  const c = mCur(), d = LYS.d;
+  const sync = !!c && lySync() && LYS.k === c.id;
+  const ok = !!(me && c && !mMuted() && MS.unsup !== c.qid);
+  const show = ok && sync, playing = ok && !c.paused;
+  if (d !== DLS.dref) { DLS.dref = d; DLS.ser++; }
+  const f = LY_FONTS.find(x => x.k === LYC.font) || LY_FONTS[0];
+  const now = Date.now(), pos = c ? mPos(c) : 0;
+  let anc = c ? (c.paused ? Math.round(pos * 1000) : Math.round(now - pos * 1000)) : 0;
+  if (c && !c.paused && Math.abs(anc - DLS.anc) < 120) anc = DLS.anc;   // 对时的小抖动不用重发
+  DLS.anc = anc;
+  const lk = show ? c.id + ':' + DLS.ser : '';
+  const sig = [show, playing, c ? c.qid : '', c ? !!c.paused : '', anc, lk, f.k, LYC.size, LYC.op, LYC.tr, c ? c.title + '\u0001' + (c.artist || '') : ''].join('|');
+  if (sig === DLS.sig) return;
+  DLS.sig = sig;
+  const m = { v: 1, show, playing, paused: !!(c && c.paused), k: lk, title: c ? String(c.title || '') : '', artist: c ? String(c.artist || '') : '',
+    pos: c ? (c.paused ? pos : (now - anc) / 1000) : 0, at: now, dur: c ? +c.dur || 0 : 0, font: f.fam || '', size: +LYC.size || 17, op: +LYC.op || 92, tr: !!LYC.tr };
+  if (show && lk !== DLS.lk) { m.lines = d.lines.map(l => ({ t: l.t, x: l.x || '', tr: l.tr || '' })); DLS.lk = lk; }
+  try { DL.pushLyric(m); } catch (_) {}
+}
+function dlUi() {
+  const box = $('#sdl'); if (!box) return;
+  box.hidden = !DL; if (!DL || !DLS.cfg) return;
+  const c = DLS.cfg;
+  [['#tdl', c.on], ['#tdll', c.locked]].forEach(([q, on]) => { $(q).classList.toggle('on', !!on); $(q).setAttribute('aria-checked', String(!!on)); });
+  $('#tdll').disabled = !c.on; $('#dlcard').classList.toggle('off', !c.on);
+  $('#dlline').querySelectorAll('button').forEach(b => { const on = b.dataset.v === c.line2; b.classList.toggle('on', on); b.setAttribute('aria-checked', String(on)); });
+  const sz = $('#dlsz'), v = Math.round(c.scale * 100);
+  if (document.activeElement !== sz) sz.value = v;
+  $('#dlszv').textContent = Math.round((+LYC.size || 17) * c.scale) + 'px';
+  sz.style.setProperty('--p', ((v - 100) / 300 * 100) + '%');
+}
+async function dlSet(patch) {
+  if (!DL) return;
+  try { const r = await DL.setDeskLyric(patch); if (r) DLS.cfg = r; } catch (_) {}
+  dlUi();
+}
+if (DL) {
+  $('#tdl').onclick = () => dlSet({ on: !(DLS.cfg && DLS.cfg.on) });
+  $('#tdll').onclick = () => dlSet({ locked: !(DLS.cfg && DLS.cfg.locked) });
+  $('#dlline').onclick = e => { const b = e.target.closest('button'); if (b) dlSet({ line2: b.dataset.v }); };
+  $('#dlsz').oninput = e => dlSet({ scale: +e.target.value / 100 });
+  $('#dlreset').onclick = () => { dlSet({ reset: true }); toast('桌面歌词回到屏幕下方中间'); };
+  DL.getDeskLyric().then(c => { DLS.cfg = c; dlUi(); }).catch(() => {});
+  if (typeof DL.onDeskLyricChanged === 'function') DL.onDeskLyricChanged(c => { const was = DLS.cfg; DLS.cfg = c; dlUi(); if (c && c.why === 'close' && was && was.on) toast('桌面歌词已关闭，可以在托盘菜单或「设置 › 音乐」里重新打开'); });
+  if (typeof DL.onWindowVisibility === 'function') DL.onWindowVisibility(v => { DLS.hidden = !v; if (v) { lyKick(); lyfPlace(); } });
+}
 lyfDrag(); lycApply();
 start();
 </script>
