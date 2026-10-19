@@ -2,7 +2,7 @@
 
 轻量的自托管聊天室：账号与邀请码、群聊、等级、语音通话 / 语音房、屏幕直播、文件仓、群聊音乐，并且可以像软件一样安装（PWA）。后端是 Node.js + Express + Socket.io，数据存在本地 SQLite 文件里，不依赖任何第三方云服务。
 
-当前版本 **v0.18.0**。开源协议：[MIT](LICENSE)。
+当前版本 **v0.19.0**。开源协议：[MIT](LICENSE)。
 
 ## 功能
 - **账号与邀请制注册**：第一个注册的账号自动成为管理员；之后注册必须使用管理员生成的邀请码（随机、一次性、7 天有效）。登录失败过多会临时锁定。
@@ -112,9 +112,11 @@ Hush 只缓存界面外壳、图标和离线页；消息、文件、头像接口
 ## 字体与许可
 Hush 的代码以 [MIT](LICENSE) 许可发布；`public/fonts/` 里的字体不在 MIT 范围内：
 - **Space Grotesk**（font-001～003）：SIL Open Font License 1.1，见 `public/fonts/OFL-SpaceGrotesk.txt`。
-- 中文：仓库不附带中文字体文件，使用系统字体（苹方 / 微软雅黑等）；电脑上装了 HarmonyOS Sans SC 会自动用上。
+- 中文：仓库不附带中文界面字体文件，使用系统字体（苹方 / 微软雅黑等）；电脑上装了 HarmonyOS Sans SC 会自动用上。
+- 歌词字体（`public/fonts/lyric/`，v0.19 起）：**霞鹜文楷 LXGW WenKai**（子集，SIL OFL 1.1，含作者对网页字体子集的附加许可）、**朱雀仿宋 Zhuque Fangsong**（子集，SIL OFL 1.1）、**得意黑 Smiley Sans**（官方 woff2 原样，SIL OFL 1.1），许可文本见同目录的 `OFL-*.txt`。
 
 ## 版本记录
+- **v0.19.0**：群聊音乐歌词。来源依次为用户上传的 `.lrc`、音频内嵌标签（ID3 USLT/SYLT、Vorbis LYRICS/UNSYNCEDLYRICS、MP4 ©lyr、WAV id3）、网易云歌曲自带歌词（含翻译）、[LRCLIB](https://lrclib.net)（服务器端顺序请求、带 `Hush/x.y.z` User-Agent、遵守 Retry-After，结果缓存在 SQLite；`LYRICS_ONLINE=0` 可关闭联网查询）。新增歌词页（按群聊播放位置同步滚动、当前句高亮、手动滚动后“回到当前”、有权限可点句跳转）和可拖动的悬浮歌词；设置页重排为「通用 / 音乐 / 外观 / 截图与表情 / 账号」，新增音乐设置（悬浮歌词 / 歌词页 / 翻译开关、位置预设与拖动、字号、不透明度、歌词字体，保存在 localStorage）；新增 3 款 OFL 歌词字体（按 unicode-range 子集按需加载）；我的音乐支持上传 / 移除 `.lrc`（UTF-8 / UTF-16 / GBK）及与音频同名自动配对；顶栏的“搜索聊天记录”放大镜移到侧栏，并支持 Ctrl+F。新接口 `GET /api/lyrics/m/:id`、`GET /api/lyrics/ne/:nid`、`PUT|DELETE /api/lyrics/m/:id`，仅桌面客户端可用。
 - **v0.18.0**：网页改成账号门户（登录 / 注册 / 个人信息 / 改资料 / 改密码 / 下载桌面版），聊天只对桌面客户端开放，由服务器端校验（socket.io 握手 + 聊天类接口一律 403 `desktop-only`）；新增 `GET /api/me`、`POST /api/password`（改完其他登录失效）、`POST /api/logout`；用户表新增注册时间（老账号按最早记录估算）；浏览器的 service worker 改为自注销，网页不再通知、不再可安装；聊天程序的 service worker 不再接管页面导航；`WEB_CHAT=1` 可恢复网页聊天。
 - **v0.17.1**：修复表情面板等浮层在高透明度玻璃设置下透出背后聊天内容、难以阅读的问题：表情面板、@ 列表、截图卡片、抽屉、消息菜单、右键菜单改用接近实底的毛玻璃（最小模糊不受“模糊”滑杆影响），不支持 backdrop-filter 时回退为实色；表情面板和 @ 列表挂到 body 下固定定位，避免输入栏自身的 backdrop-filter 让内层模糊失效。新增“存到我的表情”：电脑悬停按钮 / 右键菜单、手机长按菜单、大图查看按钮；桌面版通过桥写入表情包文件夹，Chrome / Edge 通过 File System Access（readwrite）写入所选文件夹，其它情况存入 IndexedDB；按 SHA-256 去重，文件名取原名（清理危险字符）或 Hush-sticker-<hash8>，扩展名跟随真实格式，同名不覆盖。
 - **v0.17.0**：表情包：输入栏新增表情按钮，从本机文件夹读取图片（png / jpg / gif / webp，GIF 会动），支持文件名搜索和最近使用；点一下直接发送，显示为无气泡的大表情，按内容哈希去重（同一张图只上传一次），表情不进文件仓。文件夹来源：桌面版用系统选择文件夹并自动刷新，Chrome / Edge 用 File System Access（showDirectoryPicker，句柄存 IndexedDB），其它浏览器 / 手机可把图片添加到本机（IndexedDB）。图片内联显示：粘贴、拖拽、附件、截图发送的图片按原始比例显示在聊天里（有最大尺寸，懒加载，服务器解析宽高并识别 JPEG EXIF 方向），点开是大图查看器（缩放、拖动、← / → 切换、下载、Esc 关闭）；旧图片消息同样内联显示，非图片文件不变。撤回时只有没有其它消息引用的文件才会删除。/desktop/ 额外提供 latest.yml 和 .blockmap，供桌面版应用内自动更新使用。

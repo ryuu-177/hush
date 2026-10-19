@@ -673,8 +673,9 @@ function audioFamily(file) {
   return null;
 }
 const musicById = db.prepare('SELECT * FROM music WHERE id=?');
-const musicOut = m => ({ id: m.id, title: m.title, dur: m.dur, size: m.size, ext: m.ext, created: m.created, queued: !!db.prepare('SELECT 1 FROM playlist WHERE music_id=?').get(m.id) });
+const musicOut = m => ({ id: m.id, title: m.title, artist: m.artist || '', dur: m.dur, size: m.size, ext: m.ext, created: m.created, lyr: lySrc(m.id), queued: !!db.prepare('SELECT 1 FROM playlist WHERE music_id=?').get(m.id) });
 const okHex = id => /^[a-f0-9]{32}$/.test(String(id));
+const lySrc = k => { const r = db.prepare('SELECT src FROM lyrics WHERE k=?').get(k); return r ? r.src : null; };   // v0.19：歌词来源（lrc / tag / lrclib / none）
 
 // ----- 设置（群聊设置 + 签名密钥），存在 settings 表 -----
 const getSet = (k, d) => { const r = db.prepare('SELECT v FROM settings WHERE k=?').get(k); return r ? r.v : d; };
@@ -792,6 +793,7 @@ app.post('/api/music', (req, res) => {
     if (n2 >= musicQuota(level(nu.xp))) { fs.rm(tmp, { force: true }, () => {}); return res.status(403).json({ error: '音乐仓库已满' }); }   // 同时传了好几首
     fs.renameSync(tmp, path.join(MUSIC_DIR, id));
     db.prepare('INSERT INTO music(id,user_id,title,ext,mime,size,dur,created) VALUES(?,?,?,?,?,?,?,?)').run(id, u.id, title, ext, t[0], size, Math.round(dur * 1000) / 1000, Date.now());
+    try { scanTags(id); } catch (_) {}   // v0.19：读出歌手 / 专辑 / 内嵌歌词
     res.json({ ...musicOut(musicById.get(id)), library: myMusic(nu) });
   });
   req.pipe(out);
@@ -814,6 +816,7 @@ app.delete('/api/music/:id', (req, res) => {
   if (!m || (m.user_id !== u.id && !u.is_admin)) return res.status(404).json({ error: '歌曲不存在' });
   plDropMusic(m.id);
   db.prepare('DELETE FROM music WHERE id=?').run(m.id);
+  db.prepare('DELETE FROM lyrics WHERE k=?').run(m.id);
   try { fs.rmSync(path.join(MUSIC_DIR, m.id), { force: true }); } catch (_) {}
   res.json({ ok: true, library: myMusic(userById.get(u.id)) });
 });
@@ -858,9 +861,10 @@ app.put('/api/group', (req, res) => {
 const LEAD = 1200;    // 切歌后留 1.2 秒给大家缓冲
 const GRACE = 600;
 const PL = { cur: null, lastKey: new Map(), curKey: 0 };   // cur: { qid, startedAt, timer }
-const plRows = () => db.prepare("SELECT p.*, COALESCE(m.title, p.ntitle) title, COALESCE(m.dur, p.ndur) dur, u.name uname, u.nick unick FROM playlist p LEFT JOIN music m ON m.id=p.music_id JOIN users u ON u.id=p.user_id WHERE m.id IS NOT NULL OR p.src='netease' ORDER BY p.pin DESC, p.k, p.qid").all();
+const plRows = () => db.prepare("SELECT p.*, COALESCE(m.title, p.ntitle) title, COALESCE(m.dur, p.ndur) dur, m.artist martist, u.name uname, u.nick unick FROM playlist p LEFT JOIN music m ON m.id=p.music_id JOIN users u ON u.id=p.user_id WHERE m.id IS NOT NULL OR p.src='netease' ORDER BY p.pin DESC, p.k, p.qid").all();
 const plItem = r => {
   const o = { qid: r.qid, id: r.music_id, title: r.title, dur: r.dur, by: { name: r.uname, nick: r.unick || r.uname } };
+  if (r.martist) o.artist = r.martist;
   if (r.src === 'netease') { const nid = r.music_id.slice(3); Object.assign(o, { src: 'netease', nid, artist: r.nartist || '', cover: r.ncover || '', url: NE_MEDIA.replace('{id}', nid) }); }
   return o;
 };
@@ -942,8 +946,8 @@ function plAdd(u, mid) {
 }
 // ================= v0.10：网易云音乐（只搜索 + 点歌，不需要登录网易云） =================
 // 搜索由服务器代为请求（浏览器直接请求会被跨域拦住），播放则由每个人的浏览器直接从网易云加载，不经过这台电脑。
-const NE_API = 'https://music.163.com/api/cloudsearch/pc';
-const NE_DETAIL = 'https://music.163.com/api/song/detail';
+const NE_API = process.env.NETEASE_SEARCH_URL || 'https://music.163.com/api/cloudsearch/pc';   // 环境变量只给测试用
+const NE_DETAIL = process.env.NETEASE_DETAIL_URL || 'https://music.163.com/api/song/detail';
 const NE_MEDIA = process.env.NETEASE_MEDIA || 'https://music.163.com/song/media/outer/url?id={id}.mp3';
 const NE_WAIT = Number(process.env.NETEASE_WAIT_MS) || 20000;   // 开播后多久还没人加载成功就跳过
 const NE_FAIL_GRACE = 2500;   // 有人报“放不了”后再等一会儿，看看别人能不能放（大家所在地区可能不同）
@@ -1046,6 +1050,180 @@ function neSkip(qid, reason) {
   io.emit('music:skipped', { qid, title: row ? row.title : '', reason });
   plNext(qid);
 }
+// ================= v0.19：歌词（歌词字幕） =================
+// 来源（按顺序）：① 歌曲文件里内嵌的歌词（上传时读出，旧歌第一次打开时补读）② 自己上传的 .lrc
+// ③ 网易云的歌：网易云自带歌词 ④ LRCLIB（https://lrclib.net，免费、不要密钥）按歌名 / 歌手 / 时长查。
+// 查到的结果存进数据库，下次直接用；查不到也记下来（几天后再试），不会每次都去问。
+// 说明：自己上传的 .lrc 是明确的选择，会盖过①③④；内嵌的只有纯文本时，会再去网上找有时间轴的版本，找不到才用纯文本。
+const LY = require('./lyrics');
+db.exec('CREATE TABLE IF NOT EXISTS lyrics(k TEXT PRIMARY KEY, src TEXT, raw TEXT, tr TEXT, fetched INTEGER, user_id INTEGER)');
+const LRCLIB = (process.env.LRCLIB_URL || 'https://lrclib.net').replace(/\/+$/, '');
+const NE_LYRIC = process.env.NETEASE_LYRIC || 'https://music.163.com/api/song/lyric?id={id}&lv=1&tv=-1';
+const LY_ONLINE = process.env.LYRICS_ONLINE !== '0';
+const LY_UA = `Hush/${VERSION} (self-hosted group chat; https://github.com/ryuu-177/hush)`;
+const LY_NONE_TTL = 3 * 864e5;          // 没找到：3 天后再试
+const LRC_MAX = 256 * 1024;             // 上传的 .lrc 最大 256KB
+const lyRow = db.prepare('SELECT * FROM lyrics WHERE k=?');
+const lySave = (k, src, raw, tr, uid) => db.prepare('INSERT INTO lyrics(k,src,raw,tr,fetched,user_id) VALUES(?,?,?,?,?,?) ON CONFLICT(k) DO UPDATE SET src=excluded.src,raw=excluded.raw,tr=excluded.tr,fetched=excluded.fetched,user_id=excluded.user_id').run(k, src, raw || null, tr || null, Date.now(), uid || null);
+const lyParsed = new Map();             // 解析结果缓存：k|fetched -> 结果
+function lyOut(row) {
+  if (!row || row.src === 'none' || !row.raw) return { kind: 'none', src: row ? row.src : null };
+  const ck = row.k + '|' + row.fetched;
+  let o = lyParsed.get(ck);
+  if (!o) {
+    const p = LY.parseLrc(row.raw);
+    if (row.tr && row.tr !== '-') LY.mergeTrans(p, LY.parseLrc(row.tr));
+    o = p.synced ? { kind: 'sync', src: row.src, lines: p.lines.map(l => l.tr ? { t: l.t, x: l.x, tr: l.tr } : { t: l.t, x: l.x }) } : p.plain ? { kind: 'plain', src: row.src, text: p.plain } : { kind: 'none', src: row.src };
+    lyParsed.set(ck, o); if (lyParsed.size > 200) lyParsed.delete(lyParsed.keys().next().value);
+  }
+  return { ...o, by: row.src === 'lrc' ? row.user_id : undefined };
+}
+addCol('music', 'artist', 'TEXT'); addCol('music', 'album', 'TEXT'); addCol('music', 'tagged', 'INTEGER DEFAULT 0');
+// 读歌曲文件里的标签：歌手 / 专辑 / 内嵌歌词（上传后马上读；旧歌第一次需要时再读）
+function scanTags(id) {
+  const m = musicById.get(id); if (!m) return null;
+  const tags = LY.readTags(path.join(MUSIC_DIR, m.id));
+  db.prepare('UPDATE music SET artist=?, album=?, tagged=1 WHERE id=?').run(clean(tags.artist, 80) || null, clean(tags.album, 80) || null, m.id);
+  const emb = LY.embedded(tags), row = lyRow.get(m.id);
+  // 内嵌歌词可以覆盖：还没有 / 没找到 / 旧的内嵌；有时间轴的内嵌也比网上查到的优先。自己传的 .lrc 不动
+  if (emb && (!row || row.src === 'none' || row.src === 'tag' || (row.src === 'lrclib' && emb.parsed.synced))) lySave(m.id, 'tag', emb.raw, null, null);
+  return tags;
+}
+// ----- LRCLIB：按顺序一个一个问（官方要求），遇到 429 按 Retry-After 等 -----
+let lrclibWait = 0, lrclibQ = Promise.resolve();
+function lrclibGet(p) {
+  const run = async () => {
+    if (Date.now() < lrclibWait) throw new Error('rate');
+    const r = await fetch(LRCLIB + p, { headers: { 'User-Agent': LY_UA, 'Lrclib-Client': LY_UA, Accept: 'application/json' }, signal: AbortSignal.timeout(8000) });
+    if (r.status === 429 || r.status === 503) { const ra = Number(r.headers.get('retry-after')) || 30; lrclibWait = Date.now() + ra * 1000 * (1 + Math.random() * 0.3); throw new Error('rate'); }
+    if (r.status === 404) return null;
+    if (!r.ok || !/json/i.test(r.headers.get('content-type') || '')) throw new Error('HTTP ' + r.status);
+    return r.json();
+  };
+  const p2 = lrclibQ.then(run, run);
+  lrclibQ = p2.then(() => new Promise(r => setTimeout(r, 250)), () => new Promise(r => setTimeout(r, 250)));
+  return p2;
+}
+const lyNorm = s => String(s || '').toLowerCase().normalize('NFKC').replace(/[\s\p{P}\p{S}]+/gu, '');
+const lyTitleOk = (a, b) => { a = lyNorm(a); b = lyNorm(b); return !!a && !!b && (a === b || (Math.min(a.length, b.length) >= 2 && (a.includes(b) || b.includes(a)))); };
+// 返回 { raw } / { none:true }（确认没有）；网络问题抛错（不记“没有”）
+async function lrclibFind({ title, artist, album, dur }) {
+  const cands = artist ? [{ title, artist }] : LY.guessArtistTitle(title);
+  const okRec = j => j && !Array.isArray(j) && (j.syncedLyrics || j.plainLyrics || j.instrumental);
+  const pick = (arr, c, strict) => {
+    if (!Array.isArray(arr)) return null;
+    const ok = arr.filter(j => (j.syncedLyrics || j.plainLyrics) && lyTitleOk(j.trackName, c.title) && (!c.artist || lyTitleOk(j.artistName, c.artist) || !strict) && (!dur || Math.abs((j.duration || 0) - dur) <= (strict ? 2 : 3)));
+    ok.sort((a, b) => (!!b.syncedLyrics - !!a.syncedLyrics) || Math.abs(a.duration - dur) - Math.abs(b.duration - dur));
+    return ok[0] || null;
+  };
+  let n = 0;
+  for (const c of cands) {
+    if (!c.title || n >= 4) continue;
+    if (c.artist) {
+      n++;
+      const q = '/api/get?track_name=' + encodeURIComponent(c.title) + '&artist_name=' + encodeURIComponent(c.artist) + (album ? '&album_name=' + encodeURIComponent(album) : '') + (dur >= 1 && dur <= 3600 ? '&duration=' + Math.round(dur) : '');
+      const j = await lrclibGet(q);
+      if (okRec(j)) return j.instrumental ? { none: true, instrumental: true } : { raw: j.syncedLyrics || j.plainLyrics };
+      n++;
+      const s = pick(await lrclibGet('/api/search?track_name=' + encodeURIComponent(c.title) + '&artist_name=' + encodeURIComponent(c.artist)), c, false);
+      if (s) return { raw: s.syncedLyrics || s.plainLyrics };
+    } else {
+      n++;
+      const s = pick(await lrclibGet('/api/search?q=' + encodeURIComponent(c.title)), c, true);
+      if (s) return { raw: s.syncedLyrics || s.plainLyrics };
+    }
+  }
+  return { none: true };
+}
+async function neLyric(nid) {
+  const j = await neFetch(NE_LYRIC.replace('{id}', nid));
+  if (!j || j.code !== 200) throw new Error('code');
+  if (j.nolyric) return { none: true, instrumental: true };
+  const raw = j.lrc && j.lrc.lyric, tr = j.tlyric && j.tlyric.lyric;
+  return raw && LY.parseLrc(raw).lines.length + (LY.parseLrc(raw).plain ? 1 : 0) ? { raw, tr } : { none: true };
+}
+const lyBusy = new Map(), lyErr = new Map();   // 正在查的 / 最近查失败的（5 分钟内不重试）
+// k：音乐 id 或 'ne:<网易云 id>'；info：{ title, artist, album, dur, nid }
+function lyResolve(k, info) {
+  const row = lyRow.get(k);
+  const fresh = row && (row.src !== 'none' || Date.now() - row.fetched < LY_NONE_TTL);
+  // 内嵌的只有纯文本：还要去网上找有时间轴的（只找一次）
+  const wantSync = row && row.src === 'tag' && !row.tr && !LY.parseLrc(row.raw).synced;   // tr='-' 表示已经找过
+  if (fresh && !wantSync) return Promise.resolve(lyOut(row));
+  if (!LY_ONLINE || (lyErr.get(k) || 0) > Date.now()) return Promise.resolve(row ? lyOut(row) : { kind: 'none', src: null, retry: true });
+  if (lyBusy.has(k)) return lyBusy.get(k);
+  const p = (async () => {
+    try {
+      let r = null, src = null;
+      if (info.nid) { try { r = await neLyric(info.nid); src = 'netease'; } catch (_) { r = null; } }
+      if (!r || r.none && !r.instrumental) { r = await lrclibFind(info); src = 'lrclib'; }
+      const cur = lyRow.get(k);
+      if (cur && cur.src === 'lrc') return lyOut(cur);   // 查的时候用户自己传了 .lrc
+      if (wantSync) {
+        if (r.raw && LY.parseLrc(r.raw).synced) lySave(k, src, r.raw, r.tr, null);
+        else db.prepare("UPDATE lyrics SET tr='-', fetched=? WHERE k=? AND src='tag'").run(Date.now(), k);   // 标记“已经找过”，继续用内嵌的纯文本
+        return lyOut(lyRow.get(k));
+      }
+      if (r.raw) lySave(k, src, r.raw, r.tr, null);
+      else if (!cur || cur.src === 'none') lySave(k, 'none', null, null, null);
+      return lyOut(lyRow.get(k));
+    } catch (e) {
+      lyErr.set(k, Date.now() + 5 * 60e3); if (lyErr.size > 500) lyErr.delete(lyErr.keys().next().value);
+      const cur = lyRow.get(k);
+      return cur ? lyOut(cur) : { kind: 'none', src: null, retry: true };
+    } finally { lyBusy.delete(k); }
+  })();
+  lyBusy.set(k, p);
+  return p;
+}
+const canSee = (u, m) => m && (m.user_id === u.id || u.is_admin || !!db.prepare('SELECT 1 FROM playlist WHERE music_id=?').get(m.id));
+app.get('/api/lyrics/m/:id', async (req, res) => {
+  const u = userOf(req); if (!u) return res.status(401).json({ error: '请先登录' });
+  let m = okHex(req.params.id) && musicById.get(String(req.params.id));
+  if (!canSee(u, m)) return res.status(404).json({ error: '歌曲不存在' });
+  if (!m.tagged) { scanTags(m.id); m = musicById.get(m.id); }
+  const out = await lyResolve(m.id, { title: m.title, artist: m.artist || '', album: m.album || '', dur: m.dur });
+  res.set('Cache-Control', 'no-store').json({ ...out, k: m.id, mine: out.by === u.id, canEdit: m.user_id === u.id || !!u.is_admin });
+});
+app.get('/api/lyrics/ne/:nid', async (req, res) => {
+  const u = userOf(req); if (!u) return res.status(401).json({ error: '请先登录' });
+  const nid = String(req.params.nid); if (!/^\d{1,12}$/.test(nid)) return res.status(404).json({ error: '歌曲不存在' });
+  const k = 'ne:' + nid, p = db.prepare("SELECT * FROM playlist WHERE music_id=? AND src='netease'").get(k);
+  if (!p && !lyRow.get(k)) return res.status(404).json({ error: '这首歌不在歌单里' });   // 只查歌单里的歌，不当成通用的歌词代理
+  const out = await lyResolve(k, { nid, title: p ? p.ntitle : '', artist: p ? (p.nartist || '').split(' / ')[0] : '', dur: p ? p.ndur : 0 });
+  res.set('Cache-Control', 'no-store').json({ ...out, k, mine: false, canEdit: false });
+});
+// 上传 / 替换 .lrc（请求体就是文件内容）
+app.put('/api/lyrics/m/:id', (req, res) => {
+  const u = userOf(req);
+  const no = (c, e) => { req.resume(); res.status(c).json({ error: e }); };
+  if (!u) return no(401, '请先登录');
+  const m = okHex(req.params.id) && musicById.get(String(req.params.id));
+  if (!m || (m.user_id !== u.id && !u.is_admin)) return no(404, '歌曲不存在');
+  if (Number(req.headers['content-length']) > LRC_MAX) return no(413, '歌词文件太大（最大 256KB）');
+  const chunks = []; let size = 0, over = false;
+  req.on('data', c => { size += c.length; if (size > LRC_MAX) { if (!over) { over = true; res.status(413).json({ error: '歌词文件太大（最大 256KB）' }); } req.destroy(); } else chunks.push(c); });
+  req.on('end', () => {
+    if (over) return;
+    const text = LY.decodeText(Buffer.concat(chunks)).replace(/\u0000/g, '');
+    const p = LY.parseLrc(text);
+    if (!p.synced && !p.plain) return res.status(400).json({ error: '这个文件里没有读出歌词' });
+    if (/[\u0000-\u0008\u000e-\u001f]/.test(text.slice(0, 2000)) && !p.synced) return res.status(415).json({ error: '这不是歌词文件（.lrc / .txt）' });
+    lySave(m.id, 'lrc', text.slice(0, LY.MAX_LYRIC), null, u.id);
+    io.emit('lyrics', { k: m.id });
+    res.json({ ...lyOut(lyRow.get(m.id)), k: m.id, mine: true, canEdit: true });
+  });
+});
+app.delete('/api/lyrics/m/:id', async (req, res) => {
+  const u = userOf(req); if (!u) return res.status(401).json({ error: '请先登录' });
+  const m = okHex(req.params.id) && musicById.get(String(req.params.id));
+  if (!m || (m.user_id !== u.id && !u.is_admin)) return res.status(404).json({ error: '歌曲不存在' });
+  const row = lyRow.get(m.id);
+  if (row && row.src === 'lrc') { db.prepare('DELETE FROM lyrics WHERE k=?').run(m.id); scanTags(m.id); lyErr.delete(m.id); }
+  io.emit('lyrics', { k: m.id });
+  res.json({ ok: true });
+});
+
 setTimeout(() => { plStart(); }, 0);   // 重启后：歌单还在、音乐开着，就从第一首重新开始
 
 app.post('/api/register', (req, res) => {

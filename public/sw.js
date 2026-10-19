@@ -12,7 +12,7 @@ const SHELL = [
   '/fonts/font-001.woff2', '/fonts/font-002.woff2', '/fonts/font-003.woff2'
 ];
 // 中文字体按需加载（63 个分片，用到哪片下哪片）：第一次用到时存进缓存，以后直接从本机读。换版本时随旧缓存一起清掉。
-const FONTS = /^\/fonts\/[\w-]+\.woff2$/;
+const FONTS = /^\/fonts\/(lyric\/)?[\w-]+\.(woff2|css)$/;   // v0.19：歌词字体也按需缓存
 // 永远不经过缓存的路径
 const BYPASS = /^\/(socket\.io|api|uploads)(\/|$)/;
 

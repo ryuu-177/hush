@@ -1112,10 +1112,10 @@ aside .me + .bar,.bar{border-radius:99px;overflow:hidden}
 @keyframes bpIn{from{opacity:0;transform:scale(1.035);filter:blur(calc(6px*var(--lq-bk,1)))}to{opacity:.85;transform:none;filter:none}}
 
 /* ---- 动效：液面高光扫过按钮 ---- */
-button:where(:not(.tgl,.ib2,.ib3,.mnav,.sw button,.tabs button,.seg button)){
+button:where(:not(.tgl,.ib2,.ib3,.mnav,.sw button,.tabs button,.seg button,.stabs button,.lyf .lyfc)){
   background-image:var(--lq-shine),var(--lq-glass)!important;background-size:260% 100%,100% 100%!important;background-position:130% 0,0 0!important;background-repeat:no-repeat!important;
   transition:background-position .9s var(--lq-out),box-shadow .35s var(--lq-out),transform .5s var(--lq-spring),color .25s,border-color .3s!important}
-button:where(:not(.tgl,.ib2,.ib3,.mnav,.sw button,.tabs button,.seg button)):where(:not(:disabled)):hover{background-image:var(--lq-shine),var(--lq-glass-h)!important;background-position:-30% 0,0 0!important}
+button:where(:not(.tgl,.ib2,.ib3,.mnav,.sw button,.tabs button,.seg button,.stabs button,.lyf .lyfc)):where(:not(:disabled)):hover{background-image:var(--lq-shine),var(--lq-glass-h)!important;background-position:-30% 0,0 0!important}
 button.primary,#f button.primary,.mctl .mpp,.latest,.upd{background-image:var(--lq-shine),var(--lq-lime)!important}
 button.primary:not(:disabled):hover,#f button.primary:not(:disabled):hover{background-image:var(--lq-shine),var(--lq-lime)!important}
 button.red,.lvc .on{background-image:var(--lq-shine),linear-gradient(180deg,#ff7d8f,#ec4a62 55%,#d93752)!important}
@@ -1235,8 +1235,8 @@ input,textarea,select,.nesf{transition:border-color .35s var(--lq-out),box-shado
 :root{--lq-glass:linear-gradient(rgb(246 246 240/calc(var(--lq-tf)*.9)),rgb(246 246 240/calc(var(--lq-tf)*.9))),linear-gradient(180deg,rgb(255 255 255/calc(0.74*var(--lq-ta))),rgb(255 255 255/calc(0.4*var(--lq-ta))));--lq-glass-h:linear-gradient(rgb(250 250 246/calc(var(--lq-tf)*.92)),rgb(250 250 246/calc(var(--lq-tf)*.92))),linear-gradient(180deg,rgb(255 255 255/calc(0.92*var(--lq-ta))),rgb(255 255 255/calc(0.56*var(--lq-ta))));--lq-panel:rgb(246 246 240/calc(0.72*var(--lq-ta) + .25*var(--lq-tf)));--lq-bubble:linear-gradient(rgb(250 250 246/calc(var(--lq-tf)*.9)),rgb(250 250 246/calc(var(--lq-tf)*.9))),linear-gradient(160deg,rgb(255 255 255/calc(0.82*var(--lq-ta))),rgb(255 255 255/calc(0.5*var(--lq-ta))));--lq-bubble-own:linear-gradient(rgb(224 236 120/calc(var(--lq-tf)*.92)),rgb(224 236 120/calc(var(--lq-tf)*.92))),linear-gradient(160deg,rgb(226 240 120/calc(0.78*var(--lq-ta))),rgb(212 228 78/calc(0.52*var(--lq-ta))));}
 @media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--lq-glass:linear-gradient(rgb(30 36 34/calc(var(--lq-tf)*.9)),rgb(30 36 34/calc(var(--lq-tf)*.9))),linear-gradient(180deg,rgb(236 240 232/calc(0.13*var(--lq-ta))),rgb(236 240 232/calc(0.045*var(--lq-ta))));--lq-glass-h:linear-gradient(rgb(38 45 43/calc(var(--lq-tf)*.92)),rgb(38 45 43/calc(var(--lq-tf)*.92))),linear-gradient(180deg,rgb(236 240 232/calc(0.2*var(--lq-ta))),rgb(236 240 232/calc(0.08*var(--lq-ta))));--lq-panel:rgb(22 27 26/calc(0.72*var(--lq-ta) + .25*var(--lq-tf)));--lq-bubble:linear-gradient(rgb(34 41 39/calc(var(--lq-tf)*.9)),rgb(34 41 39/calc(var(--lq-tf)*.9))),linear-gradient(160deg,rgb(236 240 232/calc(0.14*var(--lq-ta))),rgb(236 240 232/calc(0.05*var(--lq-ta))));--lq-bubble-own:linear-gradient(rgb(60 68 26/calc(var(--lq-tf)*.92)),rgb(60 68 26/calc(var(--lq-tf)*.92))),linear-gradient(160deg,rgb(217 232 79/calc(0.3*var(--lq-ta))),rgb(217 232 79/calc(0.11*var(--lq-ta))));}}
 :root[data-theme="dark"]{--lq-glass:linear-gradient(rgb(30 36 34/calc(var(--lq-tf)*.9)),rgb(30 36 34/calc(var(--lq-tf)*.9))),linear-gradient(180deg,rgb(236 240 232/calc(0.13*var(--lq-ta))),rgb(236 240 232/calc(0.045*var(--lq-ta))));--lq-glass-h:linear-gradient(rgb(38 45 43/calc(var(--lq-tf)*.92)),rgb(38 45 43/calc(var(--lq-tf)*.92))),linear-gradient(180deg,rgb(236 240 232/calc(0.2*var(--lq-ta))),rgb(236 240 232/calc(0.08*var(--lq-ta))));--lq-panel:rgb(22 27 26/calc(0.72*var(--lq-ta) + .25*var(--lq-tf)));--lq-bubble:linear-gradient(rgb(34 41 39/calc(var(--lq-tf)*.9)),rgb(34 41 39/calc(var(--lq-tf)*.9))),linear-gradient(160deg,rgb(236 240 232/calc(0.14*var(--lq-ta))),rgb(236 240 232/calc(0.05*var(--lq-ta))));--lq-bubble-own:linear-gradient(rgb(60 68 26/calc(var(--lq-tf)*.92)),rgb(60 68 26/calc(var(--lq-tf)*.92))),linear-gradient(160deg,rgb(217 232 79/calc(0.3*var(--lq-ta))),rgb(217 232 79/calc(0.11*var(--lq-ta))));}
-button:where(:not(.tgl,.ib2,.ib3,.mnav,.sw button,.tabs button,.seg button)){background-size:260% 100%,100% 100%,100% 100%!important;background-position:130% 0,0 0,0 0!important}
-button:where(:not(.tgl,.ib2,.ib3,.mnav,.sw button,.tabs button,.seg button)):where(:not(:disabled)):hover{background-position:-30% 0,0 0,0 0!important}
+button:where(:not(.tgl,.ib2,.ib3,.mnav,.sw button,.tabs button,.seg button,.stabs button,.lyf .lyfc)){background-size:260% 100%,100% 100%,100% 100%!important;background-position:130% 0,0 0,0 0!important}
+button:where(:not(.tgl,.ib2,.ib3,.mnav,.sw button,.tabs button,.seg button,.stabs button,.lyf .lyfc)):where(:not(:disabled)):hover{background-position:-30% 0,0 0,0 0!important}
 @media(min-width:641px){.ov .sheet{max-height:calc(100dvh - 40px);overflow-y:auto}}
 /* v0.14.0 补丁：很窄的手机（≤360px）上，顶栏的正在播放胶囊不再盖住“群聊”标题 */
 @media(max-width:360px){.tb #tbt{flex:0 1 auto;min-width:3.2em;overflow:hidden;white-space:nowrap}.tb .np:not(.idle){max-width:34vw}}
@@ -1379,6 +1379,154 @@ a.pill2{text-decoration:none;display:inline-flex;align-items:center}
 .pmenu button{all:unset;display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:9px;cursor:pointer;font-size:13px;color:var(--ef-tx1,var(--fg))}
 .pmenu button svg{width:16px;height:16px;opacity:.75;flex:none}
 .pmenu button:hover,.pmenu button:focus-visible{background:color-mix(in srgb,var(--ef-tx1,#222) 8%,transparent)}
+/* ===== v0.19：歌词（歌词页 + 悬浮歌词）、音乐设置、设置页重新整理 ===== */
+:root{--ly-font:"LXGW WenKai",var(--sans);--lyf-size:17px;--lyf-op:.92}
+/* 歌词页（群聊歌单抽屉里的第三页） */
+.mtabs button[hidden]{display:none}
+#mly{display:flex;flex-direction:column;padding:0;overflow:hidden;min-height:0}
+#mly[hidden]{display:none}
+.lyh{display:flex;align-items:center;gap:12px;padding:10px 20px 12px;border-bottom:1px solid var(--ef-bd,var(--line));flex:none}
+.lyh .art{width:44px;height:44px;border-radius:13px}
+.lyh .tx{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.lyh .t1{font-weight:700;font-size:14.5px;letter-spacing:.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lyh .t2{font-size:12px;color:var(--ef-tx3,var(--mut));white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:6px}
+.lysrc{flex:none;font:700 9.5px var(--mono,monospace);letter-spacing:.14em;padding:2px 6px;border-radius:5px;color:var(--ef-tx2,var(--mut));background:color-mix(in srgb,var(--ef-tx1,#222) 7%,transparent);border:1px solid var(--ef-bd,var(--line))}
+.lysrc.u{color:var(--lq-lime-ink,#2a3300);background:var(--lq-lime,#d9e84f);border-color:transparent}
+.lyh .ib3{flex:none}
+.lyb{position:relative;flex:1;min-height:0;display:flex;flex-direction:column}
+.lys{position:relative;flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;padding:0 22px;scrollbar-width:none;
+  -webkit-mask-image:linear-gradient(180deg,transparent 0,#000 16%,#000 82%,transparent 100%);mask-image:linear-gradient(180deg,transparent 0,#000 16%,#000 82%,transparent 100%)}
+.lys::-webkit-scrollbar{display:none}
+.lys::before,.lys::after{content:"";display:block;height:42%}
+.lyl{font-family:var(--ly-font);font-size:19px;line-height:1.5;padding:8px 9% 8px 12px;margin:2px -12px;border-radius:14px;color:var(--ef-tx2,var(--mut));opacity:.42;
+  transform-origin:0 50%;transition:opacity .45s var(--lq-out,ease),transform .55s var(--lq-spring,ease),color .35s,background .2s;word-break:break-word;position:relative}
+.lyl small{display:block;font-size:.7em;line-height:1.5;margin-top:2px;opacity:.85;font-family:var(--sans)}
+.lyl.nb{opacity:.62}
+.lyl.on{opacity:1;color:var(--ef-tx1,var(--fg));transform:scale(1.07);text-shadow:0 0 .5px currentColor}
+.lyl.on::before{content:"";position:absolute;left:0;top:12px;bottom:12px;width:3px;border-radius:3px;background:var(--ef-ac,var(--ac))}
+.lyl.gap{font-size:15px;letter-spacing:.3em}
+.lyl.can{cursor:pointer}
+.lyl.can:hover{background:color-mix(in srgb,var(--ef-tx1,#222) 6%,transparent);opacity:.85}
+.lyl.on.can:hover{opacity:1}
+.lyback{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);display:inline-flex;align-items:center;gap:6px;font-size:12.5px!important;padding:7px 14px!important;border-radius:999px!important;
+  background:var(--pop-bg)!important;border:1px solid var(--pop-edge)!important;box-shadow:0 0 0 .5px var(--pop-ring),var(--pop-sh)!important;color:var(--ef-tx1,var(--fg));animation:pop .25s ease;z-index:2}
+.lyback svg{width:14px;height:14px}
+.lyplain{flex:1;min-height:0;overflow:auto;padding:18px 24px 28px;font-family:var(--ly-font);font-size:17px;line-height:1.95;white-space:pre-wrap;color:var(--ef-tx1,var(--fg))}
+.lyst{margin:auto;padding:30px 24px;text-align:center;color:var(--ef-tx3,var(--mut));font-size:13px;line-height:1.8;display:flex;flex-direction:column;align-items:center;gap:8px;max-width:300px}
+.lyst b{font-family:var(--ly-font);font-weight:400;font-size:19px;letter-spacing:.12em;color:var(--ef-tx2,var(--mut))}
+.lyst .pill2{margin-top:6px}
+.lyst .dots{display:inline-flex;gap:5px}.lyst .dots i{width:6px;height:6px;border-radius:50%;background:currentColor;animation:pulse 1.2s ease-in-out infinite}
+.lyst .dots i:nth-child(2){animation-delay:.2s}.lyst .dots i:nth-child(3){animation-delay:.4s}
+.lynote{flex:none;margin:8px 20px 0;padding:8px 12px;border-radius:12px;font-size:11.5px;color:var(--ef-tx3,var(--mut));background:color-mix(in srgb,var(--ef-tx1,#222) 5%,transparent);line-height:1.6}
+.npc .mctl .lyb2.on{color:var(--ef-tx1,var(--fg))}
+/* 悬浮歌词 */
+.lyf{position:fixed;left:0;top:0;z-index:7;max-width:min(560px,calc(100vw - 24px));padding:7px 18px 8px;border-radius:16px;text-align:center;cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;
+  background:var(--pop-bg);border:1px solid var(--pop-edge);-webkit-backdrop-filter:var(--pop-blur);backdrop-filter:var(--pop-blur);box-shadow:inset 0 1px 0 var(--lq-spec,transparent),0 0 0 .5px var(--pop-ring),var(--pop-sh);
+  opacity:var(--lyf-op);transition:opacity .35s,transform .45s var(--lq-out,ease);will-change:transform}
+.lyf[hidden]{display:none}
+.lyf.drag{cursor:grabbing;transition:opacity .35s;box-shadow:inset 0 1px 0 var(--lq-spec,transparent),0 0 0 2px var(--ef-ac,var(--ac)),var(--pop-sh)}
+.lyf .lyfx{display:flex;flex-direction:column;align-items:center;min-width:0}
+.lyf.in .lyfx{animation:lyIn .42s var(--lq-out,ease)}
+@keyframes lyIn{from{opacity:0;transform:translateY(7px);filter:blur(2px)}to{opacity:1;transform:none;filter:none}}
+.lyf1{font-family:var(--ly-font);font-size:var(--lyf-size);line-height:1.4;color:var(--ef-tx1,var(--fg));white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;letter-spacing:.02em}
+.lyf2{font-size:calc(var(--lyf-size)*.68);line-height:1.4;color:var(--ef-tx3,var(--mut));white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;margin-top:1px}
+.lyf2[hidden]{display:none}
+.lyf.gap .lyf1{color:var(--ef-tx3,var(--mut));font-size:calc(var(--lyf-size)*.8);letter-spacing:.06em}
+.lyf.ps .lyf1{color:var(--ef-tx3,var(--mut))}
+.lyf .lyfc{position:absolute;top:-8px;right:-8px;width:22px;height:22px;padding:0!important;border-radius:50%!important;display:grid;place-items:center;opacity:0;transition:opacity .2s;
+  background:var(--pop-solid)!important;border:1px solid var(--pop-edge)!important;box-shadow:0 2px 6px rgb(0 0 0/.18)!important;color:var(--ef-tx2,var(--mut));cursor:pointer}
+.lyf .lyfc svg{width:11px;height:11px}
+@media(hover:hover){.lyf:hover .lyfc{opacity:1}}
+.lyf.edit{outline:2px dashed var(--ef-ac,var(--ac));outline-offset:4px;opacity:1}
+.lyf.edit .lyfc{display:none}
+.lyfe{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:8px;padding-top:8px;border-top:1px solid var(--ef-bd,var(--line));font-size:12px;color:var(--ef-tx3,var(--mut));cursor:default;flex-wrap:wrap}
+.lyfe[hidden]{display:none}
+.lyfe .pill2{padding:4px 12px;font-size:12px}
+@media(prefers-reduced-motion:reduce){.lyf.in .lyfx,.lyl{animation:none;transition:none}}
+/* 顶栏：去掉放大镜之后，胶囊靠右对齐，和右边距一致 */
+.tb .np{margin-left:auto}
+/* 侧栏：搜索聊天记录（原来顶栏的放大镜挪到这里） */
+aside .link + .link{margin-top:0}
+.link kbd{margin-left:auto;font:600 9.5px var(--mono,monospace);letter-spacing:.06em;padding:2px 6px;border-radius:5px;border:1px solid var(--ef-bd,var(--line));color:var(--ef-tx3,var(--mut));background:transparent}
+/* ---- 设置页：左边分类、右边内容；窄窗口变成顶部标签 ---- */
+#setv .sheet.setx{width:min(680px,calc(100vw - 32px));max-width:none;height:min(620px,calc(var(--app-h,100dvh) - 40px));max-height:none;display:flex;flex-direction:column;overflow:hidden!important;
+  background:var(--pop-bg)!important;-webkit-backdrop-filter:var(--pop-blur)!important;backdrop-filter:var(--pop-blur)!important;border-color:var(--pop-edge)!important}
+.setx .sbody{flex:1;min-height:0;display:grid;grid-template-columns:172px 1fr;grid-template-rows:auto 1fr}
+.setx .sh2{grid-column:1/-1;margin:0;padding:18px 20px 12px}
+.stabs{display:flex;flex-direction:column;gap:2px;padding:6px 10px 16px;border-right:1px solid var(--ef-bd,var(--line));overflow-y:auto}
+.stabs button{all:unset;box-sizing:border-box;display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:12px;font-size:13.5px;color:var(--ef-tx2,var(--mut));cursor:pointer;position:relative;transition:background .2s,color .2s}
+.stabs button svg{width:17px;height:17px;flex:none;opacity:.8}
+.stabs button small{margin-left:auto;font:700 9px var(--mono,monospace);letter-spacing:.12em;opacity:.55}
+.stabs button:hover{background:color-mix(in srgb,var(--ef-tx1,#222) 6%,transparent);color:var(--ef-tx1,var(--fg))}
+.stabs button.on{background:color-mix(in srgb,var(--ef-tx1,#222) 9%,transparent);color:var(--ef-tx1,var(--fg));font-weight:600}
+.stabs button.on::before{content:"";position:absolute;left:0;top:9px;bottom:9px;width:3px;border-radius:3px;background:var(--ef-ac,var(--ac))}
+.stabs button:focus-visible{outline:2px solid var(--ef-ac,var(--ac));outline-offset:-2px}
+.stabs button[hidden]{display:none}
+.spanes{min-height:0;overflow-y:auto;padding:12px 20px 22px;overscroll-behavior:contain}
+.spane{display:flex;flex-direction:column;gap:8px;animation:fade .2s ease}
+.spane[hidden]{display:none}
+.sgh{display:flex;align-items:center;gap:8px;margin:12px 2px 2px;font:700 10px var(--mono,monospace);letter-spacing:.2em;color:var(--ef-tx3,var(--mut));text-transform:uppercase}
+.sgh:first-child{margin-top:2px}
+.sgh::after{content:"";flex:1;height:1px;background:var(--ef-bd,var(--line))}
+.sgh span{font:600 11.5px var(--sans);letter-spacing:.08em;text-transform:none;color:var(--ef-tx2,var(--mut))}
+.setx .srow{background:color-mix(in srgb,var(--pop-solid) 70%,transparent)!important}
+.scard{display:flex;flex-direction:column;gap:12px;padding:14px;border-radius:var(--lq-r-lg,16px);border:1px solid var(--lq-edge,var(--line));background:color-mix(in srgb,var(--pop-solid) 70%,transparent);box-shadow:inset 0 1px 0 var(--lq-spec,transparent),0 0 0 .5px var(--lq-line,transparent)}
+.scard .seg{width:100%;box-sizing:border-box}
+.scard .seg button{flex:1;padding:7px 4px;font-size:12.5px;white-space:nowrap}
+.srx{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.srx small{font-size:11.5px;color:var(--ef-tx3,var(--mut));margin-left:auto}
+.pill2.ghost{border-color:var(--ef-bd,var(--line))!important;background:transparent!important;color:var(--ef-tx2,var(--mut))}
+.rrow{display:flex;flex-direction:column;gap:4px}
+.rrow label{display:flex;justify-content:space-between;font-size:12.5px;color:var(--ef-tx2,var(--mut))}
+.rrow label b{color:var(--ef-tx1,var(--fg));font-weight:600;font-variant-numeric:tabular-nums}
+.rrow .rg{display:flex;align-items:center;gap:10px;font-size:11px;color:var(--ef-tx3,var(--mut))}
+.rrow input[type=range]{-webkit-appearance:none;appearance:none;flex:1;height:26px;margin:0;background:transparent!important;border:0!important;box-shadow:none!important;padding:0!important;--p:50%}
+.rrow input[type=range]::-webkit-slider-runnable-track{height:6px;border-radius:3px;background:linear-gradient(90deg,var(--ef-ac,#d9e84f) var(--p),color-mix(in srgb,var(--ef-tx1,#222) 14%,transparent) var(--p))}
+.rrow input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;margin-top:-8px;border-radius:50%;background:linear-gradient(180deg,#fff,#eef0ea);border:.5px solid rgba(0,0,0,.12);box-shadow:0 2px 6px rgba(0,0,0,.22),0 0 0 3px rgba(255,255,255,.35)}
+.rrow input[type=range]::-moz-range-track{height:6px;border-radius:3px;background:color-mix(in srgb,var(--ef-tx1,#222) 14%,transparent)}
+.rrow input[type=range]::-moz-range-progress{height:6px;border-radius:3px;background:var(--ef-ac,#d9e84f)}
+.rrow input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:#fff;border:.5px solid rgba(0,0,0,.12)}
+.snote{margin:4px 2px 0;font-size:11px;line-height:1.7;color:var(--ef-tx3,var(--mut))}
+.snote a{color:inherit;text-decoration:underline;text-underline-offset:3px}
+/* 位置预览：一个迷你的聊天窗口 */
+.lymock{position:relative;height:118px;border-radius:12px;overflow:hidden;border:1px solid var(--ef-bd,var(--line));background:color-mix(in srgb,var(--ef-tx1,#222) 4%,transparent)}
+.lymock .mk-tb{position:absolute;left:0;right:0;top:0;height:20px;border-bottom:1px solid var(--ef-bd,var(--line));background:color-mix(in srgb,var(--ef-tx1,#222) 5%,transparent)}
+.lymock .mk-tb::before{content:"";position:absolute;left:10px;top:7px;width:38px;height:6px;border-radius:3px;background:color-mix(in srgb,var(--ef-tx1,#222) 22%,transparent)}
+.lymock .mk-np{position:absolute;right:10px;top:4px;width:52px;height:12px;border-radius:6px;border:1px solid var(--ef-bd,var(--line));background:var(--pop-solid)}
+.lymock .mk-np::before{content:"";position:absolute;left:5px;top:3px;width:4px;height:4px;border-radius:50%;background:var(--ef-ac,var(--ac))}
+.lymock .mk-m{position:absolute;left:12px;height:9px;border-radius:5px;background:color-mix(in srgb,var(--ef-tx1,#222) 10%,transparent)}
+.lymock .mk-f{position:absolute;left:10px;right:10px;bottom:7px;height:14px;border-radius:7px;border:1px solid var(--ef-bd,var(--line));background:var(--pop-solid)}
+.lymock .mk-ly{position:absolute;padding:2px 9px;border-radius:7px;font-family:var(--ly-font);font-size:10px;line-height:1.4;white-space:nowrap;color:var(--ef-tx1,var(--fg));background:var(--pop-solid);border:1px solid var(--ef-ac,var(--ac));box-shadow:0 3px 10px rgb(0 0 0/.15);transform:translate(-50%,-50%);transition:left .4s var(--lq-out,ease),top .4s var(--lq-out,ease)}
+/* 歌词字体卡片 */
+.lyfonts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.lyfo{display:flex;flex-direction:column;gap:4px;padding:12px 14px;border-radius:14px;cursor:pointer;border:1px solid var(--lq-edge,var(--line));background:color-mix(in srgb,var(--pop-solid) 70%,transparent);transition:border-color .2s,box-shadow .2s,background .2s;position:relative;min-width:0}
+.lyfo:hover{background:color-mix(in srgb,var(--ef-tx1,#222) 5%,var(--pop-solid))}
+.lyfo:focus-visible{outline:2px solid var(--ef-ac,var(--ac));outline-offset:1px}
+.lyfo.on{border-color:var(--ef-ac,var(--ac));box-shadow:0 0 0 1px var(--ef-ac,var(--ac)),0 6px 18px -10px rgb(0 0 0/.4)}
+.lyfo.on::after{content:"";position:absolute;top:10px;right:10px;width:16px;height:16px;border-radius:50%;background:var(--ef-ac,var(--ac)) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23182000' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m5 12.5 4.5 4.5L19 7'/%3E%3C/svg%3E") center/10px no-repeat}
+.lyfo .pv{font-size:20px;line-height:1.35;color:var(--ef-tx1,var(--fg));white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lyfo b{font-size:12.5px;font-weight:600;color:var(--ef-tx1,var(--fg))}
+.lyfo small{font-size:11px;color:var(--ef-tx3,var(--mut));line-height:1.5}
+.setx .ver{margin-top:14px;text-align:left;font:500 11px/1.8 var(--sans);letter-spacing:.04em;color:var(--ef-tx3,var(--mut));opacity:1}
+.sacc{display:flex;align-items:center;gap:12px;padding:14px;border-radius:var(--lq-r-lg,16px);border:1px solid var(--lq-edge,var(--line));background:color-mix(in srgb,var(--pop-solid) 70%,transparent)}
+.sacc .av{width:44px;height:44px;font-size:20px}
+.sacc .stx b{font-size:15px}
+@media(max-width:640px){
+  #setv .sheet.setx{width:100%;height:min(92dvh,760px)}
+  .setx .sbody{grid-template-columns:1fr;grid-template-rows:auto auto 1fr}
+  .setx .sh2{padding:22px 18px 8px}
+  .stabs{flex-direction:row;overflow-x:auto;overflow-y:hidden;border-right:0;border-bottom:1px solid var(--ef-bd,var(--line));padding:2px 12px 8px;gap:4px;scrollbar-width:none}
+  .stabs::-webkit-scrollbar{display:none}
+  .stabs button{flex:none;padding:7px 12px;border-radius:999px;font-size:13px}
+  .stabs button small{display:none}
+  .stabs button svg{width:15px;height:15px}
+  .stabs button.on::before{display:none}
+  .stabs button.on{background:var(--ef-tx1,var(--fg));color:var(--ef-bg1,var(--card))}
+  .spanes{padding:4px 14px calc(22px + env(safe-area-inset-bottom))}
+  .lyfonts{grid-template-columns:1fr 1fr}
+  .lyl{font-size:18px}
+}
+@media(max-width:380px){.lyfonts{grid-template-columns:1fr}.scard .seg button{font-size:11.5px;padding:7px 2px}}
 </style>
 <script src="/lq-glass.js"></script>
 </head>
@@ -1436,12 +1584,12 @@ a.pill2{text-decoration:none;display:inline-flex;align-items:center}
       <small>7 天内有效，只能用一次</small>
       <ul id="invs"></ul>
     </div>
+    <button class="link" id="srchb" onclick="openSearch()" title="搜索聊天记录（Ctrl+F）"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>搜索聊天记录<kbd>Ctrl F</kbd></button>
     <button class="link" id="setb" onclick="openSettings()" title="通知、安装、退出登录"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>设置</button>
   </aside>
   <section>
     <div class="tb"><button class="ib2 mnav" id="mnav" onclick="openNav()" title="菜单"><div class="av s" id="mav"></div></button><b id="tbt">群聊<small id="onc"></small></b>
       <button class="np idle" id="np" type="button" onclick="npClick()" title="群聊歌单"><svg class="npi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg><span class="eq"><i></i><i></i><i></i></span><i class="tapd"></i><span class="npt" id="npt"></span><span class="npb" id="npb"></span></button>
-      <button class="ib2" onclick="openSearch()" title="搜索聊天记录"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg></button>
     </div>
     <button class="upd" id="upd" hidden type="button"><i></i>有新版本，点击刷新</button>
     <div class="tip" id="tip" hidden><div class="si" id="tipi"></div><div class="stx"><b id="tipt"></b><small id="tips"></small></div><button class="pill2" id="tipgo" type="button"></button><button class="x3" id="tipx" type="button" title="不再提示"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
@@ -1584,53 +1732,115 @@ a.pill2{text-decoration:none;display:inline-flex;align-items:center}
 <!-- 群聊歌单 / 我的音乐（v0.9） -->
 <div class="drawer" id="md" aria-label="群聊歌单">
   <div class="dh"><h3 id="mdt">群聊歌单</h3><button class="ib2" id="mgs" hidden onclick="openGroupSettings()" title="群聊设置"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/></svg></button><button class="ib2" onclick="closeDrawers()" title="关闭"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
-  <div class="tabs mtabs" id="mtabs"><button data-t="pl" class="on">歌单</button><button data-t="lib">我的音乐</button></div>
+  <div class="tabs mtabs" id="mtabs"><button data-t="pl" class="on">歌单</button><button data-t="ly">歌词</button><button data-t="lib">我的音乐</button></div>
   <div class="dl" id="mpl"></div>
+  <div class="dl" id="mly" hidden></div>
   <div class="dl" id="mlib" hidden></div>
-  <input type="file" id="mff" accept="audio/*,.mp3,.flac,.wav,.m4a,.aac,.ogg,.oga,.opus,.webm,.weba" hidden>
+  <input type="file" id="mff" multiple accept="audio/*,.mp3,.flac,.wav,.m4a,.aac,.ogg,.oga,.opus,.webm,.weba,.lrc" hidden>
+  <input type="file" id="mlf" accept=".lrc,.txt,text/plain" hidden>
 </div>
+<!-- v0.19：悬浮歌词 -->
+<div class="lyf" id="lyf" hidden><div class="lyfx"><span class="lyf1" id="lyf1"></span><span class="lyf2" id="lyf2" hidden></span></div><button type="button" class="lyfc" id="lyfx2" title="关闭悬浮歌词" aria-label="关闭悬浮歌词"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button><div class="lyfe" id="lyfe" hidden><span>拖到想要的位置</span><button type="button" class="pill2 ghost" id="lyfrs">回到胶囊旁</button><button type="button" class="pill2" id="lyfok">完成</button></div></div>
 <audio id="mus" preload="auto" playsinline hidden></audio>
 <audio id="mpv" preload="auto" playsinline hidden></audio>
 
-<!-- 设置（v0.8） -->
+<!-- 设置（v0.8；v0.19 重新整理：左边分类 / 右边内容，新增“音乐”） -->
 <div class="ov" id="setv" hidden onclick="if(event.target===this)closeSettings()">
-  <div class="sheet setg">
-    <div class="body" style="padding-top:18px">
+  <div class="sheet setg setx" role="dialog" aria-label="设置">
+    <div class="sbody">
       <div class="sh2"><h3>设置</h3><button class="ib2" onclick="closeSettings()" title="关闭"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
-      <div class="srow" id="snotif">
-        <div class="si"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 1 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg></div>
-        <div class="stx"><b>消息通知</b><small id="snotifs"></small></div>
-        <button class="tgl" id="tnotif" type="button" role="switch" aria-checked="false" aria-label="消息通知" onclick="toggleNotify()"><i></i></button>
+      <nav class="stabs" id="stabs" role="tablist" aria-label="设置分类">
+        <button type="button" role="tab" data-p="gen" class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 1 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>通用<small>01</small></button>
+        <button type="button" role="tab" data-p="mus"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>音乐<small>02</small></button>
+        <button type="button" role="tab" data-p="look"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18z" fill="currentColor" stroke="none" opacity=".35"/></svg>外观<small>03</small></button>
+        <button type="button" role="tab" data-p="tool" id="stabtool"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8V5.5A1.5 1.5 0 0 1 5.5 4H8M16 4h2.5A1.5 1.5 0 0 1 20 5.5V8M20 16v2.5a1.5 1.5 0 0 1-1.5 1.5H16M8 20H5.5A1.5 1.5 0 0 1 4 18.5V16"/><circle cx="12" cy="12" r="2.6"/></svg>截图与表情<small>04</small></button>
+        <button type="button" role="tab" data-p="acc"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>账号<small>05</small></button>
+      </nav>
+      <div class="spanes" id="spanes">
+        <section class="spane" data-p="gen" role="tabpanel">
+          <div class="sgh">NOTIFY<span>通知与启动</span></div>
+          <div class="srow" id="snotif">
+            <div class="si"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 1 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg></div>
+            <div class="stx"><b>消息通知</b><small id="snotifs"></small></div>
+            <button class="tgl" id="tnotif" type="button" role="switch" aria-checked="false" aria-label="消息通知" onclick="toggleNotify()"><i></i></button>
+          </div>
+          <div class="srow" id="sauto" hidden>
+            <div class="si"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v8"/><path d="M6.4 6.4a8 8 0 1 0 11.2 0"/></svg></div>
+            <div class="stx"><b>开机自动启动</b><small id="sautos"></small></div>
+            <button class="tgl" id="tauto" type="button" role="switch" aria-checked="false" aria-label="开机自动启动" onclick="toggleAuto()"><i></i></button>
+          </div>
+          <div class="srow" id="sinst">
+            <div class="si"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="13" rx="2.5"/><path d="M8 21h8M12 7.5v6M9.5 11l2.5 2.5 2.5-2.5"/></svg></div>
+            <div class="stx"><b>安装 Hush</b><small id="sinsts"></small></div>
+            <button class="pill2" id="binst" type="button" onclick="installApp()">安装</button>
+          </div>
+          <div class="srow" id="sdesk" hidden>
+            <div class="si"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg></div>
+            <div class="stx"><b>Windows 桌面版</b><small id="sdesks">一键截图、不用每次选屏幕，开机就能收消息</small></div>
+            <a class="pill2" id="sdeskb" href="#" download>下载</a>
+          </div>
+          <div class="ios" id="ioshelp" hidden><ol><li>点浏览器的 <b>分享</b> 按钮 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M8 7l4-4 4 4"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg></li><li>往下滑，选择 <b>添加到主屏幕</b></li><li>回到主屏幕，点 Hush 图标打开</li></ol></div>
+          <div class="sgh">CHAT<span>聊天</span></div>
+          <button class="srow mrow" id="ssrch" type="button" onclick="closeSettings();openSearch()"><div class="si"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg></div><div class="stx"><b>搜索聊天记录</b><small>按关键词找以前的消息 · 快捷键 Ctrl + F</small></div><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg></button>
+          <button class="srow mrow" id="sgrp" type="button" hidden onclick="closeSettings();openGroupSettings()"><div class="si"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/></svg></div><div class="stx"><b>群聊设置</b><small>群聊音乐、切歌、点歌数量（管理员）</small></div><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg></button>
+        </section>
+        <section class="spane" data-p="mus" role="tabpanel" hidden>
+          <div class="sgh">LYRICS<span>歌词显示</span></div>
+          <div class="srow">
+            <div class="si"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="18" height="8" rx="4"/><path d="M8 12h8"/></svg></div>
+            <div class="stx"><b>悬浮歌词</b><small>在聊天窗口上显示正在唱的那一句，可以拖动</small></div>
+            <button class="tgl" id="tlyf" type="button" role="switch" aria-checked="false" aria-label="悬浮歌词"><i></i></button>
+          </div>
+          <div class="srow">
+            <div class="si"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h10M4 10h16M4 14h12M4 18h7"/></svg></div>
+            <div class="stx"><b>歌词页</b><small>群聊歌单里的「歌词」页，跟着大家的进度滚动</small></div>
+            <button class="tgl" id="tlyv" type="button" role="switch" aria-checked="false" aria-label="歌词页"><i></i></button>
+          </div>
+          <div class="srow">
+            <div class="si"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h8M8 3v2M5.5 5c.8 3 3 5.5 6 7M10.5 5c-.8 3-3 5.5-6 7"/><path d="m13 21 4-9 4 9M14.5 18h5"/></svg></div>
+            <div class="stx"><b>显示翻译</b><small>外文歌有中文翻译时，显示在原文下面</small></div>
+            <button class="tgl" id="tlyt" type="button" role="switch" aria-checked="false" aria-label="显示翻译"><i></i></button>
+          </div>
+          <div class="sgh">POSITION<span>悬浮歌词的位置</span></div>
+          <div class="scard">
+            <div class="lymock" id="lymock" aria-hidden="true"><div class="mk-tb"></div><div class="mk-np"></div><div class="mk-m" style="top:32px;width:44%"></div><div class="mk-m" style="top:48px;width:30%;left:auto;right:12px"></div><div class="mk-m" style="top:64px;width:38%"></div><div class="mk-f"></div><div class="mk-ly" id="mkly">晚风吹过窗台</div></div>
+            <div class="seg" id="lypos" role="radiogroup" aria-label="悬浮歌词的位置"><button type="button" role="radio" data-v="cap">靠近胶囊</button><button type="button" role="radio" data-v="top">顶部</button><button type="button" role="radio" data-v="mid">中间</button><button type="button" role="radio" data-v="bot">底部</button></div>
+            <div class="srx"><button class="pill2" id="lydrag" type="button">拖动调整位置</button><button class="pill2 ghost" id="lyreset" type="button">恢复默认</button><small id="lyposn"></small></div>
+          </div>
+          <div class="sgh">SIZE<span>大小与透明度</span></div>
+          <div class="scard">
+            <div class="rrow"><label for="lysz">字号 <b id="lyszv"></b></label><div class="rg"><span>小</span><input type="range" id="lysz" min="12" max="32" step="1"><span>大</span></div></div>
+            <div class="rrow"><label for="lyop">不透明度 <b id="lyopv"></b></label><div class="rg"><span>淡</span><input type="range" id="lyop" min="35" max="100" step="1"><span>实</span></div></div>
+          </div>
+          <div class="sgh">FONT<span>歌词字体</span></div>
+          <div class="lyfonts" id="lyfonts" role="radiogroup" aria-label="歌词字体"></div>
+          <p class="snote">歌词字体都是开源免费字体（SIL Open Font License 1.1），跟着 Hush 一起发布，只有用到的字才会下载。授权说明在 <a href="/fonts/README.txt" target="_blank" rel="noopener">fonts/README.txt</a>。<br>这些设置只保存在这台电脑上。</p>
+        </section>
+        <section class="spane" data-p="look" role="tabpanel" hidden>
+          <div class="sgh">GLASS<span>界面外观</span></div>
+          <div id="slook"></div>
+        </section>
+        <section class="spane" data-p="tool" role="tabpanel" hidden>
+          <div class="sgh">CAPTURE<span>截图与表情包</span></div>
+          <div class="srow shrow" id="sshot" hidden>
+            <div class="si"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8V5.5A1.5 1.5 0 0 1 5.5 4H8M16 4h2.5A1.5 1.5 0 0 1 20 5.5V8M20 16v2.5a1.5 1.5 0 0 1-1.5 1.5H16M8 20H5.5A1.5 1.5 0 0 1 4 18.5V16"/><circle cx="12" cy="12" r="2.6"/></svg></div>
+            <div class="stx"><b>截图保存位置</b><small id="sshots"></small><span class="shdir" id="sshotd" hidden></span></div>
+            <div class="sbtns"><button class="pill2 ghost" id="sshotr" type="button" hidden onclick="shotResetDir()">恢复默认</button><button class="pill2" id="sshotb" type="button" onclick="shotPickDir(true)">更改</button></div>
+          </div>
+          <div class="srow shrow" id="sstk" hidden>
+            <div class="si"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20.5 12.5A8.5 8.5 0 1 1 11.5 3.5"/><path d="M20.5 12.5c-4.6 0-9-4.4-9-9"/><path d="M8.5 13.2c.9 1.2 2.2 1.8 3.6 1.8"/><circle cx="8.6" cy="9.4" r=".6" fill="currentColor"/></svg></div>
+            <div class="stx"><b>表情包</b><small id="sstks"></small><span class="shdir" id="sstkd" hidden></span></div>
+            <div class="sbtns"><button class="pill2" id="sstkb" type="button" onclick="stkPickSource(true)">选择文件夹</button></div>
+          </div>
+          <p class="snote" id="stooln" hidden>截图和表情包文件夹需要桌面版。</p>
+        </section>
+        <section class="spane" data-p="acc" role="tabpanel" hidden>
+          <div class="sgh">ACCOUNT<span>账号</span></div>
+          <div class="sacc" id="sacc" role="button" tabindex="0" title="编辑个人资料" onclick="closeSettings();editProfile()" onkeydown="if(event.key==='Enter')this.click()"><div class="av" id="saccav"></div><div class="stx"><b id="saccn"></b><small id="saccs"></small></div><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;opacity:.6"><path d="m9 6 6 6-6 6"/></svg></div>
+          <button class="srow out" type="button" onclick="closeSettings();logout()">退出登录</button>
+          <div class="ver">Hush v__APP_VERSION__<br>界面字体：Space Grotesk（OFL）<br>歌词字体：霞鹜文楷 · 朱雀仿宋 · 得意黑（均为 SIL OFL 1.1）</div>
+        </section>
       </div>
-      <div class="srow" id="sauto" hidden>
-        <div class="si"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v8"/><path d="M6.4 6.4a8 8 0 1 0 11.2 0"/></svg></div>
-        <div class="stx"><b>开机自动启动</b><small id="sautos"></small></div>
-        <button class="tgl" id="tauto" type="button" role="switch" aria-checked="false" aria-label="开机自动启动" onclick="toggleAuto()"><i></i></button>
-      </div>
-      <div class="srow" id="sinst">
-        <div class="si"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="13" rx="2.5"/><path d="M8 21h8M12 7.5v6M9.5 11l2.5 2.5 2.5-2.5"/></svg></div>
-        <div class="stx"><b>安装 Hush</b><small id="sinsts"></small></div>
-        <button class="pill2" id="binst" type="button" onclick="installApp()">安装</button>
-      </div>
-      <div class="srow shrow" id="sshot" hidden>
-        <div class="si"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8V5.5A1.5 1.5 0 0 1 5.5 4H8M16 4h2.5A1.5 1.5 0 0 1 20 5.5V8M20 16v2.5a1.5 1.5 0 0 1-1.5 1.5H16M8 20H5.5A1.5 1.5 0 0 1 4 18.5V16"/><circle cx="12" cy="12" r="2.6"/></svg></div>
-        <div class="stx"><b>截图保存位置</b><small id="sshots"></small><span class="shdir" id="sshotd" hidden></span></div>
-        <div class="sbtns"><button class="pill2 ghost" id="sshotr" type="button" hidden onclick="shotResetDir()">恢复默认</button><button class="pill2" id="sshotb" type="button" onclick="shotPickDir(true)">更改</button></div>
-      </div>
-      <div class="srow shrow" id="sstk" hidden>
-        <div class="si"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20.5 12.5A8.5 8.5 0 1 1 11.5 3.5"/><path d="M20.5 12.5c-4.6 0-9-4.4-9-9"/><path d="M8.5 13.2c.9 1.2 2.2 1.8 3.6 1.8"/><circle cx="8.6" cy="9.4" r=".6" fill="currentColor"/></svg></div>
-        <div class="stx"><b>表情包</b><small id="sstks"></small><span class="shdir" id="sstkd" hidden></span></div>
-        <div class="sbtns"><button class="pill2" id="sstkb" type="button" onclick="stkPickSource(true)">选择文件夹</button></div>
-      </div>
-      <div class="srow" id="sdesk" hidden>
-        <div class="si"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg></div>
-        <div class="stx"><b>Windows 桌面版</b><small id="sdesks">一键截图、不用每次选屏幕，开机就能收消息</small></div>
-        <a class="pill2" id="sdeskb" href="#" download>下载</a>
-      </div>
-      <div class="ios" id="ioshelp" hidden><ol><li>点浏览器的 <b>分享</b> 按钮 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M8 7l4-4 4 4"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg></li><li>往下滑，选择 <b>添加到主屏幕</b></li><li>回到主屏幕，点 Hush 图标打开</li></ol></div>
-      <button class="srow mrow" id="sgrp" type="button" hidden onclick="closeSettings();openGroupSettings()"><div class="si"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/></svg></div><div class="stx"><b>群聊设置</b><small>群聊音乐、切歌、点歌数量</small></div><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg></button>
-      <button class="srow out" type="button" onclick="closeSettings();logout()">退出登录</button>
-      <div class="ver">Hush v__APP_VERSION__<br><small style="opacity:.7">字体：Space Grotesk（OFL）</small></div>
     </div>
   </div>
 </div>
@@ -2578,7 +2788,7 @@ async function vaultCheck() {
 }
 function vaultNew() { if ($('#vd').classList.contains('open')) loadVault(false); else vaultDot(true); }
 function openDrawer(id) { closeDrawers(); $('#scrim').hidden = false; $(id).classList.add('open'); }
-function closeDrawers() { if (typeof MS !== 'undefined' && MS.preview) stopPreview(); $('#scrim').hidden = true; document.querySelectorAll('.drawer.open').forEach(d => d.classList.remove('open')); $('aside').classList.remove('open'); }
+function closeDrawers() { if (typeof MS !== 'undefined' && MS.preview) stopPreview(); $('#scrim').hidden = true; document.querySelectorAll('.drawer.open').forEach(d => d.classList.remove('open')); $('aside').classList.remove('open'); try { lyRender(); } catch (_) {} }
 function openNav() { openDrawer('aside'); }   // 手机：左侧栏从左边滑出
 function openVault(focusId) {
   openDrawer('#vd'); vaultDot(false);
@@ -3499,7 +3709,13 @@ async function toggleAuto() {
   autoUi(a || undefined); if (a) toast(a.on ? '已开启开机自动启动' : '已关闭开机自动启动');
 }
 if (DESK && typeof DESK.onAutoStartChanged === 'function') DESK.onAutoStartChanged(v => { if (!$('#setv').hidden) autoUi(v); });   // 托盘菜单里改了，设置页同步
-function openSettings() { closeDrawers(); notifUi(); autoUi(); instUi(); shotUi(); stkUi(); deskUi(); $('#sgrp').hidden = !(me && me.admin); $('#setv').hidden = false; }
+function openSettings(tab) {
+  closeDrawers(); notifUi(); autoUi(); instUi(); shotUi(); stkUi(); deskUi(); $('#sgrp').hidden = !(me && me.admin);
+  if (window.LQGlass && !$('#slook .lqg')) LQGlass.mount($('#slook'));   // 液态玻璃外观设置放进“外观”
+  $('#stabtool').hidden = $('#sshot').hidden && $('#sstk').hidden;
+  if (me) { avatar($('#saccav'), people[me.name] || me, true); $('#saccn').textContent = me.nick || me.name; $('#saccs').textContent = '@' + me.name + (me.admin ? ' · 管理员' : '') + ' · 点这里改头像、昵称和签名'; }
+  setTab(typeof tab === 'string' ? tab : 'gen'); $('#setv').hidden = false;
+}
 function closeSettings() { $('#setv').hidden = true; $('#ioshelp').hidden = true; }
 // ----- 系统通知：页面在后台 / 没有焦点时才弹；@我 的单独弹并且一定响，普通消息合并成一条 -----
 const NOTIF_OK = 'Notification' in window;
@@ -3728,7 +3944,7 @@ function onMusic(st) {
   MS.st = st;
   if ((st.current && st.current.qid) !== prev) { MS.errs = 0; }
   if (MS.drag != null && !document.querySelector('#mskb.drag')) MS.drag = null;   // 拖完了，服务器的新位置到了
-  mApply(); renderNP();
+  mApply(); renderNP(); lyLoad(); lyRender();
   if ($('#md').classList.contains('open')) { if (document.querySelector('#mskb.drag')) MS.dirty = true; else renderMusic(); }
   if (!$('#gsv').hidden) gsUi();
 }
@@ -3764,7 +3980,7 @@ function mPlay() {
 }
 function mTick() {
   const c = mCur(); clearTimeout(MS.timer);
-  mProgress();
+  mProgress(); lyKick();
   if (!c || mMuted() || MS.preview || MS.unsup === c.qid) return;
   if (MS.src !== c.qid) { if (!MS.loading) mApply(); return; }
   if (mus.readyState < 1) return;
@@ -3844,7 +4060,8 @@ function openMusic(tab) {
 }
 function mTab(t) {
   MS.tab = t; $('#mtabs').querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.t === t));
-  $('#mpl').hidden = t !== 'pl'; $('#mlib').hidden = t !== 'lib'; $('#mdt').textContent = t === 'lib' ? '我的音乐' : '群聊歌单';
+  if (t === 'ly' && !LYC.view) t = MS.tab = 'pl';
+  $('#mpl').hidden = t !== 'pl'; $('#mlib').hidden = t !== 'lib'; $('#mly').hidden = t !== 'ly'; $('#mdt').textContent = t === 'lib' ? '我的音乐' : t === 'ly' ? '歌词' : '群聊歌单';
   if (t === 'lib') loadLib(); else if (mpv.src && MS.preview) stopPreview();
   renderMusic();
 }
@@ -3857,7 +4074,7 @@ let libLevel = 0;
 function emusText() { if (MS.lib) $('#emus').textContent = '已用 ' + MS.lib.used + '/' + MS.lib.quota + ' 首' + (MS.lib.next ? ' · Lv.' + MS.lib.next + ' 解锁第 ' + (MS.lib.quota + 1) + ' 首' : ''); }
 function renderMusic() {
   $('#mgs').hidden = !(me && me.admin);
-  if (MS.tab === 'pl') renderPl(); else renderLib();
+  if (MS.tab === 'pl') renderPl(); else if (MS.tab === 'ly') lyRender(); else renderLib();
 }
 function renderPl() {
   const box = $('#mpl'), st = MS.st;
@@ -3896,6 +4113,7 @@ function renderPl() {
     ctl.append(mb, vol);
     const canSkip = me && (me.admin || st.skip || c.by.name === me.name);
     const sk = mBtn('ib3', 'skip', canSkip ? '切到下一首' : '管理员没有开放切歌', () => socket.emit('music:skip', c.qid, r => r && r.error && toast(r.error))); sk.id = 'mskip'; sk.disabled = !canSkip;
+    if (LYC.view) { const lb = mBtn('ib3 lyb2', 'lyr', '看歌词', () => mTab('ly')); lb.id = 'mlyb'; ctl.append(lb); }
     ctl.append(sk);
     card.append(top, pg, ctl); box.append(card);
     mProgress();
@@ -4015,12 +4233,14 @@ function renderLib() {
     const pl = mBtn('ib3', MS.preview === s.id ? 'pause' : 'play', MS.preview === s.id ? '停止试听' : '试听', () => MS.preview === s.id ? stopPreview() : startPreview(s));
     pl.dataset.pv = s.id;
     const tx = el('div', 'tx'), t1 = el('div', 't1', s.title); t1.title = s.title;
-    tx.append(t1, el('div', 't2', mmss(s.dur) + ' · ' + s.ext.toUpperCase() + ' · ' + human(s.size) + (s.queued ? ' · 在歌单里' : '')));
+    const hasLy = s.lyr && s.lyr !== 'none';
+    tx.append(t1, el('div', 't2', mmss(s.dur) + ' · ' + s.ext.toUpperCase() + ' · ' + human(s.size) + (s.queued ? ' · 在歌单里' : '') + (hasLy ? ' · 有歌词' : '')));
     const qa = el('div', 'qa');
-    qa.append(mBtn('', 'edit', '改歌名', () => renameSong(s, t1)), mBtn('', 'del', '删除', () => delSong(s)));
+    const lb = mBtn(hasLy ? 'on' : '', 'lyr', hasLy ? '歌词（' + (LY_SRC[s.lyr] || s.lyr) + '）' : '歌词', b => lyMenu(b, s)); lb.dataset.ly = s.id;
+    qa.append(lb, mBtn('', 'edit', '改歌名', () => renameSong(s, t1)), mBtn('', 'del', '删除', () => delSong(s)));
     r.append(pl, tx, qa); box.append(r);
   });
-  box.append(el('div', 'mnote', '支持 mp3 / flac / wav / m4a / aac / ogg / opus，单首最大 ' + L.maxMb + 'MB\n歌曲存在服务器上，只有你能点自己的歌'));
+  box.append(el('div', 'mnote', '支持 mp3 / flac / wav / m4a / aac / ogg / opus，单首最大 ' + L.maxMb + 'MB\n可以和同名的 .lrc 歌词文件一起选中上传\n歌曲存在服务器上，只有你能点自己的歌'));
 }
 function renameSong(s, t1) {
   const i = el('input'); i.value = s.title; i.maxLength = 60; t1.textContent = ''; t1.append(i); i.focus(); i.select();
@@ -4089,15 +4309,28 @@ async function musicUpload(file) {
   x.setRequestHeader('X-Title', encodeURIComponent(file.name.replace(/\.[^.]+$/, '')));
   x.setRequestHeader('X-Duration', String(dur));
   x.upload.onprogress = e => { if (e.lengthComputable) { const p = Math.round(e.loaded / e.total * 100); bi.style.width = p + '%'; pct.textContent = p + '%'; } };
-  x.onload = () => {
-    if (x.status === 200) { row.remove(); MS.upRow = null; toast('已上传，可以去歌单里点歌了'); return loadLib(); }
-    let m = '上传失败'; try { m = JSON.parse(x.responseText).error || m; } catch (_) { if (x.status === 413) m = '文件太大，超过了隧道或服务器的限制'; }
-    fail(m);
-  };
-  x.onerror = () => fail('网络错误，上传失败');
-  x.send(file);
+  return new Promise(res => {
+    x.onload = () => {
+      if (x.status === 200) { row.remove(); MS.upRow = null; toast('已上传，可以去歌单里点歌了'); loadLib(); let j = null; try { j = JSON.parse(x.responseText); } catch (_) {} return res(j); }
+      let m = '上传失败'; try { m = JSON.parse(x.responseText).error || m; } catch (_) { if (x.status === 413) m = '文件太大，超过了隧道或服务器的限制'; }
+      fail(m); res(null);
+    };
+    x.onerror = () => { fail('网络错误，上传失败'); res(null); };
+    x.send(file);
+  });
 }
-$('#mff').onchange = e => { musicUpload(e.target.files[0]); e.target.value = ''; };
+// v0.19：可以一次选多首；同名的 .lrc 会自动配给那首歌
+$('#mff').onchange = async e => {
+  const all = [...e.target.files]; e.target.value = '';
+  const isLrc = f => /\.lrc$/i.test(f.name), base = n => n.replace(/\.[^.]+$/, '').trim().toLowerCase();
+  const lrc = all.filter(isLrc), au = all.filter(f => !isLrc(f)), used = new Set();
+  for (const f of au) {
+    const r = await musicUpload(f), l = lrc.find(x => !used.has(x) && base(x.name) === base(f.name));
+    if (r && r.id && l) { used.add(l); if (await lyUpload(r.id, l, true)) toast('已上传《' + r.title + '》和它的歌词'); }
+  }
+  const left = lrc.filter(x => !used.has(x));
+  if (left.length) toast(au.length ? '「' + left[0].name + '」没有同名的歌，可以点歌曲右边的「歌词」按钮单独上传' : '给已经上传的歌加歌词：点歌曲右边的「歌词」按钮');
+};
 // ----- 群聊设置（管理员） -----
 function openGroupSettings() { if (!me || !me.admin) return; gsUi(); $('#gsv').hidden = false; }
 function gsUi() {
@@ -4114,12 +4347,301 @@ async function gsSet(patch) {
 $('#gper').onclick = e => { const b = e.target.closest('button'); if (b && !b.disabled) gsSet({ per: +b.dataset.n }); };
 function musicInit() {
   socket.on('music', onMusic);
+  socket.on('lyrics', lySock);
   socket.on('music:skipped', m => { if (m && m.title) toast('《' + m.title + '》放不了，已跳过'); });
   socket.on('connect', () => mPing());
   if (socket.connected) mPing();
   if (!MS.pingT) MS.pingT = setInterval(() => socket && socket.connected && mPing(3), 60000);
 }
-function musicStop() { stopPreview(true); mus.pause(); mus.removeAttribute('src'); mus.load(); MS.st = null; MS.src = null; MS.lib = null; MS.blocked = false; renderNP(); }
+function musicStop() { stopPreview(true); mus.pause(); mus.removeAttribute('src'); mus.load(); MS.st = null; MS.src = null; MS.lib = null; MS.blocked = false; renderNP(); lyLoad(); }
+// ================= v0.19：歌词（跟着大家的进度滚动的歌词页 + 悬浮歌词）、音乐设置 =================
+// 歌词来源（服务器决定）：自己上传的 .lrc > 歌曲文件里内嵌的 > 网易云（网易云的歌）> LRCLIB；都没有就显示“暂无歌词”。
+// 时间用的是群聊的播放位置 mPos()，和大家一起暂停、拖进度；静音了也照样能看。
+const LYC_KEY = 'hush_lyrics_v1';
+const LYC_DEF = { float: true, view: true, tr: true, pos: 'cap', fx: 0.5, fy: 0.3, size: 17, op: 92, font: 'wk' };
+const LY_FONTS = [
+  { k: 'wk', name: '霞鹜文楷', fam: '"LXGW WenKai"', note: '温润的楷体，默认', by: 'LXGW' },
+  { k: 'zq', name: '朱雀仿宋', fam: '"Zhuque Fangsong"', note: '清秀的仿宋，像书页', by: 'JadeFoci' },
+  { k: 'smiley', name: '得意黑', fam: '"Smiley Sans"', note: '俏皮的窄斜体（简体字）', by: 'atelierAnchor' },
+  { k: 'ui', name: '跟随界面', fam: '', note: '和聊天文字一样', by: '' }
+];
+const LY_POS = { cap: '靠近音乐胶囊', top: '顶部', mid: '中间', bot: '底部', free: '自定义（拖动过）' };
+const LY_SRC = { tag: '内嵌', lrc: '我传的 LRC', lrclib: 'LRCLIB', netease: '网易云' };
+const LY_LEAD = 0.12;   // 提前一点点亮下一句，看起来更跟拍
+let LYC = (() => { try { const o = JSON.parse(localStorage.getItem(LYC_KEY) || 'null'); return { ...LYC_DEF, ...(o && typeof o === 'object' ? o : {}) }; } catch (_) { return { ...LYC_DEF }; } })();
+function lycSave() { try { localStorage.setItem(LYC_KEY, JSON.stringify(LYC)); } catch (_) {} }
+const LYS = { k: null, d: null, loading: false, idx: -2, follow: true, raf: 0, fk: null, vk: null, edit: false, jump: true };
+MICON.lyr = '<path d="M4 6h9M4 10h9M4 14h6"/><path d="M17 17.5V6.5l4-1.2"/><circle cx="15" cy="17.5" r="2.2"/>';
+MICON.more = '<circle cx="5.5" cy="12" r="1.3" fill="currentColor"/><circle cx="12" cy="12" r="1.3" fill="currentColor"/><circle cx="18.5" cy="12" r="1.3" fill="currentColor"/>';
+MICON.back = '<path d="M12 5v14M6 13l6 6 6-6"/>';
+function lyFontCss() {
+  if ($('#lyfcss')) return;
+  const l = document.createElement('link'); l.id = 'lyfcss'; l.rel = 'stylesheet'; l.href = '/fonts/lyric/lyric-fonts.css?v=__APP_VERSION__'; document.head.append(l);
+}
+function lycApply() {
+  const f = LY_FONTS.find(x => x.k === LYC.font) || LY_FONTS[0], r = document.documentElement.style;
+  r.setProperty('--ly-font', f.fam ? f.fam + ',var(--sans)' : 'var(--sans)');
+  r.setProperty('--lyf-size', Math.min(32, Math.max(12, +LYC.size || 17)) + 'px');
+  r.setProperty('--lyf-op', (Math.min(100, Math.max(35, +LYC.op || 92)) / 100).toFixed(2));
+  const tb = $('#mtabs [data-t="ly"]'); if (tb) tb.hidden = !LYC.view;
+  if (!LYC.view && MS.tab === 'ly' && $('#md').classList.contains('open')) mTab('pl');
+  LYS.vk = null; LYS.fk = null; lyRender();
+}
+// ----- 取歌词 -----
+const lyUrl = c => c.src === 'netease' ? '/api/lyrics/ne/' + c.nid : '/api/lyrics/m/' + encodeURIComponent(c.id);
+async function lyLoad(force) {
+  const c = mCur(), k = c ? c.id : null;
+  if (!force && k === LYS.k) return;
+  clearTimeout(LYS.rt);
+  if (k !== LYS.k) { LYS.d = null; LYS.idx = -2; LYS.follow = true; LYS.jump = true; }
+  LYS.k = k;
+  if (!k) { LYS.loading = false; return lyRender(); }
+  LYS.loading = !LYS.d; lyRender();
+  const r = await fetch(lyUrl(c), { headers: hdr() }).then(r => r.ok ? r.json() : null).catch(() => null);
+  if (LYS.k !== k) return;
+  LYS.loading = false; LYS.d = r || { kind: 'none', err: true }; LYS.idx = -2;
+  if (!r || r.retry) LYS.rt = setTimeout(() => { if (LYS.k === k) lyLoad(true); }, 90e3);   // 网络问题：一会儿再试
+  lyRender();
+}
+function lyIdx(lines, t) { let lo = 0, hi = lines.length - 1, a = -1; while (lo <= hi) { const m = (lo + hi) >> 1; if (lines[m].t <= t) { a = m; lo = m + 1; } else hi = m - 1; } return a; }
+const lySync = () => !!(LYS.d && LYS.d.kind === 'sync' && LYS.d.lines && LYS.d.lines.length);
+const lyViewOpen = () => MS.tab === 'ly' && $('#md').classList.contains('open') && LYC.view;
+function lyNeed() { return lySync() && !!mCur() && (!$('#lyf').hidden || lyViewOpen()); }
+function lyLoop() {
+  LYS.raf = 0; if (!lyNeed()) return;
+  lyStep();
+  const c = mCur(); if (c && (!c.paused || MS.drag != null)) LYS.raf = requestAnimationFrame(lyLoop);
+}
+function lyKick() { if (LYS.raf) return; if (lyNeed()) LYS.raf = requestAnimationFrame(lyLoop); }
+function lyStep() {
+  const c = mCur(); if (!c || !lySync()) return;
+  const pos = (MS.drag != null ? MS.drag * c.dur : mPos(c)) + LY_LEAD;
+  const i = lyIdx(LYS.d.lines, pos);
+  if (i !== LYS.idx) { LYS.idx = i; lyMark(i); lyfUpdate(); }
+}
+// ----- 歌词页 -----
+function lyRender() {
+  lyfUpdate();
+  const box = $('#mly');
+  if (!lyViewOpen()) { LYS.vk = null; return lyKick(); }
+  const c = mCur(), d = LYS.d;
+  const sig = [c ? c.qid + c.title + (c.artist || '') : '', d ? [d.kind, d.src, d.lines ? d.lines.length : 0, (d.text || '').length, d.mine, d.canEdit, d.err].join(',') : LYS.loading ? 'L' : '-', LYC.tr, mCan(c)].join('|');
+  if (sig === LYS.vk) return lyKick();
+  LYS.vk = sig; box.innerHTML = ''; LYS.jump = true; LYS.idx = -2;
+  if (!c) { const e = el('div', 'lyst'); e.append(el('b', '', '暂无播放'), el('span', '', '歌单里放歌的时候，歌词会在这里跟着唱')); box.append(e); return; }
+  if (d || LYS.loading) lyFontCss();
+  // 头部：封面、歌名、歌手、歌词来源、更多
+  const h = el('div', 'lyh'), tx = el('div', 'tx'), t2 = el('div', 't2');
+  const t1 = el('div', 't1', c.title); t1.title = c.title;
+  t2.append(el('span', '', (c.artist ? c.artist + ' · ' : '') + c.by.nick + ' 点的歌'));
+  if (d && d.src && d.kind !== 'none') { const s = el('span', 'lysrc' + (d.src === 'lrc' ? ' u' : ''), LY_SRC[d.src] || d.src); s.title = '歌词来源：' + (LY_SRC[d.src] || d.src); t2.append(s); }
+  tx.append(t1, t2); h.append(artEl(c.title, !c.paused, c.cover), tx);
+  if (d && d.canEdit) h.append(mBtn('ib3', 'more', '歌词选项', b => lyMenu(b, { id: c.id, title: c.title, lyr: d.src })));
+  box.append(h);
+  const body = el('div', 'lyb'); box.append(body);
+  if (!d) { const e = el('div', 'lyst'); e.append(el('span', 'dots', ''), el('span', '', '正在找歌词…')); e.firstChild.innerHTML = '<i></i><i></i><i></i>'; body.append(e); return; }
+  if (d.kind === 'none') {
+    const e = el('div', 'lyst'); e.append(el('b', '', '暂无歌词'), el('span', '', d.err ? '歌词没加载出来，过一会儿会自动再试' : '没找到这首歌的歌词，可能是纯音乐'));
+    if (d.canEdit) { const b = el('button', 'pill2', '上传 .lrc 歌词'); b.type = 'button'; b.onclick = () => lyPick(c.id); e.append(b); }
+    body.append(e); return;
+  }
+  if (d.kind === 'plain') {
+    body.append(el('div', 'lynote', '这份歌词没有时间轴，不会跟着滚动' + (d.canEdit ? '。上传带时间的 .lrc 就能同步了' : '')));
+    body.append(el('div', 'lyplain', d.text)); return;
+  }
+  const sc = el('div', 'lys'); sc.id = 'lys'; sc.tabIndex = 0; sc.setAttribute('aria-label', '歌词');
+  const can = mCan(c);
+  d.lines.forEach((l, i) => {
+    const r = el('div', 'lyl' + (l.x ? '' : ' gap') + (can ? ' can' : '')); r.dataset.i = i;
+    r.append(l.x || '♪ ♪ ♪');
+    if (LYC.tr && l.tr) r.append(el('small', '', l.tr));
+    if (can) r.title = '从这一句开始放（大家一起）';
+    sc.append(r);
+  });
+  sc.onclick = e => { const r = e.target.closest('.lyl'); if (!r || !mCan(mCur())) return; const l = LYS.d.lines[+r.dataset.i]; if (l) { mCtl('seek', Math.max(0, l.t - 0.05)); lyFollow(); } };
+  const man = () => lyManual();
+  sc.addEventListener('wheel', man, { passive: true }); sc.addEventListener('touchmove', man, { passive: true });
+  sc.addEventListener('keydown', e => { if (/^(Arrow|Page|Home|End)/.test(e.key)) man(); });
+  sc.addEventListener('pointerdown', e => { if (e.target === sc && e.offsetX > sc.clientWidth) man(); });   // 拖滚动条
+  const back = el('button', 'lyback'); back.type = 'button'; back.hidden = true; back.id = 'lyback'; back.innerHTML = svg('back', 2); back.append('回到当前'); back.onclick = () => lyFollow();
+  body.append(sc, back);
+  LYS.follow = true; lyStep(); if (LYS.idx === -2) lyMark(-1);
+  lyKick();
+}
+function lyMark(i) {
+  const sc = $('#lys'); if (!sc || !lyViewOpen()) return;
+  sc.querySelectorAll('.lyl.on,.lyl.nb').forEach(x => x.classList.remove('on', 'nb'));
+  const r = sc.children[i];
+  if (r) { r.classList.add('on'); sc.children[i - 1]?.classList.add('nb'); sc.children[i + 1]?.classList.add('nb'); }
+  if (LYS.follow) lyScroll(r || sc.children[0]);
+}
+function lyScroll(r) {
+  const sc = $('#lys'); if (!sc || !r) return;
+  const top = r.offsetTop - sc.clientHeight / 2 + r.offsetHeight / 2;
+  const far = LYS.jump || Math.abs(sc.scrollTop - top) > sc.clientHeight * 1.5 || matchMedia('(prefers-reduced-motion: reduce)').matches;
+  sc.scrollTo({ top, behavior: far ? 'instant' : 'smooth' }); LYS.jump = false;
+}
+function lyManual() { LYS.follow = false; const b = $('#lyback'); if (b) b.hidden = false; clearTimeout(LYS.fT); LYS.fT = setTimeout(lyFollow, 6000); }
+function lyFollow() { clearTimeout(LYS.fT); LYS.follow = true; const b = $('#lyback'); if (b) b.hidden = true; const sc = $('#lys'); if (sc) lyScroll(sc.children[Math.max(0, LYS.idx)]); }
+// ----- 悬浮歌词 -----
+function lyfUpdate() {
+  const f = $('#lyf'); if (!f) return;
+  const c = mCur(), d = LYS.d, sync = lySync();
+  const show = !!me && !$('#app').hidden && (LYS.edit || (LYC.float && c && sync && !mMuted() && MS.unsup !== c.qid && !lyViewOpen()));
+  if (!show) { if (!f.hidden) { f.hidden = true; f.classList.remove('drag'); } return; }
+  lyFontCss();
+  const was = f.hidden; f.hidden = false;
+  let x = '', tr = '', gap = false;
+  if (!c || !sync) { x = '拖动我，放到你想要的位置'; tr = '这里会显示正在唱的那句歌词'; }
+  else { const l = d.lines[LYS.idx]; if (l && l.x) { x = l.x; tr = (LYC.tr && l.tr) || ''; } else { gap = true; x = '♪ ' + c.title; } }
+  f.classList.toggle('ps', !!(c && c.paused)); f.classList.toggle('edit', LYS.edit); f.classList.toggle('gap', gap);
+  $('#lyfe').hidden = !LYS.edit;
+  const key = x + '\u0001' + tr + (gap ? 'g' : '') + LYS.edit;
+  if (key !== LYS.fk) {
+    LYS.fk = key; $('#lyf1').textContent = x; const t2 = $('#lyf2'); t2.textContent = tr; t2.hidden = !tr;
+    f.title = LYS.edit ? '' : '点一下打开歌词页 · 拖动可以换位置';
+    if (!was) { f.classList.remove('in'); void f.offsetWidth; f.classList.add('in'); }
+    lyfPlace();
+  } else if (was) lyfPlace();
+  if (was) lyKick();
+}
+function lyfAnchor() {
+  const sec = $('#app > section') || document.body, sr = sec.getBoundingClientRect();
+  const top = ($('#msgs') || sec).getBoundingClientRect().top, bot = ($('#f') || sec).getBoundingClientRect().top;
+  const cx = sr.left + sr.width / 2;
+  if (LYC.pos === 'cap') { const n = $('#np').getBoundingClientRect(); return { cx: n.width ? n.left + n.width / 2 : cx, y: top + 10, va: 't', sr }; }
+  if (LYC.pos === 'top') return { cx, y: top + 12, va: 't', sr };
+  if (LYC.pos === 'mid') return { cx, y: (top + bot) / 2, va: 'm', sr };
+  if (LYC.pos === 'bot') return { cx, y: bot - 14, va: 'b', sr };
+  return { cx: (+LYC.fx || 0.5) * innerWidth, y: (+LYC.fy || 0.3) * innerHeight, va: 'm', sr: { left: 0, right: innerWidth } };
+}
+function lyfClamp(x, y, w, h, sr) {
+  const m = 8, L = Math.max(m, (sr ? sr.left : 0) + m), R = Math.min(innerWidth, sr ? sr.right : innerWidth) - m;
+  return [Math.round(Math.max(L, Math.min(R - w, x))), Math.round(Math.max(m, Math.min(innerHeight - h - m, y)))];
+}
+function lyfPlace() {
+  const f = $('#lyf'); if (!f || f.hidden || f.classList.contains('drag')) return;
+  const a = lyfAnchor(), w = f.offsetWidth, h = f.offsetHeight;
+  const [x, y] = lyfClamp(a.cx - w / 2, a.va === 't' ? a.y : a.va === 'b' ? a.y - h : a.y - h / 2, w, h, a.sr);
+  f.style.transform = 'translate(' + x + 'px,' + y + 'px)'; f.dataset.x = x; f.dataset.y = y;
+}
+addEventListener('resize', () => lyfPlace());
+function lyfDrag() {
+  const f = $('#lyf'); let st = null;
+  f.addEventListener('pointerdown', e => {
+    if (e.button > 0 || e.target.closest('button')) return;
+    st = { id: e.pointerId, sx: e.clientX, sy: e.clientY, x: +f.dataset.x || 0, y: +f.dataset.y || 0, moved: false };
+    f.setPointerCapture(e.pointerId);
+  });
+  f.addEventListener('pointermove', e => {
+    if (!st || st.id !== e.pointerId) return;
+    const dx = e.clientX - st.sx, dy = e.clientY - st.sy;
+    if (!st.moved && Math.hypot(dx, dy) < 5) return;
+    st.moved = true; f.classList.add('drag');
+    const [x, y] = lyfClamp(st.x + dx, st.y + dy, f.offsetWidth, f.offsetHeight);
+    f.style.transform = 'translate(' + x + 'px,' + y + 'px)'; f.dataset.x = x; f.dataset.y = y;
+  });
+  const end = (e, ok) => {
+    if (!st || st.id !== e.pointerId) return;
+    const moved = st.moved; st = null; f.classList.remove('drag');
+    if (moved && ok) {   // 记成相对窗口的比例，窗口变大变小都还在差不多的位置
+      LYC.pos = 'free'; LYC.fx = +((+f.dataset.x + f.offsetWidth / 2) / innerWidth).toFixed(4); LYC.fy = +((+f.dataset.y + f.offsetHeight / 2) / innerHeight).toFixed(4);
+      lycSave(); lycUi();
+    } else if (!moved && ok && !LYS.edit) openMusic('ly');
+    lyfPlace();
+  };
+  f.addEventListener('pointerup', e => end(e, true)); f.addEventListener('pointercancel', e => end(e, false));
+  $('#lyfx2').onclick = e => { e.stopPropagation(); LYC.float = false; lycSave(); lyfUpdate(); lycUi(); toast('悬浮歌词已关闭，可以在「设置 › 音乐」里重新打开'); };
+  $('#lyfok').onclick = e => { e.stopPropagation(); lyEdit(false); };
+  $('#lyfrs').onclick = e => { e.stopPropagation(); LYC.pos = LYC_DEF.pos; lycSave(); lycUi(); lyfPlace(); };
+}
+function lyEdit(on) {
+  LYS.edit = !!on;
+  if (on && !LYC.float) { LYC.float = true; lycSave(); }
+  LYS.fk = null; lyfUpdate();
+  if (!on) { lycUi(); toast(LYC.pos === 'free' ? '位置已保存' : '位置：' + LY_POS[LYC.pos]); }
+}
+document.addEventListener('keydown', e => { if (LYS.edit && e.key === 'Escape') { e.preventDefault(); lyEdit(false); } });
+// ----- 上传 / 移除 .lrc -----
+let lyPickId = null;
+function lyPick(id) { lyPickId = id; $('#mlf').click(); }
+$('#mlf').onchange = e => { const f = e.target.files[0]; e.target.value = ''; if (f && lyPickId) lyUpload(lyPickId, f); };
+async function lyUpload(id, file, quiet) {
+  if (!/\.(lrc|txt)$/i.test(file.name)) { toast('请选择 .lrc 或 .txt 歌词文件'); return false; }
+  if (file.size > 256 * 1024) { toast('歌词文件太大（最大 256KB）'); return false; }
+  const r = await fetch('/api/lyrics/m/' + encodeURIComponent(id), { method: 'PUT', headers: { ...hdr(), 'Content-Type': 'application/octet-stream' }, body: file }).catch(() => null);
+  const j = r ? await r.json().catch(() => ({})) : {};
+  if (!r || !r.ok) { toast(j.error || '歌词上传失败'); return false; }
+  if (!quiet) toast(j.kind === 'plain' ? '歌词已保存（这份没有时间轴，会显示成静态歌词）' : '歌词已保存');
+  if (LYS.k === id) { LYS.d = j; LYS.idx = -2; LYS.vk = null; lyRender(); }
+  if (MS.lib) loadLib();
+  return true;
+}
+async function lyRemove(id) {
+  const r = await fetch('/api/lyrics/m/' + encodeURIComponent(id), { method: 'DELETE', headers: hdr() }).catch(() => null);
+  if (!r || !r.ok) return toast('移除失败');
+  toast('已移除你上传的歌词'); if (LYS.k === id) lyLoad(true); if (MS.lib) loadLib();
+}
+function lyMenu(btn, s) {
+  picMenuClose();
+  const box = el('div', 'pmenu'); box.setAttribute('role', 'menu');
+  const it = (ic, t, fn) => { const b = el('button'); b.type = 'button'; b.setAttribute('role', 'menuitem'); b.innerHTML = svg(ic); b.append(t); b.onclick = () => { picMenuClose(); fn(); }; box.append(b); return b; };
+  const first = it('up', s.lyr === 'lrc' ? '换一份 .lrc 歌词' : '上传 .lrc 歌词', () => lyPick(s.id));
+  if (s.lyr === 'lrc') it('del', '移除我上传的歌词', () => lyRemove(s.id));
+  const n = el('div', 'mnote', s.lyr && s.lyr !== 'none' ? '现在的歌词来自：' + (LY_SRC[s.lyr] || s.lyr) : '现在还没有歌词');
+  n.style.cssText = 'padding:6px 12px 4px;text-align:left'; box.append(n);
+  document.body.append(box);
+  const a = btn.getBoundingClientRect(), r = box.getBoundingClientRect();
+  box.style.left = Math.max(8, Math.min(a.right - r.width, innerWidth - r.width - 8)) + 'px';
+  box.style.top = (a.bottom + r.height + 8 > innerHeight ? Math.max(8, a.top - r.height - 6) : a.bottom + 6) + 'px';
+  PMENU = box; first.focus({ preventScroll: true });
+}
+// ----- 设置 › 音乐 -----
+function setTab(p) {
+  $('#stabs').querySelectorAll('button').forEach(b => { const on = b.dataset.p === p; b.classList.toggle('on', on); b.setAttribute('aria-selected', String(on)); });
+  document.querySelectorAll('#spanes .spane').forEach(s => s.hidden = s.dataset.p !== p);
+  $('#spanes').scrollTop = 0;
+  if (p === 'mus') { lyFontCss(); lycUi(); }
+}
+$('#stabs').onclick = e => { const b = e.target.closest('button'); if (b) setTab(b.dataset.p); };
+function lycUi() {
+  if (!$('#tlyf')) return;
+  [['#tlyf', LYC.float], ['#tlyv', LYC.view], ['#tlyt', LYC.tr]].forEach(([s, on]) => { $(s).classList.toggle('on', !!on); $(s).setAttribute('aria-checked', String(!!on)); });
+  $('#lypos').querySelectorAll('button').forEach(b => { const on = b.dataset.v === LYC.pos; b.classList.toggle('on', on); b.setAttribute('aria-checked', String(on)); });
+  $('#lyposn').textContent = '现在：' + LY_POS[LYC.pos];
+  const sz = $('#lysz'), op = $('#lyop');
+  sz.value = LYC.size; op.value = LYC.op; $('#lyszv').textContent = LYC.size + 'px'; $('#lyopv').textContent = LYC.op + '%';
+  sz.style.setProperty('--p', ((LYC.size - 12) / 20 * 100) + '%'); op.style.setProperty('--p', ((LYC.op - 35) / 65 * 100) + '%');
+  // 迷你预览
+  const P = { cap: [76, 33], top: [50, 33], mid: [50, 59], bot: [50, 84] }[LYC.pos] || [LYC.fx * 100, LYC.fy * 100];
+  const m = $('#mkly'); m.style.left = Math.min(84, Math.max(16, P[0])) + '%'; m.style.top = Math.min(90, Math.max(18, P[1])) + '%';
+  m.style.fontSize = Math.round(LYC.size * 0.6) + 'px'; m.style.opacity = LYC.op / 100;
+  const box = $('#lyfonts');
+  if (!box.children.length) LY_FONTS.forEach(f => {
+    const c = el('div', 'lyfo'); c.dataset.k = f.k; c.tabIndex = 0; c.setAttribute('role', 'radio');
+    const pv = el('div', 'pv', '晚风吹过窗台'); pv.style.fontFamily = f.fam ? f.fam + ',var(--sans)' : 'var(--sans)';
+    c.append(pv, el('b', '', f.name), el('small', '', f.note + (f.by ? ' · OFL' : '')));
+    c.onclick = () => { LYC.font = f.k; lycSave(); lycApply(); lycUi(); };
+    c.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); c.click(); } };
+    box.append(c);
+  });
+  box.querySelectorAll('.lyfo').forEach(c => { const on = c.dataset.k === LYC.font; c.classList.toggle('on', on); c.setAttribute('aria-checked', String(on)); });
+}
+function lycSet(patch) { Object.assign(LYC, patch); lycSave(); lycApply(); lycUi(); }
+$('#tlyf').onclick = () => lycSet({ float: !LYC.float });
+$('#tlyv').onclick = () => lycSet({ view: !LYC.view });
+$('#tlyt').onclick = () => lycSet({ tr: !LYC.tr });
+$('#lypos').onclick = e => { const b = e.target.closest('button'); if (b) { lycSet({ pos: b.dataset.v }); lyfPlace(); } };
+$('#lysz').oninput = e => lycSet({ size: +e.target.value });
+$('#lyop').oninput = e => lycSet({ op: +e.target.value });
+$('#lyreset').onclick = () => { lycSet({ pos: LYC_DEF.pos, size: LYC_DEF.size, op: LYC_DEF.op }); toast('已恢复默认的位置、字号和透明度'); };
+$('#lydrag').onclick = () => { closeSettings(); lyEdit(true); };
+// ----- 搜索聊天记录：顶栏的放大镜去掉了，改成侧栏入口 + 快捷键 Ctrl+F -----
+document.addEventListener('keydown', e => {
+  if ((e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey && (e.key === 'f' || e.key === 'F') && me && !$('#app').hidden) { e.preventDefault(); closeSettings(); openSearch(); }
+});
+function lySock(m) { if (!m) return; if (m.k === LYS.k) lyLoad(true); if (MS.lib && MS.lib.items.some(s => s.id === m.k) && $('#md').classList.contains('open') && MS.tab === 'lib') loadLib(); }
+lyfDrag(); lycApply();
 start();
 </script>
 </body>
