@@ -60,7 +60,7 @@
     el.className = 'lqg';
     el.innerHTML =
       '<div class="lqg-head"><span class="lqg-k">APPEARANCE</span><b>液态玻璃</b><button type="button" class="lqg-reset">恢复默认</button></div>' +
-      '<div class="lqg-prev" aria-hidden="true"><div class="lqg-bub">透过玻璃看图纸</div><div class="lqg-bub lqg-own">这是我的消息</div></div>' +
+      '<div class="lqg-prev" aria-hidden="true"><div class="lqg-bub">透过玻璃看背景</div><div class="lqg-bub lqg-own">这是我的消息</div></div>' +
       '<div class="lqg-seg" role="radiogroup" aria-label="玻璃风格">' +
         '<button type="button" role="radio" data-m="clear"><i></i>通透</button>' +
         '<button type="button" role="radio" data-m="std"><i></i>标准</button>' +

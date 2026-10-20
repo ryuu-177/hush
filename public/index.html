@@ -6,6 +6,7 @@
 <title>Hush</title>
 <meta name="description" content="Hush 群聊">
 <meta name="application-name" content="Hush">
+<script>(function(){try{var t=localStorage.getItem("hush_theme_v1");if(t==="light"||t==="dark")document.documentElement.setAttribute("data-theme",t)}catch(e){}})()</script>
 <meta name="theme-color" content="#e9eae2" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#111413" media="(prefers-color-scheme: dark)">
 <meta name="color-scheme" content="light dark">
@@ -29,7 +30,8 @@
 @font-face{font-family:"Space Grotesk";font-style:normal;font-weight:700;font-display:swap;
   src:url("/fonts/font-003.woff2") format("woff2");}
 :root{--bg:#f5f6f8;--card:#fff;--fg:#15171c;--mut:#7b808a;--line:#e4e6eb;--ac:#0f766e;--on:#fff}
-@media(prefers-color-scheme:dark){:root{--bg:#0f1114;--card:#16181d;--fg:#e8eaee;--mut:#7d838e;--line:#23262d;--ac:#2dd4bf;--on:#06201d}}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1114;--card:#16181d;--fg:#e8eaee;--mut:#7d838e;--line:#23262d;--ac:#2dd4bf;--on:#06201d}}
+:root[data-theme="dark"]{--bg:#0f1114;--card:#16181d;--fg:#e8eaee;--mut:#7d838e;--line:#23262d;--ac:#2dd4bf;--on:#06201d}
 *{box-sizing:border-box}
 html,body{height:100%;margin:0}
 body{font:15px/1.55 system-ui,"PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--fg)}
@@ -446,7 +448,8 @@ aside{padding-top:calc(24px + env(safe-area-inset-top));padding-bottom:calc(20px
 
 /* ===== v0.9.1：界面打磨（只加样式，功能和数据不变） ===== */
 :root{color-scheme:light dark;--mut:#656b76;--sh1:0 1px 2px #10152008,0 3px 12px #1015200d;--sh2:0 20px 56px #10152024}
-@media(prefers-color-scheme:dark){:root{--mut:#8f95a1;--card:#171a20;--line:#262a33;--sh1:0 1px 2px #0005,0 3px 12px #0003;--sh2:0 20px 56px #000a}}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--mut:#8f95a1;--card:#171a20;--line:#262a33;--sh1:0 1px 2px #0005,0 3px 12px #0003;--sh2:0 20px 56px #000a}}
+:root[data-theme="dark"]{--mut:#8f95a1;--card:#171a20;--line:#262a33;--sh1:0 1px 2px #0005,0 3px 12px #0003;--sh2:0 20px 56px #000a}
 body{font:15px/1.6 system-ui,-apple-system,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;-webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums}
 ::selection{background:color-mix(in srgb,var(--ac) 26%,transparent)}
 *{scrollbar-width:thin;scrollbar-color:color-mix(in srgb,var(--mut) 40%,transparent) transparent}
@@ -1546,11 +1549,132 @@ input:not([type=range]):not([type=checkbox]):not([type=radio]):not([type=color])
   #f input#t:not([type=range]),#f input#t:focus,#f input#t:focus-visible{background:transparent!important;border:0!important;box-shadow:none!important;outline:none!important}
   #f:focus-within{border-color:color-mix(in srgb,var(--ef-acd) 75%,transparent)!important;box-shadow:inset 0 1px 0 var(--lq-spec),var(--fx-ring),0 18px 40px -18px rgba(0,0,0,.45)!important}
 }
+
+/* ===== v0.20：更大的音乐面板 + 我的网易云（实底面板、单层焦点圈） ===== */
+#md{container-type:inline-size;background:color-mix(in srgb,var(--ef-bg2) 97%,transparent)!important;-webkit-backdrop-filter:blur(30px) saturate(1.2);backdrop-filter:blur(30px) saturate(1.2)}
+@media(min-width:641px){#md.drawer{width:min(780px,calc(100vw - 20px))!important}}
+@media(min-width:641px) and (max-width:900px){#md.drawer{width:calc(100vw - 20px)!important}}
+@media(max-width:640px){#md.drawer{height:min(92dvh,860px)!important}}
+#md .dh h3{letter-spacing:.02em}
+#md .mtabs{display:flex;gap:4px;margin:0 16px 8px;padding:4px;border-radius:14px;background:var(--ef-bg1);border:1px solid var(--ef-bd);overflow-x:auto;scrollbar-width:none}
+#md .mtabs::-webkit-scrollbar{display:none}
+#md .mtabs button{flex:1 0 auto;min-width:0;padding:8px 12px;border-radius:10px;font-size:13px;font-weight:600;color:var(--ef-tx2,var(--mut));background:none;border:0;white-space:nowrap;position:relative}
+#md .mtabs button.on{background:var(--ef-bg2);color:var(--ef-tx1,var(--fg));box-shadow:0 1px 0 rgba(255,255,255,.06) inset,0 2px 8px -4px rgba(0,0,0,.35)}
+#md .mtabs button.on::after{content:"";position:absolute;left:30%;right:30%;bottom:3px;height:2px;border-radius:2px;background:var(--ef-ac)}
+#md .mtabs button:focus-visible{outline:none!important;box-shadow:var(--fx-ring)}
+#md .dl{padding-left:14px;padding-right:14px}
+#md .qi{border-radius:12px;padding:8px 10px}
+#md .qi:hover{background:var(--ef-bg1)}
+.mgo{display:inline-flex;align-items:center;gap:6px;margin:12px 10px 4px}.mgo svg{width:14px;height:14px}
+.vipb{display:inline-block;margin-left:6px;padding:0 5px;border-radius:5px;font:800 9.5px/15px ui-sans-serif,system-ui;letter-spacing:.06em;vertical-align:2px;color:#3b2a00;background:linear-gradient(135deg,#ffe08a,#f3b63f);box-shadow:0 0 0 1px rgba(160,110,0,.35) inset}
+.vipb.off{color:var(--mut);background:var(--ef-bg3,var(--bg));box-shadow:0 0 0 1px var(--ef-bd) inset}
+.qi.nov .t1,.qi.nov .art{opacity:.55}
+.nevt{font-size:11px;font-weight:700;color:#b07a12;padding:2px 7px;border-radius:999px;border:1px solid color-mix(in srgb,#e0a529 55%,transparent);white-space:nowrap}
+[data-theme=dark] .nevt,.dark .nevt{color:#f1c05a}
+.mvip{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;margin-top:12px;padding:10px 12px;border-radius:12px;background:color-mix(in srgb,#f3b63f 14%,var(--ef-bg1));border:1px solid color-mix(in srgb,#f3b63f 45%,transparent);font-size:12.5px;line-height:1.5}
+.mvip b{color:#a26c00}.mvip span{flex:1;min-width:180px;color:var(--ef-tx2,var(--mut))}
+.mvip.plain{background:var(--ef-bg1);border-color:var(--ef-bd)}.mvip.plain b{color:inherit}
+/* 头部：网易云账号 */
+.neacc{display:flex;align-items:center;gap:10px;margin:0 16px 10px;padding:9px 10px 9px 9px;border-radius:14px;background:var(--ef-bg1);border:1px solid var(--ef-bd);min-height:52px}
+.neacc.in{border-color:color-mix(in srgb,var(--ef-acd) 45%,var(--ef-bd))}
+.neav{width:34px;height:34px;border-radius:50%;flex:none;overflow:hidden;background:var(--ef-bg3,var(--bg));display:grid;place-items:center;font-size:15px;color:var(--mut);box-shadow:0 0 0 2px var(--ef-bg2),0 0 0 3px color-mix(in srgb,var(--ef-acd) 55%,transparent)}
+.neav img{width:100%;height:100%;object-fit:cover}
+.nenm{flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.35}
+.nenm b{font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.nenm small{font-size:11.5px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nelo svg{width:17px;height:17px}
+/* 扫码登录 */
+.neqr{display:grid;grid-template-columns:1fr 220px;gap:18px;margin:6px 4px;padding:18px;border-radius:18px;background:var(--ef-bg1);border:1px solid var(--ef-bd);position:relative;overflow:hidden}
+.neqr::before{content:"";position:absolute;inset:0;background-image:linear-gradient(var(--ef-grid,transparent) 1px,transparent 1px),linear-gradient(90deg,var(--ef-grid,transparent) 1px,transparent 1px);background-size:22px 22px;pointer-events:none}
+.neqr>*{position:relative}
+.eft{font:700 10px/1 ui-monospace,Consolas,monospace;letter-spacing:.18em;color:var(--ef-acd)}
+.neqr h4{margin:8px 0 6px;font-size:17px}.neqr p{margin:0 0 8px;font-size:13px;line-height:1.65;color:var(--ef-tx2,var(--mut))}
+.neqr ul{margin:6px 0 0;padding:0;list-style:none;font-size:12.5px;line-height:1.9}.neqr li::before{content:"";display:inline-block;width:6px;height:6px;margin-right:8px;vertical-align:1px;background:var(--ef-ac);clip-path:polygon(0 0,100% 50%,0 100%)}
+.neqi{display:flex;flex-direction:column;align-items:center;gap:8px}
+.neqim{width:200px;height:200px;border-radius:14px;background:#fff;display:grid;place-items:center;position:relative;box-shadow:0 0 0 1px var(--ef-bd),0 10px 30px -18px rgba(0,0,0,.5);overflow:hidden}
+.neqim img{width:188px;height:188px;image-rendering:pixelated}
+.neqim.exp img,.neqim.scan img{filter:blur(3px) opacity(.35)}
+.neqim>button,.neqim>span{position:absolute}.neqim>span{color:#555;font-size:13px}
+.neqm{margin:0;font-size:12.5px;text-align:center;color:var(--ef-tx2,var(--mut));min-height:18px}
+@container (max-width:560px){.neqr{grid-template-columns:1fr}.neqi{order:-1}}
+/* 歌单 + 歌曲 */
+.nel{display:grid;grid-template-columns:210px minmax(0,1fr);gap:12px;align-items:start}
+.nels{position:sticky;top:0;display:flex;flex-direction:column;gap:3px;padding:6px;border-radius:16px;background:var(--ef-bg1);border:1px solid var(--ef-bd);max-height:calc(100dvh - 260px);overflow:auto}
+.nelp{display:flex;align-items:center;gap:9px;padding:7px 8px;border-radius:11px;border:0;background:none;text-align:left;color:inherit;width:100%;min-width:0}
+.nelp:hover{background:var(--ef-bg2)}.nelp.on{background:var(--ef-bg2);box-shadow:inset 3px 0 0 var(--ef-ac)}
+.nelp:focus-visible{outline:none!important;box-shadow:var(--fx-ring)}
+.nelp .art{width:34px;height:34px;border-radius:9px;flex:none}.nelp .art.lk{background:linear-gradient(135deg,#ff5d6c,#d81e3b);color:#fff;display:grid;place-items:center}.nelp .art.lk svg{width:16px;height:16px}
+.nelp .tx{display:flex;flex-direction:column;min-width:0;line-height:1.3}.nelp b{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.nelp small{font-size:11px;color:var(--mut)}
+.nelm{min-width:0}
+.nelh{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px;padding:4px 4px 8px}.nelh>b{font-size:16px}.nelh>small{color:var(--mut);font-size:12px}
+.nelt{margin-left:auto;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.nedd{display:inline-flex;align-items:center;gap:6px;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:5px 12px!important;font-size:12px!important}.nedd svg{width:14px;height:14px;flex:none}
+.nelv{font-size:11.5px;color:var(--mut);display:inline-flex;align-items:center;gap:5px}.nelv::before{content:"";width:7px;height:7px;border-radius:50%;background:#e0a529}.nelv.ok::before{background:var(--ef-ac)}
+.neaf{margin:0 0 6px!important}
+.nesf input#neaq,.nesf input#neaq:focus,.nesf input#neaq:focus-visible,.nesf input#neaq:hover{background:transparent!important;border:0!important;border-radius:0!important;box-shadow:none!important;outline:none!important;backdrop-filter:none!important;padding:0!important;height:100%;flex:1;min-width:0;font-size:14px;color:var(--fg)}
+.nesf input#neaq::-webkit-search-cancel-button{display:none}
+.nesf>svg{width:15px;height:15px;flex:none;opacity:.7}
+.nerows{display:flex;flex-direction:column}
+.nesn{height:28px;text-align:center;font-size:12px;color:var(--mut)}
+.qi.nea .t2{font-size:11.5px}
+.nedl{display:inline-flex;align-items:center;justify-content:center;gap:4px;height:30px;min-width:30px;padding:0 7px;border-radius:9px;border:1px solid var(--ef-bd);background:var(--ef-bg2);color:var(--fg);font-size:11px;font-weight:700;position:relative;overflow:hidden}
+.nedl svg{width:15px;height:15px}.nedl:disabled{opacity:.45}
+.nedl:not(:disabled):hover{border-color:var(--ef-acd)}
+.nedl.lk5{color:var(--mut);border-style:dashed;padding:0 8px!important;width:auto!important;max-width:none!important;flex-direction:row;white-space:nowrap;flex:none}.nedl.lk5 span{display:inline!important}.nedl.lk5 svg{width:12px;height:12px}
+.nedl.run{min-width:46px;opacity:1!important;border-color:var(--ef-acd)}.nedl.run::before{content:"";position:absolute;left:0;top:0;bottom:0;width:calc(var(--p,0)*100%);background:var(--ef-acs);transition:width .2s}.nedl.run span{position:relative}
+.nedlbar{display:flex;align-items:center;gap:10px;margin:0 0 8px;padding:8px 12px;border-radius:12px;background:var(--ef-bg1);border:1px solid var(--ef-bd);font-size:12.5px;position:relative;overflow:hidden}
+.nedlbar::before{content:"";position:absolute;left:0;bottom:0;height:3px;width:calc(var(--p,0)*100%);background:var(--ef-ac);transition:width .2s}
+.nedlbar span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.nedlbar .pill2{padding:3px 10px!important;font-size:12px!important}
+.qi .qa{display:flex;align-items:center;gap:6px;flex:none}
+@container (max-width:600px){
+  .nel{grid-template-columns:1fr}
+  .nels{position:static;flex-direction:row;overflow-x:auto;max-height:none;scrollbar-width:thin}
+  .nelp{flex:0 0 auto;width:auto;max-width:200px}
+  .nelt{margin-left:0;width:100%}
+  .qi.nea .t2{white-space:nowrap}
+  .nedl.lk5 span{display:none!important}
+}
+
+/* ===== v0.20.1 预览：聊天背景（简洁版），html[data-cbg] 选择；bp = 旧的工程图纸 ===== */
+html:not([data-cbg="bp"]) .ef-bg{opacity:1!important;background-repeat:no-repeat!important;background-position:0 0!important;background-size:auto!important}
+html:not([data-cbg="bp"]) .ef-bg::after{background:none!important}
+html:not([data-cbg="bp"]) .ef-bg::before{content:none!important}
+/* ① 素：纯色 + 极细噪点 */
+html[data-cbg="plain"] .ef-bg{background-color:var(--ef-bg1)!important;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .5 0 0 0 0 .5 0 0 0 0 .5 0 0 0 .07 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")!important;background-size:220px 220px!important;background-repeat:repeat!important}
+html[data-cbg="plain"] .ef-bg::after{background:none!important;opacity:1}
+/* ② 雾：同色系柔和渐变 + 轻暗角 */
+html[data-cbg="mist"] .ef-bg{background-color:var(--ef-bg1)!important;background-image:radial-gradient(140% 100% at 50% 0%,var(--ef-bg2) 0%,transparent 62%),linear-gradient(180deg,var(--ef-bg2),var(--ef-bg1) 70%)!important;background-size:100% 100%!important}
+html[data-cbg="mist"] .ef-bg::after{background:radial-gradient(130% 110% at 50% 40%,transparent 60%,color-mix(in srgb,#000 7%,transparent))!important}
+/* ③ 点：只有极淡的细点阵 */
+html[data-cbg="dots"] .ef-bg{background-color:var(--ef-bg1)!important;background-image:radial-gradient(circle at 1px 1px,color-mix(in srgb,var(--ef-tx1) 9%,transparent) 1px,transparent 1.4px)!important;background-size:22px 22px!important;background-repeat:repeat!important}
+html[data-cbg="dots"] .ef-bg::after{background:linear-gradient(180deg,var(--ef-bg1) 0,transparent 18%,transparent 82%,var(--ef-bg1))!important}
+/* ④ 光：右上角一抹柠檬绿光晕（推荐默认） */
+html[data-cbg="glow"] .ef-bg{background-color:var(--ef-bg1)!important;background-image:radial-gradient(75% 70% at 100% 0%,color-mix(in srgb,var(--ef-ac) 34%,transparent),transparent 72%),radial-gradient(45% 40% at 0% 100%,color-mix(in srgb,var(--ef-bg2) 90%,transparent),transparent 70%),url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .5 0 0 0 0 .5 0 0 0 0 .5 0 0 0 .07 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")!important;background-size:100% 100%,100% 100%,220px 220px!important;background-repeat:no-repeat,no-repeat,repeat!important}
+:root[data-theme="dark"][data-cbg="glow"] .ef-bg{background-image:radial-gradient(70% 65% at 100% 0%,color-mix(in srgb,var(--ef-ac) 13%,transparent),transparent 70%),radial-gradient(45% 40% at 0% 100%,color-mix(in srgb,var(--ef-bg2) 90%,transparent),transparent 70%),url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .5 0 0 0 0 .5 0 0 0 0 .5 0 0 0 .07 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")!important}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"])[data-cbg="glow"] .ef-bg{background-image:radial-gradient(70% 65% at 100% 0%,color-mix(in srgb,var(--ef-ac) 13%,transparent),transparent 70%),radial-gradient(45% 40% at 0% 100%,color-mix(in srgb,var(--ef-bg2) 90%,transparent),transparent 70%),url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .5 0 0 0 0 .5 0 0 0 0 .5 0 0 0 .07 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")!important}}
+/* 设置里的选择器 */
+.cbgs{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin:4px 0 14px}
+.cbgs button{display:flex;flex-direction:column;align-items:stretch;gap:6px;padding:6px!important;border-radius:14px!important;background:var(--ef-bg1)!important;border:1px solid var(--ef-bd)!important;font-size:12px;color:var(--ef-tx2)!important;min-height:0!important}
+.cbgs button.on{border-color:var(--ef-acd)!important;color:var(--ef-tx1)!important;box-shadow:0 0 0 2px var(--ef-acs)}
+.cbgs i{display:block;height:46px;border-radius:9px;border:1px solid var(--ef-bd);background-color:var(--ef-bg1)}
+.cbgs i.plain{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .5 0 0 0 0 .5 0 0 0 0 .5 0 0 0 .07 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");background-size:110px}
+.cbgs i.mist{background-image:linear-gradient(180deg,var(--ef-bg2),var(--ef-bg1))}
+.cbgs i.dots{background-image:radial-gradient(circle at 1px 1px,color-mix(in srgb,var(--ef-tx1) 18%,transparent) 1px,transparent 1.4px);background-size:8px 8px}
+.cbgs i.glow{background-image:radial-gradient(80% 90% at 100% 0%,color-mix(in srgb,var(--ef-ac) 45%,transparent),transparent 70%)}
+.cbgs i.bp{background-image:var(--lq-bp);background-size:300px auto}
+.cbgh{font-size:13px;font-weight:700;margin:2px 0 8px;color:var(--ef-tx1)}
+.cbgs small{font-size:10px;color:var(--ef-acd)}
+@media(max-width:640px){.cbgs{grid-template-columns:repeat(3,1fr)}}
+.thms{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;padding:4px;margin:0 0 14px;border-radius:999px;background:var(--ef-bg1);border:1px solid var(--ef-bd)}
+.thms button{padding:7px 8px!important;border-radius:999px!important;background:transparent!important;border:0!important;font-size:12.5px;color:var(--ef-tx2)!important;min-height:0!important;box-shadow:none!important}
+.thms button.on{background:var(--ef-bg2)!important;color:var(--ef-tx1)!important;box-shadow:0 0 0 1px var(--ef-acd),0 2px 8px -4px rgba(0,0,0,.3)!important}
+html:not([data-cbg="bp"]) .lqg-prev{background-color:var(--ef-bg1)!important;background-image:linear-gradient(135deg,var(--ef-bg2),var(--ef-bg1))!important}
+html[data-cbg="dots"] .lqg-prev{background-image:radial-gradient(circle at 1px 1px,color-mix(in srgb,var(--ef-tx1) 14%,transparent) 1px,transparent 1.4px)!important;background-size:14px 14px!important}
 </style>
 <script src="/lq-glass.js"></script>
 </head>
 <body>
 <div class="ef-bg" aria-hidden="true"></div>
+<script>(function(){var v="glow";try{v=localStorage.getItem("hush_cbg_v1")||"glow"}catch(e){}if(!/^(plain|mist|dots|glow|bp)$/.test(v))v="glow";document.documentElement.setAttribute("data-cbg",v)})()</script>
 <main id="auth" hidden>
   <div class="ef-hero" aria-hidden="true">
     <div class="k">HUSH / PRIVATE CHANNEL · <b>EST. 2026</b></div>
@@ -1751,8 +1875,11 @@ input:not([type=range]):not([type=checkbox]):not([type=radio]):not([type=color])
 <!-- 群聊歌单 / 我的音乐（v0.9） -->
 <div class="drawer" id="md" aria-label="群聊歌单">
   <div class="dh"><h3 id="mdt">群聊歌单</h3><button class="ib2" id="mgs" hidden onclick="openGroupSettings()" title="群聊设置"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/></svg></button><button class="ib2" onclick="closeDrawers()" title="关闭"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
-  <div class="tabs mtabs" id="mtabs"><button data-t="pl" class="on">歌单</button><button data-t="ly">歌词</button><button data-t="lib">我的音乐</button></div>
+  <div class="neacc" id="neacc" hidden></div>
+  <div class="tabs mtabs" id="mtabs" role="tablist"><button data-t="pl" class="on">正在播放</button><button data-t="pick">点歌</button><button data-t="ne" hidden>我的网易云</button><button data-t="lib">我的音乐</button><button data-t="ly">歌词</button></div>
   <div class="dl" id="mpl"></div>
+  <div class="dl" id="mpick" hidden></div>
+  <div class="dl" id="mne" hidden></div>
   <div class="dl" id="mly" hidden></div>
   <div class="dl" id="mlib" hidden></div>
   <input type="file" id="mff" multiple accept="audio/*,.mp3,.flac,.wav,.m4a,.aac,.ogg,.oga,.opus,.webm,.weba,.lrc" hidden>
@@ -2025,6 +2152,7 @@ function start() {
   });
   socket.on('me', u => {
     me = u;
+    if (window.neaInit) setTimeout(neaInit, 0);   // v0.20：桌面版 1.4.0 切到这个 Hush 账号自己的网易云登录
     $('#mn').textContent = u.nick; avatar($('#av'), u); avatar($('#mav'), u); people[u.name] = u;
     $('#ml').textContent = 'Lv.' + u.level;
     $('#bar').style.width = Math.min(100, (u.xp - u.from) / (u.to - u.from) * 100) + '%';
@@ -3748,7 +3876,8 @@ async function toggleAuto() {
 if (DESK && typeof DESK.onAutoStartChanged === 'function') DESK.onAutoStartChanged(v => { if (!$('#setv').hidden) autoUi(v); });   // 托盘菜单里改了，设置页同步
 function openSettings(tab) {
   closeDrawers(); notifUi(); autoUi(); instUi(); shotUi(); stkUi(); deskUi(); $('#sgrp').hidden = !(me && me.admin);
-  if (window.LQGlass && !$('#slook .lqg')) LQGlass.mount($('#slook'));   // 液态玻璃外观设置放进“外观”
+  if (window.LQGlass && !$('#slook .lqg')) LQGlass.mount($('#slook'));
+  cbgMount($('#slook')); themeMount($('#slook'));   // 液态玻璃外观设置放进“外观”
   $('#stabtool').hidden = $('#sshot').hidden && $('#sstk').hidden;
   if (me) { avatar($('#saccav'), people[me.name] || me, true); $('#saccn').textContent = me.nick || me.name; $('#saccs').textContent = '@' + me.name + (me.admin ? ' · 管理员' : '') + ' · 点这里改头像、昵称和签名'; }
   setTab(typeof tab === 'string' ? tab : 'gen'); $('#setv').hidden = false;
@@ -3957,7 +4086,12 @@ const MICON = {
   del: '<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/>',
   up: '<path d="M12 16V4M7 9l5-5 5 5M5 20h14"/>',
   lock: '<rect x="5" y="11" width="14" height="9" rx="2.2"/><path d="M8.5 11V8a3.5 3.5 0 0 1 7 0v3"/>',
-  search: '<circle cx="11" cy="11" r="6.5"/><path d="m20 20-4.2-4.2"/>'
+  search: '<circle cx="11" cy="11" r="6.5"/><path d="m20 20-4.2-4.2"/>',
+  dl: '<path d="M12 4v11M7 10.5l5 5 5-5M5 20h14"/>',
+  folder: '<path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>',
+  heart: '<path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/>',
+  list: '<path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01"/>',
+  out: '<path d="M15 4h4v16h-4M10 8l-4 4 4 4M6 12h11"/>'
 };
 const svg = (k, sw) => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="' + (sw || 1.8) + '" stroke-linecap="round" stroke-linejoin="round">' + MICON[k] + '</svg>';
 function mBtn(cls, k, title, fn) { const b = el('button', cls); b.type = 'button'; b.title = title; b.setAttribute('aria-label', title); b.innerHTML = svg(k); b.onclick = e => { e.stopPropagation(); fn(b); }; return b; }   // 图标来自固定常量
@@ -3994,11 +4128,22 @@ async function mApply() {
   }
   mus.volume = mVol(); mus.muted = false;
   if (MS.src !== c.qid && c.src === 'netease') {   // v0.10：网易云的歌由浏览器直接从网易云加载（服务器只帮忙查出 https 的真实地址）
-    const my = MS.src = c.qid; MS.loading = true;
+    const my = MS.src = c.qid; MS.loading = true; MS.why = ''; MS.neOwn = null;
+    socket.emit('music:try', c.qid);   // v0.20：先告诉服务器“我在试”，有会员的人加载慢一点也不会被别人的失败提前跳过
+    if (NEB && NEA.st && NEA.st.loggedIn) {   // v0.20：桌面版 1.4.0 登录了网易云：用自己的账号拿播放地址（只给自己用，不发给任何人）
+      const o = await NEB.neUrl(c.nid).catch(() => null);
+      if (MS.src !== my) return;
+      if (o && o.url) { MS.loading = false; MS.neOwn = { qid: c.qid, t: Date.now(), level: o.level }; mus.src = o.url; mus.playbackRate = 1; return mTick(); }
+      if (c.vip) MS.why = 'vip';
+    } else if (c.vip) MS.why = 'vip';
+    if (MS.why === 'vip') {   // 会员歌曲，我这里放不了：安静地等，不影响大家
+      MS.loading = false; MS.unsup = c.qid; try { mus.pause(); mus.removeAttribute('src'); mus.load(); } catch (_) {} renderNP(); if ($('#md').classList.contains('open')) renderMusic();
+      return socket.emit('music:fail', c.qid, 'vip', r => { if (r && r.kept) toast('《' + c.title + '》是会员歌曲，你这里听不了，大家照常播放'); });
+    }
     const r = await fetch('/api/netease/' + c.nid + '/src', { headers: hdr() }).then(r => r.ok ? r.json() : null).catch(() => null);
     MS.loading = false;
     if (MS.src !== my) return;
-    mus.src = (r && r.url) || c.url; mus.playbackRate = 1; socket.emit('music:try', c.qid);
+    mus.src = (r && r.url) || c.url; mus.playbackRate = 1;
     clearTimeout(MS.neT);
     if (r && !r.url) MS.neT = setTimeout(() => { if (MS.src === my && mus.readyState < 1) mus.dispatchEvent(new Event('error')); }, 7000);   // 服务器那边已经放不了：7 秒还没加载出来就当失败
   } else if (MS.src !== c.qid) {
@@ -4020,6 +4165,10 @@ function mTick() {
   mProgress(); lyKick(); dlPush();
   if (!c || mMuted() || MS.preview || MS.unsup === c.qid) return;
   if (MS.src !== c.qid) { if (!MS.loading) mApply(); return; }
+  if (MS.neOwn && MS.neOwn.qid === c.qid && NEB && !MS.neOwn.busy && Date.now() - MS.neOwn.t > 14 * 60e3 && (c.dur - mPos(c)) > 20) {   // v0.20：自己的播放地址大约 20 分钟过期，提前换新的
+    MS.neOwn.busy = true;
+    NEB.neUrl(c.nid, true).then(o => { if (MS.neOwn && MS.neOwn.qid === c.qid && o && o.url) { const t = mPos(c); MS.neOwn = { qid: c.qid, t: Date.now(), level: o.level }; mus.src = o.url; mus.currentTime = Math.max(0, t); mTick(); } else if (MS.neOwn) MS.neOwn.busy = false; }).catch(() => { if (MS.neOwn) MS.neOwn.busy = false; });
+  }
   if (mus.readyState < 1) return;
   const t = mPos(c);
   if (c.paused) { if (!mus.paused) mus.pause(); if (Math.abs(mus.currentTime - t) > 0.25) mus.currentTime = Math.max(0, t); return; }   // v0.11：大家一起暂停
@@ -4040,6 +4189,10 @@ mus.addEventListener('error', () => {
   const c = mCur(); if (!c || !mus.getAttribute('src')) return;
   if (c.src === 'netease') {   // 网易云：地区 / 版权 / VIP 放不了。告诉服务器，没人放得了就替大家跳过
     if (MS.src !== c.qid || MS.unsup === c.qid) return;
+    if (MS.neOwn && MS.neOwn.qid === c.qid && !MS.neOwn.retried && NEB) {   // 自己账号的地址过期了：换一个新的接着放
+      MS.neOwn.retried = true; const t = mus.currentTime;
+      return NEB.neUrl(c.nid, true).then(o => { if (mCur() !== c && (!mCur() || mCur().qid !== c.qid)) return; if (o && o.url) { MS.neOwn.t = Date.now(); mus.src = o.url; mus.currentTime = t; mTick(); } else { MS.unsup = c.qid; renderNP(); socket.emit('music:fail', c.qid, 'own'); } }).catch(() => {});
+    }
     MS.unsup = c.qid; renderNP();
     return socket.emit('music:fail', c.qid, r => { if (r && r.kept) toast('这首歌在你这里放不了'); });
   }
@@ -4098,9 +4251,15 @@ function openMusic(tab) {
 function mTab(t) {
   MS.tab = t; $('#mtabs').querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.t === t));
   if (t === 'ly' && !LYC.view) t = MS.tab = 'pl';
-  $('#mpl').hidden = t !== 'pl'; $('#mlib').hidden = t !== 'lib'; $('#mly').hidden = t !== 'ly'; $('#mdt').textContent = t === 'lib' ? '我的音乐' : t === 'ly' ? '歌词' : '群聊歌单';
-  if (t === 'lib') loadLib(); else if (mpv.src && MS.preview) stopPreview();
+  if (t === 'ne' && !NEB) t = MS.tab = 'pick';
+  $('#mtabs').querySelectorAll('button').forEach(b => { b.classList.toggle('on', b.dataset.t === t); b.setAttribute('role', 'tab'); b.setAttribute('aria-selected', String(b.dataset.t === t)); });
+  $('#mpl').hidden = t !== 'pl'; $('#mpick').hidden = t !== 'pick'; $('#mne').hidden = t !== 'ne'; $('#mlib').hidden = t !== 'lib'; $('#mly').hidden = t !== 'ly';
+  $('#mdt').textContent = { pl: '群聊歌单', pick: '点歌', ne: '我的网易云', lib: '我的音乐', ly: '歌词' }[t] || '群聊歌单';
+  if (t === 'lib' || t === 'pick') loadLib(); else if (mpv.src && MS.preview) stopPreview();
+  if (t === 'pick') NE.open = true;
+  if (t !== 'ne') neaQrStop();
   renderMusic();
+  if (t === 'pick') setTimeout(() => { if (MS.tab === 'pick' && !NE.inp.value) NE.inp.focus({ preventScroll: true }); }, 60);
 }
 $('#mtabs').onclick = e => { const b = e.target.closest('button'); if (b) mTab(b.dataset.t); };
 async function loadLib() {
@@ -4111,11 +4270,11 @@ let libLevel = 0;
 function emusText() { if (MS.lib) $('#emus').textContent = '已用 ' + MS.lib.used + '/' + MS.lib.quota + ' 首' + (MS.lib.next ? ' · Lv.' + MS.lib.next + ' 解锁第 ' + (MS.lib.quota + 1) + ' 首' : ''); }
 function renderMusic() {
   $('#mgs').hidden = !(me && me.admin);
-  if (MS.tab === 'pl') renderPl(); else if (MS.tab === 'ly') lyRender(); else renderLib();
+  neaHeader();
+  if (MS.tab === 'pl') renderPl(); else if (MS.tab === 'pick') renderPick(); else if (MS.tab === 'ne') renderNe(); else if (MS.tab === 'ly') lyRender(); else renderLib();
 }
 function renderPl() {
   const box = $('#mpl'), st = MS.st;
-  const nf = document.activeElement === NE.inp, na = NE.inp.selectionStart, nb = NE.inp.selectionEnd;   // 重画前记住搜索框的焦点
   box.innerHTML = '';
   if (!st) return;
   if (!st.music) {
@@ -4135,6 +4294,7 @@ function renderPl() {
     tx.append(s2);
     top.append(artEl(c.title, true, c.cover), tx);
     if (MS.unsup === c.qid) card.classList.add('bad');
+    if (c.vip) { const vb = el('span', 'vipb', 'VIP'); vb.title = '会员歌曲：登录了网易云会员的人才听得到'; tx.firstChild.append(vb); }
     const can = mCan(c);
     const pg = el('div', 'prog'), skb = el('div', 'skb' + (can ? '' : ' ro')), bar = el('div', 'bar'), bi = el('i'); bi.id = 'mprog'; bar.append(bi); skb.append(bar, el('b', 'skt'));
     skb.id = 'mskb'; skb.setAttribute('role', 'slider'); skb.setAttribute('aria-label', '播放进度'); skb.setAttribute('aria-valuemin', '0'); skb.setAttribute('aria-valuemax', String(Math.round(c.dur)));
@@ -4152,7 +4312,14 @@ function renderPl() {
     const sk = mBtn('ib3', 'skip', canSkip ? '切到下一首' : '管理员没有开放切歌', () => socket.emit('music:skip', c.qid, r => r && r.error && toast(r.error))); sk.id = 'mskip'; sk.disabled = !canSkip;
     if (LYC.view) { const lb = mBtn('ib3 lyb2', 'lyr', '看歌词', () => mTab('ly')); lb.id = 'mlyb'; ctl.append(lb); }
     ctl.append(sk);
-    card.append(top, pg, ctl); box.append(card);
+    card.append(top, pg, ctl);
+    if (MS.unsup === c.qid) {   // v0.20：自己这里放不了（需要会员 / 地区限制），大家那边照常播放
+      const w = el('div', 'mvip' + (MS.why === 'vip' ? '' : ' plain'));
+      w.append(el('b', '', MS.why === 'vip' ? '需要会员' : '这首在你这里放不了'), el('span', '', MS.why === 'vip' ? (NEB ? (NEA.st && NEA.st.loggedIn ? '你的网易云账号没有会员，这首听不了；大家那边照常播放，播完会自动接下一首' : '登录有会员的网易云账号就能一起听') : '这首是网易云会员歌曲；用 Hush 桌面版 1.4.0 登录会员账号就能一起听') : '可能是地区或版权限制；别人能放的话会继续播放'));
+      if (MS.why === 'vip' && NEB && !(NEA.st && NEA.st.loggedIn)) { const b = el('button', 'pill2', '登录网易云'); b.type = 'button'; b.onclick = () => mTab('ne'); w.append(b); }
+      card.append(w);
+    }
+    box.append(card);
     mProgress();
   } else { const e = el('div', 'mempty'); e.append(artEl('空'), el('b', '', '歌单是空的'), el('span', '', '从下面“点歌”里选一首，大家一起听')); box.append(e); }
   // 接下来
@@ -4164,25 +4331,36 @@ function renderPl() {
     const pre = q.artist ? q.artist + ' · ' : '';
     if (me && q.by.name === me.name) t2.append(pre, el('b', '', '我'), ' · ' + mmss(q.dur)); else t2.append(pre + q.by.nick + ' · ' + mmss(q.dur));
     tx.append(el('div', 't1', q.title), t2); tx.firstChild.title = q.title;
+    if (q.vip) { const vb = el('span', 'vipb', 'VIP'); vb.title = neaCanVip() ? '会员歌曲（你的账号能放）' : '会员歌曲：你这里听不了，大家照常播放'; if (!neaCanVip()) r.classList.add('nov'); tx.firstChild.append(vb); }
     const qa = el('div', 'qa');
     if (me && (me.admin || q.by.name === me.name)) qa.append(mBtn('', 'x', q.by.name === me.name ? '移出歌单' : '移出歌单（管理员）', () => socket.emit('music:remove', q.qid, x => x && x.error && toast(x.error))));
     r.append(el('span', 'n', String(i + 1)), artEl(q.title, false, q.cover), tx, qa); box.append(r);
   });
-  // 点歌：从我的音乐
-  const mine = [c, ...st.queue].filter(x => x && me && x.by.name === me.name).length;
-  const h2 = el('div', 'mh'), hr = el('span', 'mhr');
-  const sb = mBtn('nesb' + (NE.open ? ' on' : ''), 'search', NE.open ? '收起搜索' : '搜索网易云音乐', () => neToggle()); sb.id = 'nesb'; sb.setAttribute('aria-expanded', String(NE.open));
-  hr.append(el('small', '', '已点 ' + mine + '/' + st.per), sb);
-  h2.append(el('span', '', '点歌'), hr); box.append(h2);
-  NE.mine = mine; NE.per = st.per; NE.queued = new Set([c, ...st.queue].filter(Boolean).map(x => x.id));
-  if (NE.open) { box.append(NE.node); neRender(); if (nf) { NE.inp.focus({ preventScroll: true }); try { NE.inp.setSelectionRange(na, nb); } catch (_) {} } }
+  if (st.music) { const go = el('button', 'pill2 ghost mgo'); go.type = 'button'; go.innerHTML = svg('add', 2); go.append(' 去点歌'); go.onclick = () => mTab('pick'); box.append(go); }
+}
+// v0.20：点歌单独一页（搜索网易云 + 从我的音乐点），音乐面板也变大了
+function mPickInfo() {
+  const st = MS.st, c = st && st.current, all = st ? [c, ...st.queue].filter(Boolean) : [];
+  NE.mine = all.filter(x => me && x.by.name === me.name).length; NE.per = st ? st.per : 2; NE.queued = new Set(all.map(x => x.id));
+  return { st, c, mine: NE.mine };
+}
+function renderPick() {
+  const box = $('#mpick'), { st, c, mine } = mPickInfo();
+  const nf = document.activeElement === NE.inp, na = NE.inp.selectionStart, nb = NE.inp.selectionEnd;   // 重画前记住搜索框的焦点
+  box.innerHTML = '';
+  if (!st) return;
+  if (!st.music) { const e = el('div', 'mempty'); e.append(artEl('群聊音乐'), el('b', '', '群聊音乐还没有开启'), el('span', '', '管理员开启后，大家就能点歌一起听')); return box.append(e); }
+  const h0 = el('div', 'mh'); h0.append(el('span', '', '搜索网易云'), el('small', '', '已点 ' + mine + '/' + st.per)); box.append(h0);
+  NE.open = true; box.append(NE.node); neRender(); if (nf) { NE.inp.focus({ preventScroll: true }); try { NE.inp.setSelectionRange(na, nb); } catch (_) {} }
+  if (NEB) { const g = el('button', 'pill2 ghost mgo'); g.type = 'button'; g.innerHTML = svg('heart', 2); g.append(NEA.st && NEA.st.loggedIn ? ' 从我喜欢的音乐和歌单里点' : ' 登录网易云，从自己的歌单里点'); g.onclick = () => mTab('ne'); box.append(g); }
+  const h2 = el('div', 'mh'); h2.append(el('span', '', '从我的音乐点歌')); box.append(h2);
   const lib = MS.lib ? MS.lib.items : null;
   if (!lib) return box.append(el('div', 'mnote', '加载中…'));
   if (!lib.length) {
     const e = el('div', 'mempty'); e.append(el('span', '', '你的音乐仓库还是空的'));
     const b = el('button', 'pill2', '上传音乐'); b.type = 'button'; b.onclick = () => { mTab('lib'); $('#mff').click(); }; e.append(b); box.append(e); return;
   }
-  const queued = new Set([c, ...st.queue].filter(Boolean).map(x => x.id));
+  const queued = NE.queued;
   lib.forEach(s => {
     const r = el('div', 'qi'); r.dataset.mid = s.id;
     const tx = el('div', 'tx'); tx.append(el('div', 't1', s.title), el('div', 't2', mmss(s.dur) + ' · ' + s.ext.toUpperCase()));
@@ -4204,10 +4382,9 @@ NE.inp.onkeydown = e => {
   else if (e.key === 'Escape') { e.stopPropagation(); if (NE.inp.value) { NE.inp.value = ''; NE.inp.oninput(); } else neToggle(false); }
 };
 NE.clr.onclick = () => { NE.inp.value = ''; NE.clr.hidden = true; NE.q = ''; NE.items = null; NE.err = ''; neRender(); NE.inp.focus(); };
-function neToggle(v) {
-  NE.open = typeof v === 'boolean' ? v : !NE.open;
-  renderMusic();
-  if (NE.open) { NE.inp.focus({ preventScroll: true }); NE.node.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }
+function neToggle(v) {   // v0.20：搜索在「点歌」页里
+  if (v === false) { NE.inp.blur(); return; }
+  mTab('pick'); NE.inp.focus({ preventScroll: true });
 }
 async function neSearch(q, force) {
   q = String(q || '').trim().replace(/\s+/g, ' ');
@@ -4228,27 +4405,233 @@ function neRender() {
   if (!NE.items.length) return box.append(el('div', 'mnote', '没有找到“' + NE.q + '”'));
   NE.items.forEach(s => {
     const mid = 'ne:' + s.id, inq = NE.queued.has(mid), busy = NE.adding.has(s.id);
-    const r = el('div', 'qi ne' + (s.vip ? ' vip' : s.blocked ? ' blk' : '')); r.dataset.nid = s.id;
-    r.title = s.vip ? 'VIP / 付费歌曲，放不了' : s.blocked ? '这首歌在服务器所在地区可能放不了' : '';
+    const own = s.vip && !s.buy && neaCanVip();   // v0.20：我自己的网易云会员能放
+    const r = el('div', 'qi ne' + (s.vip && !own ? ' vip' : s.blocked ? ' blk' : '')); r.dataset.nid = s.id;
+    r.title = s.vip ? (own ? '会员歌曲：你的网易云会员能放，没有会员的人听不到' : s.buy ? '付费专辑里的歌，放不了' : '会员歌曲：登录网易云会员账号才能点') : s.blocked ? '这首歌在服务器所在地区可能放不了' : '';
     const tx = el('div', 'tx'), t1 = el('div', 't1', s.title), t2 = el('div', 't2');
     t1.title = s.title; t2.textContent = (s.artist || '未知歌手') + ' · ' + mmss(s.dur);
+    if (s.vip) t1.append(el('span', 'vipb' + (own ? '' : ' off'), s.buy ? '付费' : 'VIP'));
     tx.append(t1, t2);
     const qa = el('div', 'qa');
-    const full = NE.mine >= NE.per;
-    const b = mBtn(inq ? 'done' : s.vip ? 'lk' : 'add', inq ? 'ok' : s.vip ? 'lock' : 'add', inq ? '已在歌单里' : s.vip ? 'VIP 歌曲放不了' : full ? '每人最多同时点 ' + NE.per + ' 首' : '点这首', bt => neAdd(s, bt));
-    b.disabled = inq || s.vip || full || busy; b.dataset.addne = s.id;
+    const full = NE.mine >= NE.per, lock = s.vip && !own;
+    if (NEB && NEA.st && NEA.st.loggedIn) qa.append(neaDlBtn({ id: s.id, title: s.title, mine: !s.vip || own }));
+    const b = mBtn(inq ? 'done' : lock ? 'lk' : 'add', inq ? 'ok' : lock ? 'lock' : 'add', inq ? '已在歌单里' : lock ? (s.buy ? '付费专辑，放不了' : '需要会员') : full ? '每人最多同时点 ' + NE.per + ' 首' : '点这首', bt => neAdd(s, bt, own));
+    b.disabled = inq || lock || full || busy; b.dataset.addne = s.id;
     qa.append(b); r.append(artEl(s.title, false, s.cover), tx, qa); box.append(r);
   });
-  box.append(el('div', 'mnote', '来自网易云音乐 · 由每个人的浏览器直接播放\n地区或版权限制放不了的歌会自动跳过'));
+  box.append(el('div', 'mnote', '来自网易云音乐 · 每个人用自己的网易云账号或免费方式直接播放\n会员歌曲只有会员听得到；谁都放不了的歌会自动跳过'));
 }
-function neAdd(s, bt) {
+function neAdd(s, bt, own) {
   if (NE.adding.has(s.id)) return;
   NE.adding.add(s.id); bt.disabled = true; bt.classList.add('wait');
-  socket.emit('music:addne', s.id, x => {
+  socket.emit('music:addne', own ? { id: s.id, own: true } : s.id, x => {
     NE.adding.delete(s.id);
     if (x && x.error) { toast(x.error); bt.disabled = false; bt.classList.remove('wait'); }
-    else { NE.queued.add('ne:' + s.id); NE.mine++; neRender(); }
+    else { NE.queued.add('ne:' + s.id); NE.mine++; toast('已点《' + s.title + '》'); if (MS.tab === 'ne') renderNe(true); else neRender(); }
   });
+}
+// ================= v0.20：我的网易云（桌面版 1.4.0：每个人登录自己的网易云账号） =================
+// 登录凭证只在桌面版主进程里（加密保存在自己电脑上），网页和 Hush 服务器都拿不到；网页只拿到昵称、头像、歌单和自己用的播放地址。
+// 旧桌面版（1.3.0 及以前）和浏览器没有这些函数：「我的网易云」不出现，一切照旧。
+var NEB = (window.hushDesktop && ['neUser', 'neStatus', 'neQr', 'neQrCheck', 'nePlaylists', 'neTracks', 'neUrl', 'neDownload'].every(k => typeof hushDesktop[k] === 'function')) ? hushDesktop : null;
+var NEA = { st: null, key: '', lists: null, sel: 'liked', tr: {}, q: '', qr: null, qrT: 0, qrStart: 0, qrMsg: '', qrBusy: false, perm: null, dl: { busy: false, id: '', got: 0, total: 0, name: '' }, show: 60, err: '' };
+const neaCanVip = () => !!(NEB && NEA.st && NEA.st.loggedIn && NEA.st.profile && NEA.st.profile.vip);
+async function neaInit() {
+  if (!NEB || !me) return;
+  $('#mtabs [data-t="ne"]').hidden = false;
+  const key = String(me.id || me.name);
+  if (NEA.key !== key) { NEA.key = key; NEA.lists = null; NEA.tr = {}; NEA.perm = null; }
+  const st = await NEB.neUser(key).catch(() => null);
+  if (st && !st.error) NEA.st = st;
+  neaPerm();
+  if ($('#md').classList.contains('open')) renderMusic(); else neaHeader();
+}
+async function neaPerm() {
+  const r = await fetch('/api/netease/dl-perm', { headers: hdr() }).then(r => r.ok ? r.json() : null).catch(() => null);
+  if (r) { NEA.perm = r; if (MS.tab === 'ne' && $('#md').classList.contains('open')) renderNe(true); }
+}
+function neaHeader() {
+  const h = $('#neacc'); if (!h) return;
+  h.hidden = !NEB; if (!NEB) return;
+  h.innerHTML = '';
+  const st = NEA.st;
+  if (st && st.loggedIn && st.profile) {
+    const p = st.profile, a = el('span', 'neav'); if (p.avatar) { const i = el('img'); i.alt = ''; i.referrerPolicy = 'no-referrer'; i.src = p.avatar; i.onerror = () => i.remove(); a.append(i); }
+    const n = el('span', 'nenm'); n.append(el('b', '', p.nickname || '网易云用户'), el('small', '', p.vip ? '网易云会员 · 会员歌曲能放' : '没有会员 · 会员歌曲听不了'));
+    if (p.vip) n.firstChild.append(el('span', 'vipb', 'VIP'));
+    const lo = mBtn('ib2 nelo', 'out', '退出网易云登录（只在这台电脑上）', async () => { if (!confirm('退出网易云登录？\n（只影响这台电脑上的 Hush，下次要重新扫码）')) return; const s2 = await NEB.neLogout().catch(() => null); if (s2 && !s2.error) NEA.st = s2; NEA.lists = null; NEA.tr = {}; MS.src = null; mApply(); renderMusic(); });
+    lo.id = 'nelo'; h.append(a, n, lo); h.classList.add('in');
+  } else {
+    h.classList.remove('in');
+    const n = el('span', 'nenm'); n.append(el('b', '', '网易云音乐'), el('small', '', st && st.expired ? '登录过期了，重新扫码' : '登录自己的账号：同步喜欢的音乐和歌单，会员能听会员歌曲'));
+    const b = el('button', 'pill2', '扫码登录'); b.type = 'button'; b.id = 'nelg'; b.onclick = () => mTab('ne');
+    h.append(el('span', 'neav ph', '♪'), n, b);
+  }
+}
+function neaQrStop() { clearTimeout(NEA.qrT); NEA.qrT = 0; }
+async function neaQrNew() {
+  if (NEA.qrBusy) return; NEA.qrBusy = true; neaQrStop();
+  const r = await NEB.neQr().catch(e => ({ error: String(e && e.message || e) }));
+  NEA.qrBusy = false;
+  if (!r || r.error) {   // 太快重复点“刷新”：旧二维码留着继续用；还没有二维码就过几秒自己再试一次
+    const busy = r && /稍等/.test(r.error || '');
+    if (busy && NEA.qr) { NEA.qrMsg = '用网易云音乐 App 扫一扫'; renderNe(true); return neaQrPoll(); }
+    NEA.qr = null; NEA.qrMsg = (r && r.error) || '二维码生成失败';
+    if (busy) setTimeout(() => { if (!NEA.qr && MS.tab === 'ne' && !(NEA.st && NEA.st.loggedIn)) neaQrNew(); }, 4200);
+    return renderNe(true);
+  }
+  NEA.qr = r; NEA.qrStart = Date.now(); NEA.qrMsg = '用网易云音乐 App 扫一扫'; NEA.qrState = 'waiting';
+  renderNe(true); neaQrPoll();
+}
+function neaQrPoll() {   // 轮询扫码结果：开始每 2 秒，1 分钟后放慢到 4 秒，3 分钟后停（二维码也差不多过期了）
+  neaQrStop();
+  if (!NEA.qr || MS.tab !== 'ne' || !$('#md').classList.contains('open')) return;
+  const age = Date.now() - NEA.qrStart; if (age > 180e3) { NEA.qrState = 'expired'; NEA.qrMsg = '二维码过期了'; return renderNe(true); }
+  NEA.qrT = setTimeout(async () => {
+    const key = NEA.qr && NEA.qr.key; if (!key) return;
+    const r = await NEB.neQrCheck(key).catch(() => null);
+    if (!NEA.qr || NEA.qr.key !== key) return;
+    if (r && r.status === 'authorized') { NEA.qr = null; NEA.st = r; NEA.lists = null; NEA.tr = {}; toast('网易云登录成功：' + ((r.profile && r.profile.nickname) || '')); MS.src = null; mApply(); neaPerm(); return renderMusic(); }
+    if (r && r.status === 'expired') { NEA.qrState = 'expired'; NEA.qrMsg = '二维码过期了'; return renderNe(true); }
+    if (r && r.status === 'scanned') { NEA.qrState = 'scanned'; NEA.qrMsg = '已扫码' + (r.nickname ? '（' + r.nickname + '）' : '') + '，请在手机上点“确认登录”'; renderNe(true); }
+    if (r && r.error) { NEA.qrMsg = r.error; renderNe(true); }
+    neaQrPoll();
+  }, age < 60e3 ? 2000 : 4000);
+}
+async function neaLoadLists() {
+  if (NEA.lists === 'loading') return; NEA.lists = 'loading'; NEA.err = '';
+  const r = await NEB.nePlaylists().catch(() => null);
+  if (!r || r.error) { NEA.lists = null; NEA.err = (r && r.error) || '歌单加载失败'; if (r && r.code === 301) { NEA.st = await NEB.neStatus().catch(() => NEA.st); } return renderMusic(); }
+  NEA.lists = r.lists; if (!NEA.lists.some(l => (l.liked ? 'liked' : l.id) === NEA.sel)) NEA.sel = 'liked';
+  renderNe(true); neaLoadTracks(NEA.sel);
+}
+const neaKey = l => l.liked ? 'liked' : l.id;
+async function neaLoadTracks(k, more) {
+  const t = NEA.tr[k] || (NEA.tr[k] = { songs: [], total: null, done: false, busy: false, err: '' });
+  if (t.busy || t.done) return; t.busy = true;
+  const r = await NEB.neTracks({ id: k, offset: t.songs.length, limit: 100 }).catch(() => null);
+  t.busy = false;
+  if (!r || r.error) { t.err = (r && r.error) || '加载失败'; return renderNe(true); }
+  t.songs.push(...r.songs); if (r.total != null) t.total = r.total;
+  t.done = r.total != null ? t.songs.length >= r.total : !r.more || !r.songs.length;
+  if (NEA.sel === k) renderNe(true);
+  if (NEA.q && !t.done && NEA.sel === k) neaLoadTracks(k);   // 在筛选：把剩下的也拿过来
+}
+function neaDlBtn(s) {
+  const P = NEA.perm, D = NEA.dl;
+  if (!P || !P.ok) {
+    const b = el('button', 'nedl lk5'); b.type = 'button'; b.innerHTML = svg('lock', 2); b.append(el('span', '', (P ? P.need : 5) + '级解锁'));
+    b.title = 'Hush 账号 ' + (P ? P.need : 5) + ' 级以上才能下载到自己电脑' + (P ? '（你现在 Lv.' + P.level + '）' : '');
+    b.onclick = e => { e.stopPropagation(); toast(b.title); }; return b;
+  }
+  const b = el('button', 'nedl'); b.type = 'button'; b.dataset.dl = s.id;
+  if (D.busy && D.id === s.id) { b.classList.add('run'); b.style.setProperty('--p', D.total ? (D.got / D.total).toFixed(3) : '0'); b.append(el('span', '', D.total ? Math.floor(D.got / D.total * 100) + '%' : '…')); b.title = '正在下载'; b.disabled = true; return b; }
+  b.innerHTML = svg('dl', 2); b.title = s.mine === false ? '你的账号放不了这首，不能下载' : '下载到自己电脑（' + (NEA.st.dlDir ? NEA.st.dlDir.name : '先选一个文件夹') + '）';
+  b.setAttribute('aria-label', '下载《' + s.title + '》');
+  b.disabled = D.busy || s.mine === false;
+  b.onclick = e => { e.stopPropagation(); neaDownload(s); };
+  return b;
+}
+async function neaDownload(s) {
+  if (NEA.dl.busy) return toast('正在下载另一首，下完再来');
+  if (!NEA.st.dlDir) { const d = await NEB.neChooseDlDir().catch(() => null); if (!d || d.error || !d.path) return; NEA.st.dlDir = d; }
+  const pr = await fetch('/api/netease/dl-perm', { method: 'POST', headers: { ...hdr(), 'Content-Type': 'application/json' }, body: JSON.stringify({ id: s.id }) }).then(async r => ({ ok: r.ok, j: await r.json().catch(() => ({})) })).catch(() => ({ ok: false, j: { error: '网络错误' } }));
+  if (!pr.ok) { toast(pr.j.error || '现在不能下载'); return neaPerm(); }
+  if (NEA.perm) NEA.perm.left = pr.j.left;
+  Object.assign(NEA.dl, { busy: true, id: s.id, got: 0, total: 0, name: s.title }); renderMusic();
+  const r = await NEB.neDownload(s.id, pr.j.t).catch(e => ({ error: String(e && e.message || e) }));
+  Object.assign(NEA.dl, { busy: false, id: '' });
+  if (!r || r.error) { toast('下载失败：' + ((r && r.error) || '未知错误')); return renderMusic(); }
+  NEA.last = r; toast('已下载《' + s.title + '》到「' + NEA.st.dlDir.name + '」'); renderMusic();
+}
+if (NEB && NEB.onNeDownload) NEB.onNeDownload(p => {
+  if (!p || p.id !== NEA.dl.id) return;
+  if (p.state === 'progress') { NEA.dl.got = p.got; NEA.dl.total = p.total; const b = document.querySelector('.nedl.run'); if (b) { b.style.setProperty('--p', p.total ? (p.got / p.total).toFixed(3) : '0'); b.firstChild && (b.firstChild.textContent = p.total ? Math.floor(p.got / p.total * 100) + '%' : '…'); } const bar = $('#nedlbar'); if (bar) { bar.style.setProperty('--p', p.total ? (p.got / p.total).toFixed(3) : '0'); bar.querySelector('b').textContent = p.total ? Math.floor(p.got / p.total * 100) + '%' : ''; } }
+});
+function neaRow(s, k) {
+  const inq = NE.queued.has('ne:' + s.id), busy = NE.adding.has(s.id), full = NE.mine >= NE.per;
+  const r = el('div', 'qi ne nea' + (s.mine ? '' : ' nov')); r.dataset.nid = s.id;
+  const tx = el('div', 'tx'), t1 = el('div', 't1', s.title), t2 = el('div', 't2');
+  t1.title = s.title; if (s.vip) t1.append(el('span', 'vipb' + (s.mine ? '' : ' off'), s.buy ? '付费' : 'VIP'));
+  t2.textContent = (s.artist || '未知歌手') + (s.album ? ' · ' + s.album : '') + ' · ' + mmss(s.dur);
+  tx.append(t1, t2);
+  const qa = el('div', 'qa');
+  if (!s.mine) qa.append(el('span', 'nevt', s.buy ? '付费专辑' : '需要会员'));
+  qa.append(neaDlBtn(s));
+  const b = mBtn(inq ? 'done' : !s.mine ? 'lk' : 'add', inq ? 'ok' : !s.mine ? 'lock' : 'add', inq ? '已在歌单里' : !s.mine ? (s.buy ? '付费专辑，放不了' : '需要会员才能放') : full ? '每人最多同时点 ' + NE.per + ' 首' : '点这首（大家一起听）', bt => neAdd(s, bt, s.vip));
+  b.disabled = inq || !s.mine || full || busy || !(MS.st && MS.st.music); b.dataset.addne = s.id;
+  qa.append(b); r.append(artEl(s.title, false, s.cover), tx, qa);
+  return r;
+}
+function renderNe(soft) {
+  const box = $('#mne'); if (!box || MS.tab !== 'ne') return;
+  const fq = document.activeElement && document.activeElement.id === 'neaq', fa = fq ? document.activeElement.selectionStart : 0, sc = box.scrollTop;
+  box.innerHTML = '';
+  if (!NEB) { box.append(el('div', 'mnote', '用 Hush 桌面版 1.4.0 可以登录自己的网易云账号')); return; }
+  mPickInfo();
+  const st = NEA.st;
+  if (!st || !st.loggedIn) {   // 扫码登录
+    const card = el('div', 'neqr'), l = el('div', 'neql'), rr = el('div', 'neqi');
+    l.append(el('span', 'eft', 'NETEASE · LOGIN'), el('h4', '', '用网易云音乐 App 扫码登录'), el('p', '', '登录后，你喜欢的音乐和自己的歌单都会出现在这里，可以一键点歌给大家听。有会员的账号还能放会员歌曲。'));
+    const ul = el('ul'); ['登录信息加密保存在这台电脑上，只给你自己用', '不会发给 Hush 服务器，也不会给其他人', '没有会员的账号听不了会员歌曲（大家那边照常播放）'].forEach(t => ul.append(el('li', '', t))); l.append(ul);
+    if (st && st.persist === false) l.append(el('p', 'mnote', '这台电脑不能加密保存，关掉 Hush 后要重新扫码'));
+    const img = el('div', 'neqim' + (NEA.qrState === 'expired' ? ' exp' : NEA.qrState === 'scanned' ? ' scan' : ''));
+    if (NEA.qr && NEA.qr.img) { const i = el('img'); i.alt = '网易云登录二维码'; i.src = NEA.qr.img; i.id = 'neqrimg'; img.append(i); } else img.append(el('span', '', NEA.qrBusy ? '生成中…' : ''));
+    if (NEA.qrState === 'expired') { const b = el('button', 'pill2', '刷新二维码'); b.type = 'button'; b.onclick = () => neaQrNew(); img.append(b); }
+    const msg = el('p', 'neqm', NEA.qrMsg || ''); msg.id = 'neqm';
+    const rf = el('button', 'pill2 ghost', '换一张'); rf.type = 'button'; rf.id = 'neqrf'; rf.onclick = () => neaQrNew();
+    rr.append(img, msg, rf); card.append(l, rr); box.append(card);
+    if (!NEA.qr && !NEA.qrBusy && NEA.qrState !== 'expired' && !NEA.qrMsg) neaQrNew();
+    else if (NEA.qr && !NEA.qrT && NEA.qrState !== 'expired') neaQrPoll();
+    return;
+  }
+  if (NEA.lists == null) { box.append(el('div', 'mnote', NEA.err || '正在读取你的歌单…')); if (!NEA.err) neaLoadLists(); else { const b = el('button', 'pill2', '重试'); b.type = 'button'; b.onclick = () => { NEA.err = ''; neaLoadLists(); }; box.append(b); } return; }
+  if (NEA.lists === 'loading') { box.append(el('div', 'mnote', '正在读取你的歌单…')); return; }
+  const wrap = el('div', 'nel'), side = el('div', 'nels'), main = el('div', 'nelm');
+  side.setAttribute('role', 'listbox'); side.setAttribute('aria-label', '我的歌单');
+  NEA.lists.forEach(l => {
+    const k = neaKey(l), b = el('button', 'nelp' + (k === NEA.sel ? ' on' : '')); b.type = 'button'; b.setAttribute('role', 'option'); b.setAttribute('aria-selected', String(k === NEA.sel));
+    const a = artEl(l.name, false, l.cover); if (l.liked) { a.classList.add('lk'); a.innerHTML = svg('heart', 2.2); }
+    const t = el('span', 'tx'); t.append(el('b', '', l.liked ? '我喜欢的音乐' : l.name), el('small', '', l.count + ' 首' + (l.mine || l.liked ? '' : ' · ' + (l.by || '收藏'))));
+    b.append(a, t); b.title = l.name; b.onclick = () => { NEA.sel = k; NEA.show = 60; NEA.q = ''; renderNe(); neaLoadTracks(k); $('#mne').scrollTop = 0; };
+    side.append(b);
+  });
+  const cur = NEA.lists.find(l => neaKey(l) === NEA.sel) || NEA.lists[0], t = NEA.tr[NEA.sel] || { songs: [], done: false, busy: false };
+  const hd = el('div', 'nelh'); hd.append(el('b', '', cur ? (cur.liked ? '我喜欢的音乐' : cur.name) : ''), el('small', '', (t.total || (cur && cur.count) || 0) + ' 首'));
+  const f = el('label', 'nesf neaf'); f.innerHTML = svg('search', 1.9);
+  const fi = el('input'); fi.id = 'neaq'; fi.type = 'search'; fi.placeholder = '在这个歌单里找：歌名 / 歌手 / 专辑'; fi.autocomplete = 'off'; fi.maxLength = 40; fi.value = NEA.q; fi.setAttribute('aria-label', '筛选歌曲');
+  fi.oninput = () => { NEA.q = fi.value.trim(); NEA.show = 60; clearTimeout(NEA.ft); NEA.ft = setTimeout(() => { renderNe(true); if (NEA.q) neaLoadTracks(NEA.sel); }, 160); };
+  fi.onkeydown = e => { if (e.key === 'Escape' && fi.value) { e.stopPropagation(); fi.value = ''; fi.oninput(); } };
+  f.append(fi);
+  const tools = el('div', 'nelt');
+  const P = NEA.perm, dd = el('button', 'pill2 ghost nedd'); dd.type = 'button'; dd.innerHTML = svg('folder', 2); dd.append(' ' + (st.dlDir ? st.dlDir.name : '选择下载文件夹')); dd.title = st.dlDir ? '下载到：' + st.dlDir.path + '（点一下换一个）' : '选择歌曲下载到哪个文件夹';
+  dd.onclick = async () => { const d = await NEB.neChooseDlDir().catch(() => null); if (d && !d.error && d.path) { NEA.st.dlDir = d; renderNe(true); } };
+  const lv = el('span', 'nelv' + (P && P.ok ? ' ok' : '')); lv.textContent = P ? (P.ok ? '下载已解锁 · 这小时还能下 ' + P.left + ' 首' : 'Hush ' + P.need + ' 级解锁下载 · 你现在 Lv.' + P.level) : '';
+  if (P && P.ok) tools.append(dd); tools.append(lv);
+  hd.append(tools);
+  main.append(hd, f);
+  if (NEA.dl.busy || NEA.last) {
+    const bar = el('div', 'nedlbar' + (NEA.dl.busy ? ' run' : '')); bar.id = 'nedlbar'; bar.style.setProperty('--p', NEA.dl.total ? (NEA.dl.got / NEA.dl.total).toFixed(3) : NEA.dl.busy ? '0' : '1');
+    if (NEA.dl.busy) bar.append(el('span', '', '正在下载《' + NEA.dl.name + '》'), el('b', '', NEA.dl.total ? Math.floor(NEA.dl.got / NEA.dl.total * 100) + '%' : ''));
+    else { bar.append(el('span', '', '已下载：' + NEA.last.name), el('b', '')); const o = el('button', 'pill2 ghost', '在文件夹中显示'); o.type = 'button'; o.onclick = () => NEB.neShowDl(NEA.last.name); bar.append(o); }
+    main.append(bar);
+  }
+  const q = NEA.q.toLowerCase(), list = q ? t.songs.filter(s => (s.title + ' ' + s.artist + ' ' + s.album).toLowerCase().includes(q)) : t.songs;
+  const rows = el('div', 'nerows');
+  list.slice(0, NEA.show).forEach(s => rows.append(neaRow(s)));
+  main.append(rows);
+  if (t.err) main.append(el('div', 'mnote', t.err));
+  else if (!t.songs.length && (t.busy || !t.done)) { for (let i = 0; i < 5; i++) { const r = el('div', 'qi sk'); r.append(el('div', 'art'), el('div', 'tx')); r.lastChild.append(el('i'), el('i')); rows.append(r); } }
+  else if (!list.length) main.append(el('div', 'mnote', q ? (t.done ? '这个歌单里没有“' + NEA.q + '”' : '正在找…') : '这个歌单是空的'));
+  if (list.length > NEA.show || !t.done) {   // 懒加载：滚到底再多画 / 多拿一些
+    const sn = el('div', 'nesn', t.busy ? '加载中…' : ''); main.append(sn);
+    const io2 = new IntersectionObserver(es => { if (!es.some(e => e.isIntersecting)) return; io2.disconnect(); if (list.length > NEA.show) { NEA.show += 60; renderNe(true); } else neaLoadTracks(NEA.sel); }, { root: box, rootMargin: '300px' });
+    io2.observe(sn);
+  }
+  main.append(el('div', 'mnote', (neaCanVip() ? '你是网易云会员：会员歌曲也能点，没有会员的人那边会显示“需要会员”。' : '没有会员：会员歌曲（VIP）点不了也听不了。') + '\n点歌用你自己的网易云账号播放，播放地址不会发给别人。'));
+  wrap.append(side, main); box.append(wrap);
+  box.scrollTop = soft ? sc : 0;
+  if (fq) { fi.focus({ preventScroll: true }); try { fi.setSelectionRange(fa, fa); } catch (_) {} }
 }
 function renderLib() {
   const box = $('#mlib'), L = MS.lib; box.innerHTML = '';
@@ -4743,6 +5126,32 @@ if (DL) {
 }
 lyfDrag(); lycApply();
 start();
+
+// v0.20.1 预览：聊天背景选择（只存在本机）
+const CBG = [['glow', '光', '推荐'], ['plain', '素', ''], ['mist', '雾', ''], ['dots', '点', ''], ['bp', '图纸', '旧版']];
+function cbgSet(v) { document.documentElement.setAttribute('data-cbg', v); try { localStorage.setItem('hush_cbg_v1', v); } catch (_) {} document.querySelectorAll('.cbgs button').forEach(b => b.classList.toggle('on', b.dataset.v === v)); }
+function cbgMount(host) {
+  if (!host || host.querySelector('.cbgs')) return;
+  const h = el('div', 'cbgh', '聊天背景'); const g = el('div', 'cbgs'); g.setAttribute('role', 'radiogroup');
+  const cur = document.documentElement.getAttribute('data-cbg') || 'glow';
+  CBG.forEach(([v, n, tag]) => { const b = el('button'); b.type = 'button'; b.dataset.v = v; b.setAttribute('role', 'radio'); b.append(el('i', v), el('span', '', n)); if (tag) b.lastChild.append(' ', el('small', '', tag)); b.classList.toggle('on', v === cur); b.onclick = () => cbgSet(v); g.append(b); });
+  host.prepend(h, g);
+}
+
+// 主题：跟随系统（默认）/ 浅色 / 深色；只存在本机。跟随系统时由 CSS 的 prefers-color-scheme 实时切换
+const THEMES = [['auto', '跟随系统'], ['light', '浅色'], ['dark', '深色']];
+function themeGet() { try { const t = localStorage.getItem('hush_theme_v1'); return t === 'light' || t === 'dark' ? t : 'auto'; } catch (_) { return 'auto'; } }
+function themeSet(t) {
+  try { t === 'auto' ? localStorage.removeItem('hush_theme_v1') : localStorage.setItem('hush_theme_v1', t); } catch (_) {}
+  if (t === 'auto') document.documentElement.removeAttribute('data-theme'); else document.documentElement.setAttribute('data-theme', t);
+  document.querySelectorAll('.thms button').forEach(b => { b.classList.toggle('on', b.dataset.v === t); b.setAttribute('aria-checked', String(b.dataset.v === t)); });
+}
+function themeMount(host) {
+  if (!host || host.querySelector('.thms')) return;
+  const g = el('div', 'thms'); g.setAttribute('role', 'radiogroup'); const cur = themeGet();
+  THEMES.forEach(([v, n]) => { const b = el('button', '', n); b.type = 'button'; b.dataset.v = v; b.setAttribute('role', 'radio'); b.classList.toggle('on', v === cur); b.setAttribute('aria-checked', String(v === cur)); b.onclick = () => themeSet(v); g.append(b); });
+  host.prepend(el('div', 'cbgh', '深浅色'), g);
+}
 </script>
 </body>
 </html>

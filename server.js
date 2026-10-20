@@ -125,7 +125,7 @@ CREATE TABLE IF NOT EXISTS playlist(qid INTEGER PRIMARY KEY, music_id TEXT, user
 CREATE TABLE IF NOT EXISTS settings(k TEXT PRIMARY KEY, v TEXT);
 `);
 // v0.10 升级：歌单里可以放网易云的歌（不占个人音乐仓库）。music_id 写成 'ne:<歌曲id>'，歌名等信息直接存在歌单里
-for (const [c, d] of [['src', 'TEXT'], ['ntitle', 'TEXT'], ['nartist', 'TEXT'], ['ncover', 'TEXT'], ['ndur', 'REAL']]) addCol('playlist', c, d);
+for (const [c, d] of [['src', 'TEXT'], ['ntitle', 'TEXT'], ['nartist', 'TEXT'], ['ncover', 'TEXT'], ['ndur', 'REAL'], ['nvip', 'INTEGER DEFAULT 0']]) addCol('playlist', c, d);
 
 // ---------- 等级规则：升到第 N+1 级需要 20 * N² 经验 ----------
 const XP_MESSAGE = 2;      // 发消息（每 5 秒最多算一次）
@@ -867,7 +867,7 @@ const plRows = () => db.prepare("SELECT p.*, COALESCE(m.title, p.ntitle) title, 
 const plItem = r => {
   const o = { qid: r.qid, id: r.music_id, title: r.title, dur: r.dur, by: { name: r.uname, nick: r.unick || r.uname } };
   if (r.martist) o.artist = r.martist;
-  if (r.src === 'netease') { const nid = r.music_id.slice(3); Object.assign(o, { src: 'netease', nid, artist: r.nartist || '', cover: r.ncover || '', url: NE_MEDIA.replace('{id}', nid) }); }
+  if (r.src === 'netease') { const nid = r.music_id.slice(3); Object.assign(o, { src: 'netease', nid, artist: r.nartist || '', cover: r.ncover || '', url: NE_MEDIA.replace('{id}', nid) }); if (r.nvip) o.vip = true; }
   return o;
 };
 function musicState() {
@@ -884,8 +884,8 @@ function plStart() {
   PL.cur = { qid: r.qid, startedAt, timer: setTimeout(() => { plNext(r.qid); }, r.dur * 1000 + LEAD + GRACE) };
   if (r.src === 'netease') {
     // 网易云的歌可能因为地区 / 版权 / VIP 放不了：有人在加载、但过了 NE_WAIT 还没有任何人加载成功，就自动跳过
-    PL.cur.ne = { ok: false, tries: new Set(), fail: null };
-    PL.cur.watch = setTimeout(() => { const c = PL.cur; if (c && c.qid === r.qid && c.ne && !c.ne.ok && c.ne.tries.size) neSkip(r.qid, 'timeout'); }, LEAD + NE_WAIT);
+    PL.cur.ne = { ok: false, oks: new Set(), tries: new Set(), fails: new Set(), fail: null };
+    PL.cur.watch = setTimeout(() => { const c = PL.cur; if (c && c.qid === r.qid && c.ne && !c.ne.ok && c.ne.tries.size) neSkip(r.qid, 'timeout'); }, LEAD + NE_WAIT);   // 超时：谁都没加载成功
   }
 }
 // ----- v0.11：暂停 / 继续 / 拖进度（点歌的人和管理员可以操作，服务器说了算，所有人同步） -----
@@ -967,6 +967,7 @@ function neSong(s) {
     album: clean((s.al || s.album || {}).name, 80), cover: neCover((s.al || s.album || {}).picUrl),
     dur: Math.round((Number(s.dt || s.duration) || 0) / 10) / 100,
     vip: fee === 1 || fee === 4,                                   // VIP / 付费专辑：外链放不了
+    buy: fee === 4,                                                // 付费专辑：会员也放不了
     blocked: s.privilege ? (p.st < 0 || p.pl === 0) : false        // 服务器所在地区没有版权（大家所在地区不同，结果可能不一样）
   };
   if (/^\d{1,12}$/.test(o.id) && o.dur > 0) { neSongs.set(o.id, o); if (neSongs.size > 2000) neSongs.delete(neSongs.keys().next().value); }
@@ -1026,13 +1027,14 @@ async function neInfo(id) {
   if (neSongs.has(id)) return neSongs.get(id);
   try { const j = await neFetch(NE_DETAIL + '?ids=' + encodeURIComponent('[' + id + ']')); const s = j.songs && j.songs[0]; return s && String(s.id) === id ? neSong(s) : null; } catch (_) { return null; }
 }
-async function plAddNe(u, nid) {
+async function plAddNe(u, nid, own) {
   const g = groupSettings();
   if (!g.music) return '群聊音乐还没有开启';
   nid = String(nid || ''); if (!/^\d{1,12}$/.test(nid)) return '歌曲不存在';
   const s = await neInfo(nid);
   if (!s || !(s.dur > 0)) return '找不到这首歌';
-  if (s.vip) return '这首是 VIP / 付费歌曲，放不了';
+  if (s.buy) return '这首在付费专辑里，放不了';
+  if (s.vip && !own) return '这首是 VIP / 付费歌曲，需要会员才能放';   // v0.20：登录了网易云会员的桌面版可以点（只有能放的人听得到）
   const mid = 'ne:' + nid;
   if (db.prepare('SELECT 1 FROM playlist WHERE music_id=?').get(mid)) return '这首歌已经在歌单里了';
   const rows = plRows(), mine = rows.filter(r => r.user_id === u.id);
@@ -1041,6 +1043,7 @@ async function plAddNe(u, nid) {
   const last = Math.max(PL.lastKey.get(u.id) || 0, ...mine.map(r => r.k));
   const k = Math.max(K, last + 1, 1), ts = Date.now();
   db.prepare("INSERT INTO playlist(music_id,user_id,k,added,src,ntitle,nartist,ncover,ndur) VALUES(?,?,?,?,'netease',?,?,?,?)").run(mid, u.id, k, ts, s.title, s.artist, s.cover, s.dur);
+  if (s.vip) db.prepare('UPDATE playlist SET nvip=1 WHERE music_id=?').run(mid);
   const r = db.prepare("INSERT INTO messages(user_id,text,ts,kind) VALUES(?,?,?,'song')").run(u.id, s.title, ts);
   io.emit('msg', msgOut(msgRow.get(Number(r.lastInsertRowid))));
   plStart(); pushMusic();
@@ -1052,6 +1055,43 @@ function neSkip(qid, reason) {
   io.emit('music:skipped', { qid, title: row ? row.title : '', reason });
   plNext(qid);
 }
+// ================= v0.20：下载网易云歌曲到自己电脑（Hush 5 级解锁） =================
+// 下载由桌面版用你自己的网易云账号完成，文件只存在你的电脑上，不经过、也不上传到这台服务器。
+// 服务器只负责把关：5 级以上才发一张 2 分钟有效、只能用一次的“下载许可”，桌面版下载前拿许可来核对。
+const NE_DL_LEVEL = Number(process.env.NETEASE_DL_LEVEL) || 5;
+const NE_DL_PER_HOUR = Number(process.env.NETEASE_DL_PER_HOUR) || 30;
+const NE_DL_TTL = 120e3;
+const neDlHits = new Map(), neDlUsed = new Map();
+const dlSign = b => crypto.createHmac('sha256', SIGN_SECRET).update('nedl.' + b).digest('base64url');
+app.get('/api/netease/dl-perm', (req, res) => {   // 只看自己能不能下载（给界面显示锁）
+  const u = userOf(req); if (!u) return res.status(401).json({ error: '请先登录' });
+  const L = level(u.xp), now = Date.now(), h = (neDlHits.get(u.id) || []).filter(t => now - t < 3600e3);
+  res.set('Cache-Control', 'no-store').json({ ok: L >= NE_DL_LEVEL, level: L, need: NE_DL_LEVEL, left: Math.max(0, NE_DL_PER_HOUR - h.length), perHour: NE_DL_PER_HOUR });
+});
+app.post('/api/netease/dl-perm', (req, res) => {
+  const u = userOf(req); if (!u) return res.status(401).json({ error: '请先登录' });
+  res.set('Cache-Control', 'no-store');
+  const id = String((req.body && req.body.id) || ''); if (!/^\d{1,12}$/.test(id)) return res.status(400).json({ error: '歌曲不存在' });
+  const L = level(u.xp);
+  if (L < NE_DL_LEVEL) return res.status(403).json({ error: `Hush 账号 ${NE_DL_LEVEL} 级才能下载（你现在 ${L} 级）`, code: 'level', level: L, need: NE_DL_LEVEL });
+  const now = Date.now(), h = (neDlHits.get(u.id) || []).filter(t => now - t < 3600e3);
+  if (h.length >= NE_DL_PER_HOUR) return res.status(429).json({ error: `一小时最多下载 ${NE_DL_PER_HOUR} 首，休息一下再来`, code: 'rate' });
+  h.push(now); neDlHits.set(u.id, h);
+  const b = Buffer.from(JSON.stringify({ u: u.id, id, e: now + NE_DL_TTL, n: crypto.randomBytes(9).toString('base64url') })).toString('base64url');
+  res.json({ t: b + '.' + dlSign(b), exp: now + NE_DL_TTL, left: NE_DL_PER_HOUR - h.length });
+});
+app.post('/api/netease/dl-verify', (req, res) => {   // 桌面版主进程核对许可（一次性）
+  res.set('Cache-Control', 'no-store');
+  const t = String((req.body && req.body.t) || ''), [b, sg] = t.split('.');
+  let o = null; try { if (b && sg && crypto.timingSafeEqual(Buffer.from(sg), Buffer.from(dlSign(b)))) o = JSON.parse(Buffer.from(b, 'base64url').toString()); } catch (_) { o = null; }
+  const now = Date.now();
+  for (const [k, e] of neDlUsed) if (e < now) neDlUsed.delete(k);
+  if (!o || !(o.e > now) || neDlUsed.has(o.n) || String(req.body.id || '') !== o.id) return res.status(403).json({ ok: false, error: '下载许可无效或已过期' });
+  const u = userById.get(o.u); if (!u || level(u.xp) < NE_DL_LEVEL) return res.status(403).json({ ok: false, error: '等级不够' });
+  neDlUsed.set(o.n, o.e);
+  res.json({ ok: true, uid: o.u, id: o.id });
+});
+
 // ================= v0.19：歌词（歌词字幕） =================
 // 来源（按顺序）：① 歌曲文件里内嵌的歌词（上传时读出，旧歌第一次打开时补读）② 自己上传的 .lrc
 // ③ 网易云的歌：网易云自带歌词 ④ LRCLIB（https://lrclib.net，免费、不要密钥）按歌名 / 歌手 / 时长查。
@@ -1559,15 +1599,24 @@ io.on('connection', socket => {
   socket.on('music:ping', (_, cb) => ack(cb, Date.now()));   // 对时：客户端据此算出和服务器的时间差
   socket.on('music:add', (id, cb) => { const e = plAdd(userById.get(uid), id); ack(cb, e ? { error: e } : { ok: true }); });
   // v0.10：网易云
-  socket.on('music:addne', async (id, cb) => { const e = await plAddNe(userById.get(uid), id); ack(cb, e ? { error: e } : { ok: true }); });
+  socket.on('music:addne', async (id, cb) => {   // v0.20：id 或 { id, own: true }（own = 我自己的网易云账号能放这首）
+    const o = id && typeof id === 'object' ? id : { id };
+    const e = await plAddNe(userById.get(uid), o.id, o.own === true); ack(cb, e ? { error: e } : { ok: true });
+  });
   const neCur = qid => { const c = PL.cur; return c && c.ne && c.qid === parseInt(qid) ? c : null; };
   socket.on('music:try', qid => { const c = neCur(qid); if (c) c.ne.tries.add(socket.id); });
-  socket.on('music:ok', qid => { const c = neCur(qid); if (c) { c.ne.ok = true; clearTimeout(c.ne.fail); clearTimeout(c.watch); } });
-  socket.on('music:fail', (qid, cb) => {
+  socket.on('music:ok', qid => { const c = neCur(qid); if (c) { c.ne.ok = true; c.ne.oks.add(socket.id); c.ne.fails.delete(socket.id); clearTimeout(c.ne.fail); clearTimeout(c.watch); } });
+  const neOkNow = c => { for (const id of c.ne.oks) if (!io.sockets.sockets.has(id)) c.ne.oks.delete(id); c.ne.ok = c.ne.oks.size > 0; return c.ne.ok; };   // 放得了的人退出 / 换了没会员的账号：重新算
+  // v0.20：只有“所有试着放的人都放不了”（地区 / 版权 / 需要会员）才替大家跳过；有会员的人还在加载就继续等
+  const neAllFailed = c => [...c.ne.tries].every(id => c.ne.fails.has(id) || !io.sockets.sockets.has(id));
+  const neCheck = c => { clearTimeout(c.ne.fail); c.ne.fail = setTimeout(() => { if (PL.cur === c && !neOkNow(c) && neAllFailed(c)) neSkip(c.qid, 'error'); }, NE_FAIL_GRACE); };
+  socket.on('music:fail', (qid, why, cb) => {
+    if (typeof why === 'function') { cb = why; why = ''; }
     const c = neCur(qid); if (!c) return ack(cb, { gone: true });
-    if (c.ne.ok) return ack(cb, { kept: true });   // 别人放得了：只有你这里放不了，不替大家跳过
-    if (!c.ne.fail) c.ne.fail = setTimeout(() => neSkip(c.qid, 'error'), NE_FAIL_GRACE);
-    ack(cb, { skipping: true });
+    c.ne.tries.add(socket.id); c.ne.fails.add(socket.id); c.ne.oks.delete(socket.id);
+    if (neOkNow(c)) return ack(cb, { kept: true });   // 别人放得了：只有你这里放不了，不替大家跳过
+    if (!neAllFailed(c)) return ack(cb, { waiting: true });   // 还有人在加载（比如有会员的人），先等
+    neCheck(c); ack(cb, { skipping: true });
   });
   socket.on('music:remove', (qid, cb) => {
     const r = db.prepare('SELECT * FROM playlist WHERE qid=?').get(parseInt(qid) || 0), u = userById.get(uid);
@@ -1584,6 +1633,7 @@ io.on('connection', socket => {
   });
 
   socket.on('disconnect', () => {
+    { const c = PL.cur; if (c && c.ne && c.ne.tries.has(socket.id)) { c.ne.tries.delete(socket.id); c.ne.fails.delete(socket.id); c.ne.oks.delete(socket.id); if (!neOkNow(c) && c.ne.fails.size && neAllFailed(c)) neCheck(c); } }
     online.delete(socket.id); onlineIds.delete(socket.id); pushOnline();
     const c = calls.get(uid);
     if (c && (c.sock === socket.id || (!c.sock && !socketsOf(uid).length))) endCall(uid, c.state === 'active' ? 'hangup' : 'offline');
