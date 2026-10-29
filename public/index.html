@@ -1468,6 +1468,16 @@ aside .link + .link{margin-top:0}
 .spanes{min-height:0;overflow-y:auto;padding:12px 20px 22px;overscroll-behavior:contain}
 .spane{display:flex;flex-direction:column;gap:8px;animation:fade .2s ease}
 .spane[hidden]{display:none}
+/* v0.21：设置 › 语音（阈值 / 降噪） */
+.vxrow{flex-direction:column;align-items:stretch!important;gap:10px!important}
+.vxm{position:relative;height:12px;border-radius:6px;background:color-mix(in srgb,var(--ef-tx1,#222) 10%,transparent);overflow:hidden}
+.vxm i{position:absolute;left:0;top:0;bottom:0;width:0;border-radius:6px;background:var(--ef-tx2,#999);transition:width .05s linear}
+.vxm.open i{background:var(--ef-ac,var(--ac))}
+.vxm b{position:absolute;top:-2px;bottom:-2px;width:2px;background:var(--ef-tx1,#222);left:0}
+.vxc{display:flex;align-items:center;gap:10px;font-size:12.5px}
+.vxc input[type=range]{flex:1;accent-color:var(--ef-ac,var(--ac))}
+.vxc span{min-width:52px;text-align:right;font:600 12px var(--mono,monospace);opacity:.75}
+.vxc small{opacity:.7}
 .sgh{display:flex;align-items:center;gap:8px;margin:12px 2px 2px;font:700 10px var(--mono,monospace);letter-spacing:.2em;color:var(--ef-tx3,var(--mut));text-transform:uppercase}
 .sgh:first-child{margin-top:2px}
 .sgh::after{content:"";flex:1;height:1px;background:var(--ef-bd,var(--line))}
@@ -1605,7 +1615,7 @@ input:not([type=range]):not([type=checkbox]):not([type=radio]):not([type=color])
 .nelp .art{width:34px;height:34px;border-radius:9px;flex:none}.nelp .art.lk{background:linear-gradient(135deg,#ff5d6c,#d81e3b);color:#fff;display:grid;place-items:center}.nelp .art.lk svg{width:16px;height:16px}
 .nelp .tx{display:flex;flex-direction:column;min-width:0;line-height:1.3}.nelp b{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.nelp small{font-size:11px;color:var(--mut)}
 .nelm{min-width:0}
-.nelh{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px;padding:4px 4px 8px}.nelh>b{font-size:16px}.nelh>small{color:var(--mut);font-size:12px}
+.nelh{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px;padding:4px 4px 8px}.nelh>b{font-size:16px}.nelh>small{color:var(--mut);font-size:12px}.nelh>small.nemiss{opacity:.72;font-size:11.5px}
 .nelt{margin-left:auto;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .nedd{display:inline-flex;align-items:center;gap:6px;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:5px 12px!important;font-size:12px!important}.nedd svg{width:14px;height:14px;flex:none}
 .nelv{font-size:11.5px;color:var(--mut);display:inline-flex;align-items:center;gap:5px}.nelv::before{content:"";width:7px;height:7px;border-radius:50%;background:#e0a529}.nelv.ok::before{background:var(--ef-ac)}
@@ -1669,12 +1679,33 @@ html[data-cbg="glow"] .ef-bg{background-color:var(--ef-bg1)!important;background
 .thms button.on{background:var(--ef-bg2)!important;color:var(--ef-tx1)!important;box-shadow:0 0 0 1px var(--ef-acd),0 2px 8px -4px rgba(0,0,0,.3)!important}
 html:not([data-cbg="bp"]) .lqg-prev{background-color:var(--ef-bg1)!important;background-image:linear-gradient(135deg,var(--ef-bg2),var(--ef-bg1))!important}
 html[data-cbg="dots"] .lqg-prev{background-image:radial-gradient(circle at 1px 1px,color-mix(in srgb,var(--ef-tx1) 14%,transparent) 1px,transparent 1.4px)!important;background-size:14px 14px!important}
+
+/* v0.21：个人资料背景图——1262 行的 background 简写把 size/position 重置成 auto / 0 0，1200×525 的图只露出左上角 */
+.sheet .cover.img{background-size:cover!important;background-position:center!important;background-repeat:no-repeat!important}
+/* v0.21：个性气泡——气泡后面是发送者的资料背景图，头像那边清晰，往外渐隐 */
+html:not([data-ubg="off"]) .m.ubg .b:not(.bimg):not(.stk)::after{content:""!important;position:absolute;inset:0;z-index:-1;pointer-events:none;border-radius:inherit!important;
+  background:linear-gradient(90deg,color-mix(in srgb,var(--ef-bg2) var(--ubg-s,40%),transparent),color-mix(in srgb,var(--ef-bg2) calc(var(--ubg-s,40%) + 25%),transparent)),var(--ubg,none) left 40%/cover no-repeat;
+  -webkit-mask-image:linear-gradient(90deg,#000 0%,rgba(0,0,0,.55) 45%,transparent 92%);mask-image:linear-gradient(90deg,#000 0%,rgba(0,0,0,.55) 45%,transparent 92%);
+  opacity:var(--ubg-o,.6);transition:opacity .4s ease}
+html:not([data-ubg="off"]) .m.own.ubg .b:not(.bimg):not(.stk)::after{background:linear-gradient(270deg,color-mix(in srgb,var(--ef-ac) calc(var(--ubg-s,40%) - 10%),transparent),color-mix(in srgb,var(--ef-ac) calc(var(--ubg-s,40%) + 15%),transparent)),var(--ubg,none) right 40%/cover no-repeat;
+  -webkit-mask-image:linear-gradient(270deg,#000 0%,rgba(0,0,0,.55) 45%,transparent 92%);mask-image:linear-gradient(270deg,#000 0%,rgba(0,0,0,.55) 45%,transparent 92%)}
+.m.ubg:not(.ubgok) .b::after{opacity:0!important}
+html[data-ubg="lo"]{--ubg-o:.38;--ubg-s:52%}
+html[data-ubg="mid"],html:not([data-ubg]){--ubg-o:.62;--ubg-s:38%}
+html[data-ubg="hi"]{--ubg-o:.9;--ubg-s:24%}
+.m.ubg .b{text-shadow:0 0 6px color-mix(in srgb,var(--ef-bg2) 70%,transparent)}
+.m.own.ubg .b{text-shadow:0 0 6px color-mix(in srgb,var(--ef-ac) 60%,transparent)}
+html[data-ubg="off"] .m.ubg .b{text-shadow:none}
+.ubgs{grid-template-columns:repeat(4,1fr)!important}
+.ubgs i{background:linear-gradient(90deg,#c98a5a,#7b5ea8 60%,transparent)!important}
+.ubgs button[data-v="off"] i{background:var(--ef-bg1)!important}
+.ubgs button[data-v="lo"] i{opacity:.4}.ubgs button[data-v="mid"] i{opacity:.65}
 </style>
 <script src="/lq-glass.js"></script>
 </head>
 <body>
 <div class="ef-bg" aria-hidden="true"></div>
-<script>(function(){var v="glow";try{v=localStorage.getItem("hush_cbg_v1")||"glow"}catch(e){}if(!/^(plain|mist|dots|glow|bp)$/.test(v))v="glow";document.documentElement.setAttribute("data-cbg",v)})()</script>
+<script>(function(){var v="glow";try{v=localStorage.getItem("hush_cbg_v1")||"glow"}catch(e){}if(!/^(plain|mist|dots|glow|bp)$/.test(v))v="glow";document.documentElement.setAttribute("data-cbg",v);var g="mid";try{g=localStorage.getItem("hush_ubg_v1")||"mid"}catch(e){}if(!/^(off|lo|mid|hi)$/.test(g))g="mid";document.documentElement.setAttribute("data-ubg",g)})()</script>
 <main id="auth" hidden>
   <div class="ef-hero" aria-hidden="true">
     <div class="k">HUSH / PRIVATE CHANNEL · <b>EST. 2026</b></div>
@@ -1898,9 +1929,10 @@ html[data-cbg="dots"] .lqg-prev{background-image:radial-gradient(circle at 1px 1
       <nav class="stabs" id="stabs" role="tablist" aria-label="设置分类">
         <button type="button" role="tab" data-p="gen" class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 1 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>通用<small>01</small></button>
         <button type="button" role="tab" data-p="mus"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>音乐<small>02</small></button>
-        <button type="button" role="tab" data-p="look"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18z" fill="currentColor" stroke="none" opacity=".35"/></svg>外观<small>03</small></button>
-        <button type="button" role="tab" data-p="tool" id="stabtool"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8V5.5A1.5 1.5 0 0 1 5.5 4H8M16 4h2.5A1.5 1.5 0 0 1 20 5.5V8M20 16v2.5a1.5 1.5 0 0 1-1.5 1.5H16M8 20H5.5A1.5 1.5 0 0 1 4 18.5V16"/><circle cx="12" cy="12" r="2.6"/></svg>截图与表情<small>04</small></button>
-        <button type="button" role="tab" data-p="acc"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>账号<small>05</small></button>
+        <button type="button" role="tab" data-p="voice"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>语音<small>03</small></button>
+        <button type="button" role="tab" data-p="look"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18z" fill="currentColor" stroke="none" opacity=".35"/></svg>外观<small>04</small></button>
+        <button type="button" role="tab" data-p="tool" id="stabtool"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8V5.5A1.5 1.5 0 0 1 5.5 4H8M16 4h2.5A1.5 1.5 0 0 1 20 5.5V8M20 16v2.5a1.5 1.5 0 0 1-1.5 1.5H16M8 20H5.5A1.5 1.5 0 0 1 4 18.5V16"/><circle cx="12" cy="12" r="2.6"/></svg>截图与表情<small>05</small></button>
+        <button type="button" role="tab" data-p="acc"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>账号<small>06</small></button>
       </nav>
       <div class="spanes" id="spanes">
         <section class="spane" data-p="gen" role="tabpanel">
@@ -1979,6 +2011,37 @@ html[data-cbg="dots"] .lqg-prev{background-image:radial-gradient(circle at 1px 1
           <div class="sgh">FONT<span>歌词字体</span></div>
           <div class="lyfonts" id="lyfonts" role="radiogroup" aria-label="歌词字体"></div>
           <p class="snote">默认的「标准」用电脑自带的字体（Windows 是微软雅黑，Mac 是苹方），不用下载。另外三款是开源免费字体（SIL Open Font License 1.1），跟着 Hush 一起发布，只有用到的字才会下载。授权说明在 <a href="/fonts/README.txt" target="_blank" rel="noopener">fonts/README.txt</a>。<br>这些设置只保存在这台电脑上。</p>
+        </section>
+        <section class="spane" data-p="voice" role="tabpanel" hidden>
+          <div class="sgh">MIC<span>麦克风阈值（噪声门）</span></div>
+          <div class="srow">
+            <div class="si"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h3l3-8 4 16 3-8h5"/></svg></div>
+            <div class="stx"><b>启用阈值</b><small>声音低于阈值时不发送，适合人多、环境吵的时候</small></div>
+            <button class="tgl" id="tvgate" type="button" role="switch" aria-checked="false" aria-label="启用阈值" onclick="vxSet({gate:!VX.gate})"><i></i></button>
+          </div>
+          <div class="srow vxrow">
+            <div class="vxm" id="vxm" title="实时音量，竖线是阈值"><i id="vxlv"></i><b id="vxth"></b></div>
+            <div class="vxc"><input type="range" id="vxthr" min="0" max="100" step="1" aria-label="阈值"><span id="vxthv"></span></div>
+            <div class="vxc"><small>松开延迟</small><input type="range" id="vxrel" min="100" max="1000" step="50" aria-label="松开延迟"><span id="vxrelv"></span></div>
+            <div class="vxc"><button class="pill2 ghost" id="vxtest" type="button" onclick="vxTest()">测试麦克风</button><small id="vxst"></small></div>
+          </div>
+          <div class="sgh">DSP<span>浏览器降噪</span></div>
+          <div class="srow">
+            <div class="si"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 9v6M8 6v12M12 9v6M16 11v2M20 12h0"/></svg></div>
+            <div class="stx"><b>降噪</b><small>压掉风扇、键盘这类持续的背景声</small></div>
+            <button class="tgl" id="tvns" type="button" role="switch" aria-checked="false" aria-label="降噪" onclick="vxSet({ns:!VX.ns})"><i></i></button>
+          </div>
+          <div class="srow">
+            <div class="si"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10v4h4l5 4V6L7 10z"/><path d="M16 9a4 4 0 0 1 0 6"/></svg></div>
+            <div class="stx"><b>回声消除</b><small>不戴耳机时防止别人听到自己的回声</small></div>
+            <button class="tgl" id="tvec" type="button" role="switch" aria-checked="false" aria-label="回声消除" onclick="vxSet({ec:!VX.ec})"><i></i></button>
+          </div>
+          <div class="srow">
+            <div class="si"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 18 20 6M4 6h6M14 18h6"/></svg></div>
+            <div class="stx"><b>自动增益</b><small>自动调整麦克风音量；用阈值时建议关掉，阈值会更稳定</small></div>
+            <button class="tgl" id="tvagc" type="button" role="switch" aria-checked="false" aria-label="自动增益" onclick="vxSet({agc:!VX.agc})"><i></i></button>
+          </div>
+          <p class="snote">通话中修改会立即生效。这些设置按账号保存在这台电脑上。</p>
         </section>
         <section class="spane" data-p="look" role="tabpanel" hidden>
           <div class="sgh">GLASS<span>界面外观</span></div>
@@ -2249,6 +2312,7 @@ function renderMsg(m) {
     c.append(q);
   }
   const b = el('div', 'b');
+  if (m.bg && !m.file) { d.classList.add('ubg'); d.dataset.ubg = m.bg; ubgFill(d); }
   if (m.file) { b.classList.add(m.sticker ? 'stk' : 'bimg'); b.append(picEl(m)); d.dataset.fid = m.file.id; d.classList.add('im'); }
   else richText(b, m.text, m.mentions);
   c.append(b);
@@ -2600,11 +2664,90 @@ async function iceRetry(pc, show, restart) {
 async function mic() {
   if (local) return local;
   if (!navigator.mediaDevices?.getUserMedia) throw new Error('需要通过 https 地址或 localhost 打开才能使用麦克风');
-  local = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } });
-  local.getAudioTracks().forEach(t => t.enabled = !muted);
+  vxLoadIfUser();
+  local = await navigator.mediaDevices.getUserMedia({ audio: vxCons() });
+  vxAttach(local); vxApply();
   meter('@me', local); micUi();
   return local;
 }
+// ----- v0.21：麦克风阈值（噪声门）+ 浏览器降噪（设置 › 语音） -----
+// 做法：另外克隆一份麦克风轨道只用来测音量（不发送），低于阈值时把发送的轨道 enabled=false（对方收到静音帧），
+// 不用重新协商 WebRTC。开门很快（attack），关门要等“松开延迟”过去，避免说话断断续续。
+const VX_DEF = { gate: false, thr: 18, rel: 300, ns: true, ec: true, agc: true };
+const vxKey = () => 'hush_voice_v1:' + (me && me.name || '');
+let VX = { ...VX_DEF };
+function vxLoad() { try { VX = { ...VX_DEF, ...JSON.parse(localStorage.getItem(vxKey()) || '{}') }; } catch (_) { VX = { ...VX_DEF }; } }
+const VXS = { mon: null, an: null, src: null, buf: null, open: true, until: 0, lv: 0, raf: 0, test: null };
+const vxCons = () => ({ echoCancellation: VX.ec, noiseSuppression: VX.ns, autoGainControl: VX.agc });
+const vxLevel = buf => { let sum = 0; for (const v of buf) sum += v * v; const db = 20 * Math.log10(Math.sqrt(sum / buf.length) || 1e-8); return Math.max(0, Math.min(100, (db + 70) * 100 / 70)); };   // -70dB..0dB -> 0..100
+function vxSet(o) {
+  const dsp = ('ns' in o) || ('ec' in o) || ('agc' in o);
+  Object.assign(VX, o);
+  try { localStorage.setItem(vxKey(), JSON.stringify(VX)); } catch (_) {}
+  if (dsp) [local, VXS.test].forEach(s => s && s.getAudioTracks().forEach(t => t.applyConstraints(vxCons()).catch(e => console.warn('applyConstraints', e))));
+  if (dsp && VXS.mon) VXS.mon.getAudioTracks().forEach(t => t.applyConstraints(vxCons()).catch(() => {}));
+  vxApply(); vxUi();
+}
+function vxApply() {   // 发送轨道是否开：没静音，且（没开阈值 或 门开着）
+  const on = !muted && (!VX.gate || VXS.open);
+  local && local.getAudioTracks().forEach(t => { if (t.enabled !== on) t.enabled = on; });
+}
+function vxAttach(stream) {   // 给测量用的克隆轨道接分析器
+  vxDetach(true);
+  const c = ctx(), t = stream.getAudioTracks()[0]; if (!c || !t) return;
+  VXS.mon = new MediaStream([t.clone()]);
+  VXS.src = c.createMediaStreamSource(VXS.mon); VXS.an = c.createAnalyser(); VXS.an.fftSize = 1024;
+  VXS.src.connect(VXS.an); VXS.buf = new Float32Array(VXS.an.fftSize); VXS.open = true;
+  if (!VXS.raf) VXS.raf = setInterval(vxTick, 30);   // 不用 requestAnimationFrame：窗口最小化 / 藏到托盘时它会停，门会卡在关着
+}
+function vxDetach(keepTest) {
+  try { VXS.src && VXS.src.disconnect(); } catch (_) {}
+  VXS.mon && VXS.mon.getTracks().forEach(t => t.stop());
+  VXS.mon = VXS.src = VXS.an = null; VXS.open = true; VXS.lv = 0;
+  if (!keepTest) vxTestStop(); else vxPaint();
+}
+function vxTick() {
+  const now = performance.now();
+  if (!VXS.an) { clearInterval(VXS.raf); VXS.raf = 0; return vxPaint(); }
+  if (document.hidden && VX.gate) { VXS.until = now + VX.rel; if (!VXS.open) { VXS.open = true; vxApply(); } return; }   // 后台时定时器会被降速到 1 秒一次：宁可开着门，也不要吞掉说话
+  VXS.an.getFloatTimeDomainData(VXS.buf);
+  const raw = vxLevel(VXS.buf);
+  VXS.lv = raw > VXS.lv ? raw : VXS.lv * 0.9 + raw * 0.1;   // 显示用：快起慢落
+  if (raw >= VX.thr) { VXS.until = now + VX.rel; if (!VXS.open) { VXS.open = true; vxApply(); } }
+  else if (VXS.open && now > VXS.until) { VXS.open = false; vxApply(); }
+  vxPaint();
+}
+function vxPaint() {
+  const m = $('#vxm'); if (!m || $('#setv')?.hidden) return;
+  $('#vxlv').style.width = VXS.lv.toFixed(1) + '%';
+  m.classList.toggle('open', !!VXS.an && (!VX.gate || VXS.open));
+}
+async function vxTest() {   // 不在通话时，临时打开麦克风看音量
+  if (VXS.test || local) return vxTestStop();
+  try { VXS.test = await navigator.mediaDevices.getUserMedia({ audio: vxCons() }); vxAttach(VXS.test); }
+  catch (e) { $('#vxst').textContent = '打不开麦克风：' + (e.message || e); }
+  vxUi();
+}
+function vxTestStop() {
+  if (!VXS.test) return;
+  const s = VXS.test; VXS.test = null; s.getTracks().forEach(t => t.stop());
+  if (local) vxAttach(local); else vxDetach(true);
+  vxUi();
+}
+function vxUi() {
+  if (!$('#vxthr')) return;
+  vxLoadIfUser();
+  [['tvgate', 'gate'], ['tvns', 'ns'], ['tvec', 'ec'], ['tvagc', 'agc']].forEach(([id, k]) => { const b = $('#' + id); b.classList.toggle('on', !!VX[k]); b.setAttribute('aria-checked', String(!!VX[k])); });
+  $('#vxthr').value = VX.thr; $('#vxthv').textContent = VX.thr; $('#vxth').style.left = 'calc(' + VX.thr + '% - 1px)';
+  $('#vxrel').value = VX.rel; $('#vxrelv').textContent = VX.rel + 'ms';
+  $('#vxtest').textContent = VXS.test ? '停止测试' : '测试麦克风'; $('#vxtest').hidden = !!local;
+  $('#vxst').textContent = local ? '正在通话，显示的是你现在的麦克风' : (VXS.test ? '对着麦克风说话，调到说话时超过竖线、安静时低于竖线' : '');
+  vxPaint();
+}
+let vxUser = null;
+function vxLoadIfUser() { const u = me && me.name || ''; if (u !== vxUser) { vxUser = u; vxLoad(); } }
+$('#vxthr').oninput = e => vxSet({ thr: +e.target.value });
+$('#vxrel').oninput = e => vxSet({ rel: +e.target.value });
 // ----- 声音播放 + 音量检测（v0.4.1） -----
 let actx = null;
 const meters = new Map();   // '@me' 或 用户名 -> { an, src, buf, lv, hold }
@@ -2669,7 +2812,7 @@ function micUi() {
   $('#mms').textContent = muted ? '已静音' : '';
 }
 function releaseMic() {
-  if (!call && !rpcs.size && local && !$('#rj').dataset.in) { local.getTracks().forEach(t => t.stop()); local = null; unmeter('@me'); }
+  if (!call && !rpcs.size && local && !$('#rj').dataset.in) { local.getTracks().forEach(t => t.stop()); local = null; unmeter('@me'); vxDetach(); }
   micUi();
 }
 function mkpc(name, ch) {
@@ -2765,7 +2908,7 @@ function endLocal(reason) {
 }
 function toggleMute() {
   muted = !muted; $('#mute').textContent = muted ? '取消静音' : '静音'; micUi();
-  local && local.getAudioTracks().forEach(t => t.enabled = !muted);
+  vxApply();
 }
 async function roomToggle() {
   ctx();
@@ -3877,12 +4020,12 @@ if (DESK && typeof DESK.onAutoStartChanged === 'function') DESK.onAutoStartChang
 function openSettings(tab) {
   closeDrawers(); notifUi(); autoUi(); instUi(); shotUi(); stkUi(); deskUi(); $('#sgrp').hidden = !(me && me.admin);
   if (window.LQGlass && !$('#slook .lqg')) LQGlass.mount($('#slook'));
-  cbgMount($('#slook')); themeMount($('#slook'));   // 液态玻璃外观设置放进“外观”
+  cbgMount($('#slook')); themeMount($('#slook')); ubgMount($('#slook'));   // 液态玻璃外观设置放进“外观”
   $('#stabtool').hidden = $('#sshot').hidden && $('#sstk').hidden;
   if (me) { avatar($('#saccav'), people[me.name] || me, true); $('#saccn').textContent = me.nick || me.name; $('#saccs').textContent = '@' + me.name + (me.admin ? ' · 管理员' : '') + ' · 点这里改头像、昵称和签名'; }
   setTab(typeof tab === 'string' ? tab : 'gen'); $('#setv').hidden = false;
 }
-function closeSettings() { $('#setv').hidden = true; $('#ioshelp').hidden = true; }
+function closeSettings() { vxTestStop(); $('#setv').hidden = true; $('#ioshelp').hidden = true; }
 // ----- 系统通知：页面在后台 / 没有焦点时才弹；@我 的单独弹并且一定响，普通消息合并成一条 -----
 const NOTIF_OK = 'Notification' in window;
 const notifyOn = () => NOTIF_OK && Notification.permission === 'granted' && localStorage.hush_notify !== '0';
@@ -4498,6 +4641,9 @@ function neaQrPoll() {   // 轮询扫码结果：开始每 2 秒，1 分钟后�
     neaQrPoll();
   }, age < 60e3 ? 2000 : 4000);
 }
+// 歌单顺序：我喜欢的音乐 → 我创建的 → 我收藏的，组内保持桌面版给的顺序（sort 是稳定的）。
+// 桌面版 1.5.0 起主进程已经排好，这里再排一次是为了兼容旧桌面版（1.4.0 只把“喜欢”提到最前，其余原样）。
+const neaOrder = lists => (lists || []).slice().sort((a, b) => ((a.liked ? 0 : a.mine ? 1 : 2) - (b.liked ? 0 : b.mine ? 1 : 2)));
 async function neaLoadLists() {
   if (NEA.lists === 'loading') return; NEA.lists = 'loading'; NEA.err = '';
   const r = await NEB.nePlaylists().catch(() => null);
@@ -4507,13 +4653,29 @@ async function neaLoadLists() {
 }
 const neaKey = l => l.liked ? 'liked' : l.id;
 async function neaLoadTracks(k, more) {
-  const t = NEA.tr[k] || (NEA.tr[k] = { songs: [], total: null, done: false, busy: false, err: '' });
+  // 翻页游标 t.next 是“已经用掉的歌曲 id 数”，不是已经拿到的歌数：网易云会悄悄丢掉下架 / 不存在的 id 并把重复的合并，
+  // 按已拿到的歌数翻页会让每一页往回漂（重复 + 跳歌），done 也永远等不到。桌面版 1.5.0 起 ne:tracks 会返回 nextOffset。
+  const t = NEA.tr[k] || (NEA.tr[k] = { songs: [], total: null, done: false, busy: false, err: '', next: 0, ids: new Set() });
+  if (t.ids === undefined) t.ids = new Set(t.songs.map(x => String(x.id)));   // 旧状态兼容
+  if (t.next === undefined) t.next = t.songs.length;
   if (t.busy || t.done) return; t.busy = true;
-  const r = await NEB.neTracks({ id: k, offset: t.songs.length, limit: 100 }).catch(() => null);
+  const r = await NEB.neTracks({ id: k, offset: t.next, limit: 100 }).catch(() => null);
   t.busy = false;
   if (!r || r.error) { t.err = (r && r.error) || '加载失败'; return renderNe(true); }
-  t.songs.push(...r.songs); if (r.total != null) t.total = r.total;
-  t.done = r.total != null ? t.songs.length >= r.total : !r.more || !r.songs.length;
+  const got = Array.isArray(r.songs) ? r.songs : [];
+  for (const x of got) { const id = String(x.id); if (t.ids.has(id)) continue; t.ids.add(id); t.songs.push(x); }
+  if (r.total != null) t.total = r.total;
+  if (r.trackCount != null) t.count = Number(r.trackCount) || 0;   // 歌单总首数（含下架、取不到详情的）
+  // 下一页从 nextOffset 开始；老桌面版（1.4.0 及以前）没有 nextOffset，就按这一页用掉的 id 数走
+  const step = r.nextOffset != null ? Number(r.nextOffset) - t.next : got.length;
+  t.next += Math.max(0, step);
+  // 一页全是下架的歌（got 为空）时不能就此停住：只要游标还在往前走、后面还有 id，就继续翻。
+  // 翻到底看“游标是否走满歌单总首数”（trackCount），不看拿到了几首 —— 下架的歌永远拿不到。
+  const total = r.total != null ? r.total : t.total;
+  const ceil = t.count && total ? Math.max(t.count, total) : (t.count || total);
+  t.done = step <= 0 || r.more === false || (ceil != null ? t.next >= ceil : !got.length || got.length < 100);
+  t.err = '';   // 这一页成功了，清掉上次的加载失败
+  if (r.ordered === false && k === 'liked') t.warn = '网易云没返回“我喜欢的音乐”的顺序，暂时按接口顺序显示';
   if (NEA.sel === k) renderNe(true);
   if (NEA.q && !t.done && NEA.sel === k) neaLoadTracks(k);   // 在筛选：把剩下的也拿过来
 }
@@ -4589,15 +4751,20 @@ function renderNe(soft) {
   if (NEA.lists === 'loading') { box.append(el('div', 'mnote', '正在读取你的歌单…')); return; }
   const wrap = el('div', 'nel'), side = el('div', 'nels'), main = el('div', 'nelm');
   side.setAttribute('role', 'listbox'); side.setAttribute('aria-label', '我的歌单');
-  NEA.lists.forEach(l => {
+  const lists = neaOrder(NEA.lists);
+  lists.forEach(l => {
     const k = neaKey(l), b = el('button', 'nelp' + (k === NEA.sel ? ' on' : '')); b.type = 'button'; b.setAttribute('role', 'option'); b.setAttribute('aria-selected', String(k === NEA.sel));
     const a = artEl(l.name, false, l.cover); if (l.liked) { a.classList.add('lk'); a.innerHTML = svg('heart', 2.2); }
     const t = el('span', 'tx'); t.append(el('b', '', l.liked ? '我喜欢的音乐' : l.name), el('small', '', l.count + ' 首' + (l.mine || l.liked ? '' : ' · ' + (l.by || '收藏'))));
     b.append(a, t); b.title = l.name; b.onclick = () => { NEA.sel = k; NEA.show = 60; NEA.q = ''; renderNe(); neaLoadTracks(k); $('#mne').scrollTop = 0; };
     side.append(b);
   });
-  const cur = NEA.lists.find(l => neaKey(l) === NEA.sel) || NEA.lists[0], t = NEA.tr[NEA.sel] || { songs: [], done: false, busy: false };
-  const hd = el('div', 'nelh'); hd.append(el('b', '', cur ? (cur.liked ? '我喜欢的音乐' : cur.name) : ''), el('small', '', (t.total || (cur && cur.count) || 0) + ' 首'));
+  const cur = lists.find(l => neaKey(l) === NEA.sel) || lists[0], t = NEA.tr[NEA.sel] || { songs: [], done: false, busy: false };
+  // 歌单里被网易云下架 / 没版权的歌取不到详情，列表会比标题少几行；翻到底以后如实写成 “可用 / 总数”，
+  // 底下一行小字说明少的是哪几首，免得看起来像丢了歌。
+  const tot = (t.count || t.total || (cur && cur.count) || 0), got = t.songs.length, missing = t.done && tot > got ? tot - got : 0;
+  const hd = el('div', 'nelh'); hd.append(el('b', '', cur ? (cur.liked ? '我喜欢的音乐' : cur.name) : ''), el('small', '', missing ? got + ' / ' + tot + ' 首' : tot + ' 首'));
+  if (missing) { const ms = el('small', 'nemiss', missing + ' 首已下架或无法获取'); ms.title = '这个歌单里有 ' + missing + ' 首被网易云下架或没有版权，取不到歌曲信息，没法显示'; hd.append(ms); }
   const f = el('label', 'nesf neaf'); f.innerHTML = svg('search', 1.9);
   const fi = el('input'); fi.id = 'neaq'; fi.type = 'search'; fi.placeholder = '在这个歌单里找：歌名 / 歌手 / 专辑'; fi.autocomplete = 'off'; fi.maxLength = 40; fi.value = NEA.q; fi.setAttribute('aria-label', '筛选歌曲');
   fi.oninput = () => { NEA.q = fi.value.trim(); NEA.show = 60; clearTimeout(NEA.ft); NEA.ft = setTimeout(() => { renderNe(true); if (NEA.q) neaLoadTracks(NEA.sel); }, 160); };
@@ -4620,6 +4787,7 @@ function renderNe(soft) {
   const rows = el('div', 'nerows');
   list.slice(0, NEA.show).forEach(s => rows.append(neaRow(s)));
   main.append(rows);
+  if (t.warn) main.append(el('div', 'mnote', t.warn));
   if (t.err) main.append(el('div', 'mnote', t.err));
   else if (!t.songs.length && (t.busy || !t.done)) { for (let i = 0; i < 5; i++) { const r = el('div', 'qi sk'); r.append(el('div', 'art'), el('div', 'tx')); r.lastChild.append(el('i'), el('i')); rows.append(r); } }
   else if (!list.length) main.append(el('div', 'mnote', q ? (t.done ? '这个歌单里没有“' + NEA.q + '”' : '正在找…') : '这个歌单是空的'));
@@ -5031,6 +5199,7 @@ function setTab(p) {
   document.querySelectorAll('#spanes .spane').forEach(s => s.hidden = s.dataset.p !== p);
   $('#spanes').scrollTop = 0;
   if (p === 'mus') { lyFontCss(true); lycUi(); dlUi(); }
+  if (p === 'voice') vxUi(); else vxTestStop();
 }
 $('#stabs').onclick = e => { const b = e.target.closest('button'); if (b) setTab(b.dataset.p); };
 function lycUi() {
@@ -5151,6 +5320,27 @@ function themeMount(host) {
   const g = el('div', 'thms'); g.setAttribute('role', 'radiogroup'); const cur = themeGet();
   THEMES.forEach(([v, n]) => { const b = el('button', '', n); b.type = 'button'; b.dataset.v = v; b.setAttribute('role', 'radio'); b.classList.toggle('on', v === cur); b.setAttribute('aria-checked', String(v === cur)); b.onclick = () => themeSet(v); g.append(b); });
   host.prepend(el('div', 'cbgh', '深浅色'), g);
+}
+
+// v0.21：个性气泡（发送者的资料背景图在气泡后面渐隐）。只存在本机；图片按名字缓存（bgUrl），每个人只下载一次
+const UBG = [['off', '关'], ['lo', '淡'], ['mid', '中'], ['hi', '浓']];
+const ubgMode = () => document.documentElement.getAttribute('data-ubg') || 'mid';
+function ubgFill(d) {
+  if (ubgMode() === 'off' || d.classList.contains('ubgok')) return;
+  const name = d.dataset.ubg; if (!name) return;
+  bgUrl(name).then(u => { if (!u || d.dataset.ubg !== name) return; d.style.setProperty('--ubg', 'url("' + u + '")'); d.classList.add('ubgok'); }).catch(() => {});
+}
+function ubgSet(v) {
+  document.documentElement.setAttribute('data-ubg', v); try { localStorage.setItem('hush_ubg_v1', v); } catch (_) {}
+  document.querySelectorAll('.ubgs button').forEach(b => b.classList.toggle('on', b.dataset.v === v));
+  if (v !== 'off') document.querySelectorAll('#msgs .m.ubg:not(.ubgok)').forEach(ubgFill);
+}
+function ubgMount(host) {
+  if (!host || host.querySelector('.ubgs')) return;
+  const g = el('div', 'cbgs ubgs'); g.setAttribute('role', 'radiogroup'); const cur = ubgMode();
+  UBG.forEach(([v, n]) => { const b = el('button'); b.type = 'button'; b.dataset.v = v; b.setAttribute('role', 'radio'); b.append(el('i'), el('span', '', n)); if (v === 'mid') b.lastChild.append(' ', el('small', '', '默认')); b.classList.toggle('on', v === cur); b.onclick = () => ubgSet(v); g.append(b); });
+  const cb = host.querySelector('.cbgs:not(.ubgs)'); const h = el('div', 'cbgh', '气泡背景图（对方资料里的背景图）');
+  if (cb) cb.after(h, g); else host.prepend(h, g);
 }
 </script>
 </body>
