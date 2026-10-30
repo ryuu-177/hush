@@ -1,6 +1,6 @@
 {
   "name": "hush-chat",
-  "version": "0.21.1",
+  "version": "0.22.0",
   "private": true,
   "main": "server.js",
   "scripts": { "start": "node server.js" },

@@ -1098,7 +1098,7 @@ aside .me + .bar,.bar{border-radius:99px;overflow:hidden}
   button,.m .b,.m.own .b,.sheet,.drawer,aside,.tb,#auth .card{-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
   .m .b{background:var(--ef-bg2)!important}.m.own .b{background:#e3ee8a!important}
 }
-@media(prefers-reduced-motion:reduce){.m{animation:none}.m:hover .b{transform:none}}
+@media(prefers-reduced-motion:reduce){.m{animation:none}.m:hover .b{transform:none}html .m.ubg:hover::after{transform:scaleX(1.05)}}
 
 /* =====================================================================
    v0.14 · 原创图纸背景（对话构成）+ 动效 + 手机端独立设计
@@ -1682,24 +1682,122 @@ html[data-cbg="dots"] .lqg-prev{background-image:radial-gradient(circle at 1px 1
 
 /* v0.21：个人资料背景图——1262 行的 background 简写把 size/position 重置成 auto / 0 0，1200×525 的图只露出左上角 */
 .sheet .cover.img{background-size:cover!important;background-position:center!important;background-repeat:no-repeat!important}
-/* v0.21：个性气泡——气泡后面是发送者的资料背景图，头像那边清晰，往外渐隐 */
-html:not([data-ubg="off"]) .m.ubg .b:not(.bimg):not(.stk)::after{content:""!important;position:absolute;inset:0;z-index:-1;pointer-events:none;border-radius:inherit!important;
-  background:linear-gradient(90deg,color-mix(in srgb,var(--ef-bg2) var(--ubg-s,40%),transparent),color-mix(in srgb,var(--ef-bg2) calc(var(--ubg-s,40%) + 25%),transparent)),var(--ubg,none) left 40%/cover no-repeat;
-  -webkit-mask-image:linear-gradient(90deg,#000 0%,rgba(0,0,0,.55) 45%,transparent 92%);mask-image:linear-gradient(90deg,#000 0%,rgba(0,0,0,.55) 45%,transparent 92%);
-  opacity:var(--ubg-o,.6);transition:opacity .4s ease}
-html:not([data-ubg="off"]) .m.own.ubg .b:not(.bimg):not(.stk)::after{background:linear-gradient(270deg,color-mix(in srgb,var(--ef-ac) calc(var(--ubg-s,40%) - 10%),transparent),color-mix(in srgb,var(--ef-ac) calc(var(--ubg-s,40%) + 15%),transparent)),var(--ubg,none) right 40%/cover no-repeat;
-  -webkit-mask-image:linear-gradient(270deg,#000 0%,rgba(0,0,0,.55) 45%,transparent 92%);mask-image:linear-gradient(270deg,#000 0%,rgba(0,0,0,.55) 45%,transparent 92%)}
-.m.ubg:not(.ubgok) .b::after{opacity:0!important}
-html[data-ubg="lo"]{--ubg-o:.38;--ubg-s:52%}
-html[data-ubg="mid"],html:not([data-ubg]){--ubg-o:.62;--ubg-s:38%}
-html[data-ubg="hi"]{--ubg-o:.9;--ubg-s:24%}
-.m.ubg .b{text-shadow:0 0 6px color-mix(in srgb,var(--ef-bg2) 70%,transparent)}
-.m.own.ubg .b{text-shadow:0 0 6px color-mix(in srgb,var(--ef-ac) 60%,transparent)}
-html[data-ubg="off"] .m.ubg .b{text-shadow:none}
+/* v0.21.3 个性背景：头像 · 名字 · 气泡 · 时间这一整条是一块背景卡，用发送者自己的图，
+   头像那侧清楚、往另一侧真的渐隐到透明；气泡是半透明磨砂浮在上面。
+   两个关键做法：
+   ① 糊图用 filter:blur 把图本身糊掉，不用 backdrop-filter —— 一屏几十条也只是几十张小图，
+      不会几十层同时采样，滚动不掉帧；:hover 只动 transform，不动 filter，不然每帧重绘。
+   ② 模糊盒做得比可见带大一圈（上下各多 --ubg-pad），再用 clip-path 裁回来：blur 会让边缘
+      半透明外溢，不裁的话相邻两张卡的交界会漏出底色、变成一条亮带。裁完相邻两块的边
+      正好落在间距中点，接成一整块。 */
+.m.ubg{position:relative;isolation:isolate;--ubg-pad:26px;--ubg-r:18px;--ubg-t:4px;--ubg-b:4px}
+.m.ubg::after{content:"";position:absolute;z-index:-1;pointer-events:none;
+  top:calc(-1*(var(--ubg-pad) + var(--ubg-t,calc(var(--ubg-gap,22px)/2))));
+  bottom:calc(-1*(var(--ubg-pad) + var(--ubg-b,calc(var(--ubg-gap,22px)/2))));
+  left:-10px;right:-10px;
+  background-image:var(--ubg,none);background-repeat:no-repeat;background-size:cover;background-position:center;
+  filter:blur(14px) saturate(1.16);transform:scaleX(1.05);transform-origin:50% 50%;
+  opacity:var(--ubg-o,.62);transition:opacity .4s ease;
+  /* 横向真的渐隐到透明。不用颜色渐变到 --ef-bg2，那样底子是壁纸时会露出一条色带 */
+  -webkit-mask-image:linear-gradient(90deg,#000 0%,#000 46%,transparent 100%);
+  mask-image:linear-gradient(90deg,#000 0%,#000 46%,transparent 100%);
+  -webkit-clip-path:inset(var(--ubg-pad) 0 var(--ubg-pad) 0 round var(--ubg-r));
+  clip-path:inset(var(--ubg-pad) 0 var(--ubg-pad) 0 round var(--ubg-r))}
+.m.own.ubg::after{
+  -webkit-mask-image:linear-gradient(270deg,#000 0%,#000 46%,transparent 100%);
+  mask-image:linear-gradient(270deg,#000 0%,#000 46%,transparent 100%)}
+.m.ubg:hover::after{transform:scaleX(1.065)}
+/* 连续块里新加入的行只淡入不位移：lqin 带 translateY/scale，会让整块背景看着一抖。
+   入场结束后打 .lqd 停掉动画，撤回重算首尾类名时旧行不会重播入场。 */
+@media(prefers-reduced-motion:no-preference){html:not([data-ubg="off"]) .m.ubg.ubg-run:not(.ubg-run-a){animation-name:lqfd}}
+@keyframes lqfd{from{opacity:0}to{opacity:1}}
+/* 一组共用一张图：尺寸和位置由 ubgGroup() 按整组算好写在行上（--ubg-bs / --ubg-bp），单条保持 cover */
+.m.ubg.ubg-run::after{background-size:var(--ubg-bs,cover);background-position:var(--ubg-bp,center)}
+/* 自己的消息默认按内容收宽（align-self:flex-end），一组里各行宽度不同，背景左缘会出台阶。
+   成组时整行拉满，row-reverse 下内容仍贴右；单条不动 */
+html:not([data-ubg="off"]) .m.own.ubg.ubg-run{align-self:stretch}
+/* 深色主题：名字行垫一层很淡的暗底（box-shadow 外扩，不改宽度不换行），名字和时间提亮，压在浅色背景图上也读得清 */
+html[data-theme="dark"]:not([data-ubg="off"]) .m.ubg.ubgok>.c>.h{width:fit-content;white-space:nowrap;border-radius:6px;background:color-mix(in srgb,#0b0d0c calc(40% + var(--ubg-o,.62)*35%),transparent);box-shadow:0 0 0 4px color-mix(in srgb,#0b0d0c calc(40% + var(--ubg-o,.62)*35%),transparent);color:color-mix(in srgb,var(--ef-tx1) 78%,var(--ef-tx3))}html[data-theme="dark"]:not([data-ubg="off"]) .m.own.ubg.ubgok>.c>.h{margin-left:auto}
+@media(prefers-color-scheme:dark){html:not([data-theme]):not([data-ubg="off"]) .m.ubg.ubgok>.c>.h{width:fit-content;white-space:nowrap;border-radius:6px;background:color-mix(in srgb,#0b0d0c calc(40% + var(--ubg-o,.62)*35%),transparent);box-shadow:0 0 0 4px color-mix(in srgb,#0b0d0c calc(40% + var(--ubg-o,.62)*35%),transparent);color:color-mix(in srgb,var(--ef-tx1) 78%,var(--ef-tx3))}html:not([data-theme]):not([data-ubg="off"]) .m.own.ubg.ubgok>.c>.h{margin-left:auto}}
+/* 浅色主题：背景整体降一档（淡 .24 / 中 .38 / 浓 .62），对方气泡保持偏白磨砂，名字行垫一层很淡的亮底（用 box-shadow 外扩，不加 padding/margin，名字行宽度和换行都不变） */
+html[data-theme="light"][data-ubg="lo"]{--ubg-o:.24}html[data-theme="light"][data-ubg="mid"],html[data-theme="light"]:not([data-ubg]){--ubg-o:.38}html[data-theme="light"][data-ubg="hi"]{--ubg-o:.62}
+@media(prefers-color-scheme:light){html:not([data-theme])[data-ubg="lo"]{--ubg-o:.24}html:not([data-theme])[data-ubg="mid"],html:not([data-theme]):not([data-ubg]){--ubg-o:.38}html:not([data-theme])[data-ubg="hi"]{--ubg-o:.62}}
+html[data-theme="light"]:not([data-ubg="off"]) .m.ubg:not(.own) .b:not(.bimg):not(.stk){background:color-mix(in srgb,#fff 74%,transparent)!important}
+@media(prefers-color-scheme:light){html:not([data-theme]):not([data-ubg="off"]) .m.ubg:not(.own) .b:not(.bimg):not(.stk){background:color-mix(in srgb,#fff 74%,transparent)!important}}
+html[data-theme="light"]:not([data-ubg="off"]) .m.ubg.ubgok>.c>.h{width:fit-content;border-radius:6px;background:color-mix(in srgb,#fff 58%,transparent);box-shadow:0 0 0 4px color-mix(in srgb,#fff 58%,transparent);color:color-mix(in srgb,var(--ef-tx1) 82%,var(--ef-tx3))}html[data-theme="light"]:not([data-ubg="off"]) .m.own.ubg.ubgok>.c>.h{margin-left:auto}
+@media(prefers-color-scheme:light){html:not([data-theme]):not([data-ubg="off"]) .m.ubg.ubgok>.c>.h{width:fit-content;border-radius:6px;background:color-mix(in srgb,#fff 58%,transparent);box-shadow:0 0 0 4px color-mix(in srgb,#fff 58%,transparent);color:color-mix(in srgb,var(--ef-tx1) 82%,var(--ef-tx3))}html:not([data-theme]):not([data-ubg="off"]) .m.own.ubg.ubgok>.c>.h{margin-left:auto}}
+.m.lqd{animation:none}
+.m.ubg:not(.ubgok)::after{opacity:0!important}
+/* 同一个人连着发：只加类名，不套容器 —— 消息是增量插入、撤回的，一有容器就会散架。
+   整段纵向不淡、圆角只留最外两侧，相邻两块正好在间距中点对接，看着是一整块。 */
+/* 段内：上下各探出半个间距，相邻两块正好在中点对接；段外：只探 6px，和别人的卡片留出清楚的空当 */
+.m.ubg.ubg-run{--ubg-t:calc(var(--ubg-gap,22px)/2);--ubg-b:calc(var(--ubg-gap,22px)/2);--ubg-r:0;border-radius:0}
+.m.ubg.ubg-run-a{--ubg-t:4px;--ubg-r:18px 18px 0 0}
+.m.ubg.ubg-run-b{--ubg-b:4px;--ubg-r:0 0 18px 18px}
+/* 头像和名字只在第一行出现。用 visibility 不用 display：.av 是点头像看资料的入口，
+   display:none 会把左侧留白也吃掉，文字缩进就错位。整段都包在 not(off) 里，「关」才能回到旧的样子。 */
+html:not([data-ubg="off"]) .m.ubg.ubg-run-m>.av.s,
+html:not([data-ubg="off"]) .m.ubg.ubg-run-b>.av.s{visibility:hidden}
+html:not([data-ubg="off"]) .m.ubg.ubg-run-m>.c>.h,
+html:not([data-ubg="off"]) .m.ubg.ubg-run-b>.c>.h{display:none}
+html:not([data-ubg="off"]) .m.ubg .b:not(.bimg):not(.stk){
+  background:color-mix(in srgb,var(--ef-bg2) calc(var(--ubg-o,.62)*58%),transparent)!important;
+  border-color:color-mix(in srgb,var(--ef-tx1) calc(var(--ubg-o,.62)*13%),transparent)!important;
+  -webkit-backdrop-filter:none!important;backdrop-filter:none!important;
+  box-shadow:inset 0 1px 0 color-mix(in srgb,#fff calc(var(--ubg-o,.62)*40%),transparent),0 8px 22px -16px rgba(0,0,0,.45)!important}
+html:not([data-ubg="off"]) .m.own.ubg .b:not(.bimg):not(.stk){
+  background:color-mix(in srgb,var(--ef-ac) calc(var(--ubg-o,.62)*24%),transparent)!important;
+  border-color:color-mix(in srgb,var(--ef-ac) calc(var(--ubg-o,.62)*36%),transparent)!important;
+  box-shadow:inset 0 1px 0 color-mix(in srgb,#fff calc(var(--ubg-o,.62)*46%),transparent),0 8px 22px -16px rgba(0,0,0,.4)!important}
+html:not([data-ubg="off"]) .m.ubg .av.s{
+  box-shadow:0 0 0 1px color-mix(in srgb,var(--ef-tx1) calc(var(--ubg-o,.62)*12%),transparent),
+  0 0 16px 2px color-mix(in srgb,var(--ef-bg2) calc(var(--ubg-o,.62)*70%),transparent)}
+html:not([data-ubg="off"]) .m.own.ubg .av.s{
+  box-shadow:0 0 0 1px color-mix(in srgb,var(--ef-ac) calc(var(--ubg-o,.62)*26%),transparent),
+  0 0 16px 2px color-mix(in srgb,var(--ef-ac) calc(var(--ubg-o,.62)*22%),transparent)}
+/* 文字在图上要压得住：阴影取主题底色，深色主题压暗、浅色主题提亮，两边都成立 */
+html:not([data-ubg="off"]) .m.ubg .b{
+  text-shadow:0 1px 3px color-mix(in srgb,var(--ef-bg1) calc(var(--ubg-o,.62)*72%),transparent)}
+/* 四档：关 / 淡 / 中 / 浓。data-ubg 和 localStorage 的 hush_ubg_v1 都不改名，老用户不用迁移 */
+html[data-ubg="lo"]{--ubg-o:.38}
+html[data-ubg="mid"],html:not([data-ubg]){--ubg-o:.62}
+html[data-ubg="hi"]{--ubg-o:.9}
+/* 「关」要真的回到现在的样子：content:none 断干净，只把 opacity 归零还会留下一层模糊采样 */
+html[data-ubg="off"] .m.ubg::after{content:none!important}
 .ubgs{grid-template-columns:repeat(4,1fr)!important}
 .ubgs i{background:linear-gradient(90deg,#c98a5a,#7b5ea8 60%,transparent)!important}
 .ubgs button[data-v="off"] i{background:var(--ef-bg1)!important}
 .ubgs button[data-v="lo"] i{opacity:.4}.ubgs button[data-v="mid"] i{opacity:.65}
+/* v0.22：已读小头像。挂在气泡外侧下角，绝对定位：不改行高，不影响 ubgGroup 的测量 */
+.m .b .rr{position:absolute;bottom:-4px;left:calc(100% + 6px);display:flex;align-items:center;flex-direction:row;z-index:2;line-height:0;user-select:none;-webkit-user-select:none;cursor:default;white-space:nowrap;transition:transform .32s cubic-bezier(.2,.8,.2,1),opacity .2s}
+.m.own .b .rr{left:auto;right:calc(100% + 6px);flex-direction:row-reverse}
+.rr .av.rd{width:18px;height:18px;min-width:18px;border-radius:50%!important;font-size:10px;line-height:18px;font-weight:600;display:grid;place-items:center;overflow:hidden;color:#fff;box-shadow:0 0 0 1.5px var(--card),0 1px 3px rgba(0,0,0,.18)!important;margin:0;padding:0;animation:none!important}
+.rr .av.rd img{width:100%;height:100%;object-fit:cover}
+.rr .av.rd+.av.rd{margin-left:-6px}
+.m.own .rr .av.rd+.av.rd{margin-left:0;margin-right:-6px}
+.rr .rn{height:18px;min-width:18px;padding:0 5px;margin-left:3px;border-radius:9px;font-size:10px;line-height:18px;font-weight:600;color:var(--fg);background:color-mix(in srgb,var(--card) 88%,var(--fg));box-shadow:0 0 0 1.5px var(--card)}
+.m.own .rr .rn{margin-left:0;margin-right:3px}
+.rr.mv{transition:none}
+@media(prefers-reduced-motion:reduce){.m .b .rr{transition:none}}
+/* 窄窗口（≤600px）：气泡常常满宽，外侧没位置，头像收进气泡下角（压在底边上，只占底部内边距，不挡文字和时间）；自己的消息镜像到左下角 */
+@media(max-width:600px){.m .b .rr{left:auto;right:6px;bottom:-9px}.m.own .b .rr{right:auto;left:6px}}
+/* v0.23 打磨：流畅度。只动 transform / opacity，不加 backdrop-filter，全部尊重减少动效 */
+:root{--dur-1:.15s;--dur-2:.25s;--dur-3:.4s;--ease-std:cubic-bezier(.16,1,.3,1)}
+/* 1. 只有实时新到的消息（add() 里打 .in）播入场；历史、翻页、回到最新、重连补拉、撤回后的重排都不播。
+      每条气泡入场带 filter 模糊，50 条同时播是首屏卡顿的大头；按类名而不是按位置，撤回最后一条时旧行不会重播。 */
+#msgs>.m:not(.in),#msgs>.m:not(.in) .b{animation:none}
+/* 2. 遮罩入场只淡底色，不再从 blur(0) 动画到 blur(8px)：模糊本身保留，省掉每帧重算整屏背景模糊 */
+@keyframes ovIn{from{background-color:transparent;opacity:0}to{opacity:1}}
+/* 3. 进度条：width 动画 → transform:scaleX，不再每帧触发布局 */
+.np::after{width:calc(100% - 32px);transform:scaleX(var(--p,0));transform-origin:0 50%;transition:transform .5s linear}
+html .np::after{width:calc(100% - 20px)}
+.nedl.run::before{width:100%;transform:scaleX(var(--p,0));transform-origin:0 50%;transition:transform .2s linear}
+/* 4. 已读头像用统一的过渡变量 */
+.m .b .rr{transition:transform var(--dur-3) var(--ease-std),opacity var(--dur-1)}
+/* 5. 键盘焦点：设置行、可点的头像 / 封面也给焦点环 */
+.srow:focus-visible,.av[tabindex]:focus-visible,[role=button]:focus-visible{outline:2px solid var(--ef-acd,var(--ac));outline-offset:2px}
+/* 6. 减少动效兜底：漏网的入场、过渡、平滑滚动一律关掉 */
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.001ms!important;animation-delay:0s!important;animation-iteration-count:1!important;transition-duration:.001ms!important;transition-delay:0s!important;scroll-behavior:auto!important}}
 </style>
 <script src="/lq-glass.js"></script>
 </head>
@@ -1897,7 +1995,7 @@ html[data-ubg="off"] .m.ubg .b{text-shadow:none}
       <div class="srow">
         <div class="si"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h13M3 12h9M3 18h9"/><path d="M17 15v6M14 18h6"/></svg></div>
         <div class="stx"><b>每人同时点歌</b><small>歌单里每人最多几首</small></div>
-        <div class="seg" id="gper"><button data-n="1">1</button><button data-n="2">2</button><button data-n="3">3</button></div>
+        <div class="seg" id="gper"><button data-n="1">1</button><button data-n="2">2</button><button data-n="3">3</button><button data-n="4">4</button><button data-n="5">5</button></div>
       </div>
     </div>
   </div>
@@ -1946,6 +2044,11 @@ html[data-ubg="off"] .m.ubg .b{text-shadow:none}
             <div class="si"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v8"/><path d="M6.4 6.4a8 8 0 1 0 11.2 0"/></svg></div>
             <div class="stx"><b>开机自动启动</b><small id="sautos"></small></div>
             <button class="tgl" id="tauto" type="button" role="switch" aria-checked="false" aria-label="开机自动启动" onclick="toggleAuto()"><i></i></button>
+          </div>
+          <div class="srow" id="sread">
+            <div class="si"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/><path d="M4 4l16 16"/></svg></div>
+            <div class="stx"><b>隐藏我的已读</b><small id="sreads">开启后别人看不到你读到哪，你也看不到别人的</small></div>
+            <button class="tgl" id="tread" type="button" role="switch" aria-checked="false" aria-label="隐藏我的已读" onclick="rdHideToggle()"><i></i></button>
           </div>
           <div class="srow" id="sinst">
             <div class="si"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="13" rx="2.5"/><path d="M8 21h8M12 7.5v6M9.5 11l2.5 2.5 2.5-2.5"/></svg></div>
@@ -2237,6 +2340,7 @@ function start() {
   voice();
   liveInit();
   musicInit();
+  setTimeout(readInit, 0);   // v0.22：已读模块定义在脚本末尾，等它初始化完再挂
   socket.on('online', l => {
     $('#on').innerHTML = ''; $('#onc').textContent = l.length + ' 人在线';
     l.forEach(p => {
@@ -2296,7 +2400,7 @@ function sysLine(m) {
 function renderMsg(m) {
   people[m.name] = Object.assign(people[m.name] || {}, { name: m.name, nick: m.nick, avatar: m.avatar, color: m.color, level: m.level });
   if (m.recalled || m.song || m.live || (m.file && !(m.file.image && !m.file.deleted))) return sysLine(m);   // v0.17：图片 / 表情包直接显示在聊天里
-  const d = el('div', 'm' + (me && m.name === me.name ? ' own' : '')); d.dataset.id = m.id; d.dataset.ts = m.ts;
+  const d = el('div', 'm' + (me && m.name === me.name ? ' own' : '')); d.dataset.id = m.id; d.dataset.ts = m.ts; d.dataset.ub = m.name;
   if (me && m.mentions && m.mentions.includes(me.name) && m.name !== me.name) d.classList.add('hit');
   const a = el('div', 'av s'); a.dataset.u = m.name; avatar(a, m); a.style.cursor = 'pointer'; a.onclick = () => avClick(m.name);
   const c = el('div', 'c');
@@ -2338,7 +2442,8 @@ function add(m, quiet) {
   const box = $('#msgs');
   if (box.querySelector('[data-id="' + m.id + '"]')) return;
   const near = box.scrollHeight - box.scrollTop - box.clientHeight < 160 || (me && m.name === me.name);
-  box.append(renderMsg(m));
+  const row = renderMsg(m); if (!quiet && row.classList.contains('m')) { row.classList.add('in'); setTimeout(() => row.classList.remove('in'), 1500); }   // v0.23：只有实时新消息播入场
+  box.append(row); ubgGroup();
   if (near || quiet) box.scrollTop = box.scrollHeight;
 }
 function onIncoming(m) {
@@ -2353,11 +2458,13 @@ function applyRecall(m) {
   document.querySelectorAll('[data-id="' + m.id + '"]').forEach(e => e.replaceWith(sysLine(m)));
   document.querySelectorAll('.qt[data-ref="' + m.id + '"]').forEach(q => { q.textContent = ''; q.append(el('b', '', m.nick || m.name), '原消息已撤回'); });
   if (replyTo && replyTo.id === m.id) cancelReply();
+  ubgGroup();   // 撤回中间一条后段落断开，首尾类名要重算，不然会缺角
 }
 function renderList(list, more) {
   const box = $('#msgs'); box.innerHTML = '';
   if (more) box.append(moreBtn());
   list.forEach(m => { if (m.id > lastId && !windowMode) lastId = m.id; box.append(renderMsg(m)); });
+  ubgGroup();
 }
 function moreBtn() {
   const b = el('button', 'more', '查看更早的消息'); b.id = 'more'; b.type = 'button';
@@ -2371,7 +2478,7 @@ function moreBtn() {
     const frag = document.createDocumentFragment();
     if (list.length >= 50) frag.append(moreBtn());
     list.forEach(m => frag.append(renderMsg(m)));
-    box.prepend(frag); box.scrollTop += box.scrollHeight - h0;
+    box.prepend(frag); box.scrollTop += box.scrollHeight - h0; ubgGroup();
   };
   return b;
 }
@@ -3079,11 +3186,27 @@ function voice() {
   socket.on('room:error', m => { alert(m); releaseMic(); });
   socket.on('room:peers', async peers => {
     $('#rj').dataset.in = '1'; $('#rj').textContent = '离开语音房'; bar();
-    for (const p of peers) { const pc = mkpc(p.name, 'room'); rpcs.set(p.name, pc); await sendOffer(pc, p.name, 'room'); }
+    // v0.21.3：断线接回时 keep=true 的连接还通着，不重建；其余的关掉重新 offer
+    for (const [n, pc] of rpcs) if (!peers.some(p => p.name === n)) { closePc(pc); rpcs.delete(n); }
+    for (const p of peers) {
+      if (p.keep && rpcs.has(p.name)) continue;
+      closePc(rpcs.get(p.name));
+      const pc = mkpc(p.name, 'room'); rpcs.set(p.name, pc); await sendOffer(pc, p.name, 'room');
+    }
   });
   socket.on('room:joined', () => {});   // 新成员会主动发 offer
+  socket.on('room:rejoined', ({ name, keep }) => { if (!keep) { closePc(rpcs.get(name)); rpcs.delete(name); } });   // 对方断线接回：等它发新 offer
   socket.on('room:left', ({ name }) => { closePc(rpcs.get(name)); rpcs.delete(name); });
-  socket.on('disconnect', () => { endLocal(); leaveRoomLocal(); });
+  socket.on('call:resumed', ({ name, keep }) => {   // 对方断线接回：连接断了就重建，由对方发 offer
+    if (!call || call.state !== 'on' || call.peer !== name || keep) return;
+    closePc(call.pc); call.pc = mkpc(name, 'call');
+  });
+  // v0.21.3：只有主动断开 / 被服务器踢掉才立刻结束；网络抖动先保留通话和语音房，等重连接回（服务器宽限 20 秒）
+  socket.on('disconnect', reason => {
+    if (reason === 'io server disconnect' || reason === 'io client disconnect') { endLocal(); leaveRoomLocal(); return; }
+    clearTimeout(net.vt);
+    net.vt = setTimeout(() => { if (!socket.connected) { net.peer = null; net.room = false; endLocal('offline'); leaveRoomLocal(); } }, 22000);
+  });
 }
 // ================= 文件仓（v0.7） =================
 const V = { cat: '', q: '', sort: 'time', order: 'desc', items: [], total: 0, focus: null, loading: false, seq: 0 };
@@ -3944,13 +4067,25 @@ function netInit() {
   // v0.8：重连 6 秒还不成功，说明是服务器关了或网络断了，换成更明确的提示
   socket.io.on('reconnect_attempt', () => { if (net.down && Date.now() - net.at > 6000) netShow(navigator.onLine ? '服务器暂时连不上，恢复后自动重连' : '网络已断开，连上后自动恢复', 'wait'); });
   socket.on('connect', async () => {
-    if (!net.down) return; net.down = false;
+    if (!net.down) return; net.down = false; clearTimeout(net.vt);
     const tasks = [];
+    const alive = pc => pc && ['connected', 'completed'].includes(pc.iceConnectionState);
+    if (call && call.state !== 'on') endLocal('offline');   // 响铃中断线：服务器那边已经结束了
     if (live) { socket.emit('live:start'); $('#lvn').textContent = '0'; tasks.push('直播已恢复'); }
     if (net.room) {
       net.room = false;
-      try { await getIce(); await mic(); socket.emit('room:join'); tasks.push('已重新加入语音房'); }
+      if ($('#rj').dataset.in) {   // v0.21.3：还在宽限期内：接回原位置，通着的连接不动
+        socket.emit('room:join', { resume: true, keep: [...rpcs].filter(([, pc]) => alive(pc)).map(([n]) => n) }); tasks.push('语音房已恢复');
+      } else try { await getIce(); await mic(); socket.emit('room:join'); tasks.push('已重新加入语音房'); }
       catch (_) { return netShow('已重新连接，语音房已断开', 'ok', '重新加入', () => { $('#net').hidden = true; roomToggle(); }); }
+    }
+    if (net.peer && call && call.state === 'on' && call.peer === net.peer) {   // v0.21.3：通话接回
+      const p = net.peer, keep = alive(call.pc); net.peer = null;
+      const r = await new Promise(res => socket.timeout(5000).emit('call:resume', { keep }, (e, v) => res(e ? null : v)));
+      if (r && r.ok) {
+        if (!keep && call && call.peer === p) { closePc(call.pc); call.pc = mkpc(p, 'call'); await sendOffer(call.pc, p, 'call'); }
+        tasks.push('通话已恢复');
+      } else { endLocal(); net.peer = p; }
     }
     if (net.peer) { const p = net.peer; net.peer = null; return netShow('已重新连接，通话已中断', 'ok', '回拨 ' + nick(p), () => { $('#net').hidden = true; startCall(p); }); }
     netShow(['已重新连接'].concat(tasks).join('，'), 'ok');
@@ -4484,7 +4619,7 @@ function renderPl() {
 // v0.20：点歌单独一页（搜索网易云 + 从我的音乐点），音乐面板也变大了
 function mPickInfo() {
   const st = MS.st, c = st && st.current, all = st ? [c, ...st.queue].filter(Boolean) : [];
-  NE.mine = all.filter(x => me && x.by.name === me.name).length; NE.per = st ? st.per : 2; NE.queued = new Set(all.map(x => x.id));
+  NE.mine = all.filter(x => me && x.by.name === me.name).length; NE.per = st ? st.per : 5; NE.queued = new Set(all.map(x => x.id));
   return { st, c, mine: NE.mine };
 }
 function renderPick() {
@@ -4515,7 +4650,7 @@ function renderPick() {
 }
 // ================= v0.10：搜索网易云音乐，一键点歌 =================
 // 只在歌单面板里点放大镜才出现；搜索走服务器（/api/netease/search），播放由浏览器直接从网易云加载。
-const NE = { open: false, q: '', items: null, busy: false, err: '', seq: 0, t: 0, mine: 0, per: 2, queued: new Set(), adding: new Set() };
+const NE = { open: false, q: '', items: null, busy: false, err: '', seq: 0, t: 0, mine: 0, per: 5, queued: new Set(), adding: new Set() };
 NE.node = el('div', 'nes'); NE.node.id = 'nes';
 NE.node.innerHTML = '<label class="nesf"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="m20 20-4.2-4.2"/></svg><input id="nesq" type="search" enterkeyhint="search" autocomplete="off" maxlength="60" placeholder="搜索网易云：歌名 / 歌手"><button type="button" class="nesx" id="nesx" title="清空" aria-label="清空" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M7 7l10 10M17 7 7 17"/></svg></button></label><div class="ner" id="ner"></div>';
 NE.inp = NE.node.querySelector('#nesq'); NE.list = NE.node.querySelector('#ner'); NE.clr = NE.node.querySelector('#nesx');
@@ -4760,11 +4895,11 @@ function renderNe(soft) {
     side.append(b);
   });
   const cur = lists.find(l => neaKey(l) === NEA.sel) || lists[0], t = NEA.tr[NEA.sel] || { songs: [], done: false, busy: false };
-  // 歌单里被网易云下架 / 没版权的歌取不到详情，列表会比标题少几行；翻到底以后如实写成 “可用 / 总数”，
-  // 底下一行小字说明少的是哪几首，免得看起来像丢了歌。
+  // 个别歌取不到歌曲信息（song_detail 偶尔漏返回，桌面版 1.5.1 起会从歌单内嵌的 tracks 兜底补回来），
+  // 列表会比标题少几行；翻到底以后如实写成 “可用 / 总数”，底下一行小字说明数量，免得看起来像丢了歌。
   const tot = (t.count || t.total || (cur && cur.count) || 0), got = t.songs.length, missing = t.done && tot > got ? tot - got : 0;
   const hd = el('div', 'nelh'); hd.append(el('b', '', cur ? (cur.liked ? '我喜欢的音乐' : cur.name) : ''), el('small', '', missing ? got + ' / ' + tot + ' 首' : tot + ' 首'));
-  if (missing) { const ms = el('small', 'nemiss', missing + ' 首已下架或无法获取'); ms.title = '这个歌单里有 ' + missing + ' 首被网易云下架或没有版权，取不到歌曲信息，没法显示'; hd.append(ms); }
+  if (missing) { const ms = el('small', 'nemiss', missing + ' 首取不到歌曲信息'); ms.title = '这个歌单里有 ' + missing + ' 首取不到歌曲信息（可能已下架，也可能网易云这次没返回详情），没法显示'; hd.append(ms); }
   const f = el('label', 'nesf neaf'); f.innerHTML = svg('search', 1.9);
   const fi = el('input'); fi.id = 'neaq'; fi.type = 'search'; fi.placeholder = '在这个歌单里找：歌名 / 歌手 / 专辑'; fi.autocomplete = 'off'; fi.maxLength = 40; fi.value = NEA.q; fi.setAttribute('aria-label', '筛选歌曲');
   fi.oninput = () => { NEA.q = fi.value.trim(); NEA.show = 60; clearTimeout(NEA.ft); NEA.ft = setTimeout(() => { renderNe(true); if (NEA.q) neaLoadTracks(NEA.sel); }, 160); };
@@ -4922,7 +5057,7 @@ $('#mff').onchange = async e => {
 // ----- 群聊设置（管理员） -----
 function openGroupSettings() { if (!me || !me.admin) return; gsUi(); $('#gsv').hidden = false; }
 function gsUi() {
-  const st = MS.st || { music: false, skip: false, per: 2 };
+  const st = MS.st || { music: false, skip: false, per: 5 };
   [['#gmusic', st.music], ['#gskip', st.skip]].forEach(([s, on]) => { $(s).classList.toggle('on', on); $(s).setAttribute('aria-checked', String(on)); });
   $('#gskip').disabled = !st.music;
   $('#gper').querySelectorAll('button').forEach(b => { b.classList.toggle('on', +b.dataset.n === st.per); b.disabled = !st.music; });
@@ -5328,12 +5463,106 @@ const ubgMode = () => document.documentElement.getAttribute('data-ubg') || 'mid'
 function ubgFill(d) {
   if (ubgMode() === 'off' || d.classList.contains('ubgok')) return;
   const name = d.dataset.ubg; if (!name) return;
-  bgUrl(name).then(u => { if (!u || d.dataset.ubg !== name) return; d.style.setProperty('--ubg', 'url("' + u + '")'); d.classList.add('ubgok'); }).catch(() => {});
+  bgUrl(name).then(u => { if (!u || d.dataset.ubg !== name) return; d.style.setProperty('--ubg', 'url("' + u + '")'); d.classList.add('ubgok'); ubgGroup(); }).catch(() => {});
 }
+// v0.21.3：同一个人连着发就并成一整块背景。只打类名，不套容器——消息是增量插入、撤回的，
+// 一有容器就会散架。判断条件：同一个发送者、都是纯文字、间隔 5 分钟以内。
+const UBG_RUN_GAP = 5 * 60 * 1000;
+const UBG_RUN_CLS = ['ubg-run', 'ubg-run-a', 'ubg-run-m', 'ubg-run-b'];
+const UBG_POS = ['--ubg-h', '--ubg-y', '--ubg-bs', '--ubg-bp'];
+function ubgPosClear(r) { if (!r._p) return; r._p = 0; UBG_POS.forEach(k => r.style.removeProperty(k)); }
+function ubgStrip() {   // 「关」档：把分组类名全撤掉，头像、名字、间距回到旧版
+  document.querySelectorAll('#msgs .m').forEach(r => {
+    ubgPosClear(r);
+    if (!r._u) return;
+    r._u = 0; r.classList.remove.apply(r.classList, UBG_RUN_CLS);
+  });
+}
+// 背景图宽高比：整组共用一张图要自己算 cover，得先知道图的比例。按 URL 缓存，加载完再排一次。
+const ubgArs = new Map();
+function ubgAr(r) {
+  const m = /url\("?(.*?)"?\)$/.exec((r.style.getPropertyValue('--ubg') || '').trim()); if (!m) return 0;
+  const u = m[1], v = ubgArs.get(u);
+  if (v !== undefined) return v;
+  ubgArs.set(u, 0);
+  const im = new Image(); im.onload = () => { ubgArs.set(u, im.naturalWidth / im.naturalHeight || 0); ubgGroup(); }; im.src = u;
+  return 0;
+}
+// 一组共用一张图：先把所有组的几何一次读完，再统一写，避免读写交错反复触发布局。
+// 组框 = 首行顶上 4px 到末行底下 4px；行与行在间距中点对接，所以每行可见带的顶 = 行顶 − 半个间距。
+// 背景层（::after）比可见带上下各大 --ubg-pad，图按「组框 + 2×pad」铺满（cover），再按该行在组里的偏移上移。
+function ubgPlace(groups, g) {
+  const geo = groups.map(run => {
+    const ar = ubgAr(run[0]);
+    const tops = run.map(r => r.offsetTop), hs = run.map(r => r.offsetHeight), w = run[0].offsetWidth + 20;
+    return { run, ar, tops, hs, w };
+  });
+  const pad = 26;
+  geo.forEach(({ run, ar, tops, hs, w }) => {
+    if (!ar) { run.forEach(ubgPosClear); return; }      // 图比例还没拿到：先按单行 cover，加载完会再排
+    const n = run.length, g0 = tops[0] - 4, H = tops[n - 1] + hs[n - 1] + 4 - g0, BH = H + 2 * pad;
+    const sc = Math.max(w / ar, BH), bh = sc, bw = sc * ar, bx = (w - bw) / 2;
+    for (let i = 0; i < n; i++) {
+      const r = run[i], y = (i ? tops[i] - g / 2 : tops[0] - 4) - g0;
+      r._p = 1;
+      r.style.setProperty('--ubg-h', H + 'px');
+      r.style.setProperty('--ubg-y', y + 'px');
+      r.style.setProperty('--ubg-bs', bw.toFixed(1) + 'px ' + bh.toFixed(1) + 'px');
+      r.style.setProperty('--ubg-bp', bx.toFixed(1) + 'px ' + ((BH - bh) / 2 - y).toFixed(1) + 'px');
+    }
+  });
+}
+let ubgRaf = 0;
+function ubgGroup() {
+  if (ubgMode() === 'off') { ubgStrip(); return; }   // 「关」不打任何分组类名，整行回到旧的样子
+  if (ubgRaf) return;                       // 同一帧里只算一次，滚动时不会反复跑
+  ubgRaf = requestAnimationFrame(() => {
+    ubgRaf = 0;
+    const box = document.getElementById('msgs'); if (!box) return;
+    // 实际行间距量一次写进 --ubg-gap：断点会变（22/20/16/14px），相邻两块的背景正好在间距中点对接
+    const g = parseFloat(getComputedStyle(box).rowGap) || 22;
+    if (box.dataset.ubggap !== String(g)) { box.dataset.ubggap = String(g); box.style.setProperty('--ubg-gap', g + 'px'); }
+    const run = [], groups = [];
+    const flush = () => {
+      const n = run.length;
+      if (n > 1) groups.push(run.slice()); else if (n) ubgPosClear(run[0]);
+      for (let i = 0; i < n; i++) {
+        const r = run[i], a = n > 1 && i === 0, b = n > 1 && i === n - 1, m = n > 1 && i > 0 && i < n - 1;
+        if (r._u !== n) {
+          r._u = n;
+          r.classList.toggle('ubg-run', n > 1);
+          r.classList.toggle('ubg-run-a', a);
+          r.classList.toggle('ubg-run-m', m);
+          r.classList.toggle('ubg-run-b', b);
+        }
+      }
+      run.length = 0;
+    };
+    const same = (a, b) => a && b
+      && a.dataset.ub === b.dataset.ub
+      && a.classList.contains('own') === b.classList.contains('own')
+      && !a.classList.contains('im') && !b.classList.contains('im')
+      && Math.abs((+b.dataset.ts || 0) - (+a.dataset.ts || 0)) <= UBG_RUN_GAP;
+    for (const r of box.children) {
+      if (!r.classList || !r.classList.contains('m')) { flush(); continue; }   // 撤回提示等系统行夹在中间就断段，否则两半的背景中间空一截
+      const ok = r.classList.contains('ubg') && r.classList.contains('ubgok');
+      const prev = run[run.length - 1];
+      if (ok && prev && same(prev, r)) { run.push(r); continue; }
+      flush();
+      if (ok) run.push(r); else ubgPosClear(r);
+    }
+    flush();
+    ubgPlace(groups, g);
+  });
+}
+document.addEventListener('animationend', e => { const t = e.target; if (t.classList && t.classList.contains('b') && e.animationName === 'bubIn') { const r = t.closest('.m.in'); if (r) r.classList.remove('in'); } if (t.classList && t.classList.contains('m') && e.animationName.startsWith('lq')) t.classList.add('lqd'); });
+let ubgRz = 0;
+addEventListener('resize', () => { if (ubgRz) return; ubgRz = setTimeout(() => { ubgRz = 0; ubgGroup(); }, 180); });
 function ubgSet(v) {
   document.documentElement.setAttribute('data-ubg', v); try { localStorage.setItem('hush_ubg_v1', v); } catch (_) {}
   document.querySelectorAll('.ubgs button').forEach(b => b.classList.toggle('on', b.dataset.v === v));
   if (v !== 'off') document.querySelectorAll('#msgs .m.ubg:not(.ubgok)').forEach(ubgFill);
+  ubgGroup();
 }
 function ubgMount(host) {
   if (!host || host.querySelector('.ubgs')) return;
@@ -5341,6 +5570,132 @@ function ubgMount(host) {
   UBG.forEach(([v, n]) => { const b = el('button'); b.type = 'button'; b.dataset.v = v; b.setAttribute('role', 'radio'); b.append(el('i'), el('span', '', n)); if (v === 'mid') b.lastChild.append(' ', el('small', '', '默认')); b.classList.toggle('on', v === cur); b.onclick = () => ubgSet(v); g.append(b); });
   const cb = host.querySelector('.cbgs:not(.ubgs)'); const h = el('div', 'cbgh', '气泡背景图（对方资料里的背景图）');
   if (cb) cb.after(h, g); else host.prepend(h, g);
+}
+
+// v0.22：已读。只有「窗口在前台且有焦点 + 消息露出一半停留 1 秒 + 3 分钟内有操作」才算读到；
+// 只上报读到的最大编号（只增不减，最快 1 秒一次）。别人的小头像挂在他读到的最后一条消息的气泡外角上。
+const RD = { reads: {}, have: false, hide: false, sent: 0, want: 0, lastSent: 0, timer: 0, act: Date.now(), vis: new Map(), io: null, mo: null, raf: 0, tick: 0 };
+const RD_DWELL = 1000, RD_IDLE = 3 * 60 * 1000, RD_GAP = 1000, RD_MAX = 4;
+try { RD.hide = localStorage.getItem('hush_hideread_v1') === '1'; } catch (_) {}
+function rdActive() {
+  if (document.visibilityState !== 'visible' || !document.hasFocus()) return false;
+  if (Date.now() - RD.act > RD_IDLE) return false;
+  const box = document.getElementById('msgs');
+  return !!(box && box.offsetParent !== null);   // 聊天区确实打开着（不在登录页 / 被别的界面盖住隐藏）
+}
+function rdSend() {
+  if (!socket || RD.want <= RD.sent) return;
+  const wait = RD.lastSent + RD_GAP - Date.now();
+  if (wait > 0) { if (!RD.timer) RD.timer = setTimeout(() => { RD.timer = 0; rdSend(); }, wait); return; }
+  RD.sent = RD.want; RD.lastSent = Date.now(); socket.emit('read', RD.sent);
+}
+function rdCheck() {
+  const now = Date.now(), on = rdActive();
+  let best = 0;
+  RD.vis.forEach((t, el) => {
+    if (!el.isConnected) { RD.vis.delete(el); return; }
+    if (!on) { RD.vis.set(el, 0); return; }             // 暂停：重新计时，回来后还要再停 1 秒
+    if (!t) { RD.vis.set(el, now); return; }
+    if (now - t >= RD_DWELL) { const id = +el.dataset.id || 0; if (id > best) best = id; }
+  });
+  if (best > RD.want) { RD.want = best; rdSend(); }
+}
+function rdObserve(root) {
+  if (!RD.io) return;
+  (root || document.getElementById('msgs')).querySelectorAll('.m[data-id],.sys[data-id]').forEach(el => { if (!el._rdo) { el._rdo = 1; RD.io.observe(el); } });
+}
+function rdName(n) { const p = people[n]; return (p && p.nick) || n; }
+function rdRows(box) {   // 可见气泡按编号排好；只在 #msgs 子节点变化（新消息 / 翻历史 / 撤回）时重建
+  if (!RD.rows) {
+    RD.rows = [...box.querySelectorAll(':scope>.m[data-id]')].map(r => ({ id: +r.dataset.id, r })).sort((x, y) => x.id - y.id);
+  }
+  return RD.rows;
+}
+function rdFind(rows, id) {   // 二分：编号 ≤ id 的最后一条可见气泡（读到的是撤回 / 系统行就落到它前面那条）
+  let lo = 0, hi = rows.length - 1, at = -1;
+  while (lo <= hi) { const mid = (lo + hi) >> 1; if (rows[mid].id <= id) { at = mid; lo = mid + 1; } else hi = mid - 1; }
+  return at < 0 ? null : rows[at].r;
+}
+function rdRender() {
+  if (RD.raf) return;
+  RD.raf = requestAnimationFrame(() => {
+    RD.raf = 0;
+    const box = document.getElementById('msgs'); if (!box) return;
+    const old = new Map();   // 先统一读旧位置，换位置时用 transform 从旧处滑过去
+    const prev = [...box.querySelectorAll('.rr')];
+    prev.forEach(r => { const k = r.dataset.k; if (k) old.set(k, r.getBoundingClientRect()); });
+    prev.forEach(r => r.remove());
+    if (RD.hide || !RD.have) return;
+    const rows = rdRows(box);
+    if (!rows.length) return;
+    const by = new Map();
+    for (const [name, id0] of Object.entries(RD.reads)) {
+      const id = +id0 || 0;
+      if (!id || (me && name === me.name)) continue;
+      const t = rdFind(rows, id); if (!t) continue;
+      if (!by.has(t)) by.set(t, []); by.get(t).push(name);
+    }
+    // 第一遍：全部插入（只写）
+    const placed = [];
+    by.forEach((names, t) => {
+      const b = t.querySelector('.b'); if (!b) return;
+      names.sort((a, c) => rdName(a).localeCompare(rdName(c)));
+      const w = el('div', 'rr'); w.dataset.k = names.join('\n'); w.title = '已读：' + names.map(rdName).join('、');
+      w.setAttribute('aria-label', w.title); w.onclick = e => e.stopPropagation();
+      names.slice(0, RD_MAX).forEach(n => { const a = el('span', 'av rd'); avatar(a, people[n] || { name: n }, true); w.append(a); });
+      if (names.length > RD_MAX) w.append(el('span', 'rn', '+' + (names.length - RD_MAX)));
+      b.append(w);
+      if (old.has(w.dataset.k)) placed.push(w);
+    });
+    if (!placed.length) return;
+    // 第二遍：统一读新位置（只触发一次布局）
+    const mv = placed.map(w => { const o = old.get(w.dataset.k), n = w.getBoundingClientRect(); return [w, o.left - n.left, o.top - n.top]; }).filter(x => x[1] || x[2]);
+    if (!mv.length) return;
+    // 第三遍：统一写 transform 到旧位置，下一帧放开过渡滑回 0（减少动效时 CSS 已关掉过渡）
+    mv.forEach(([w, dx, dy]) => { w.classList.add('mv'); w.style.transform = 'translate(' + dx + 'px,' + dy + 'px)'; });
+    requestAnimationFrame(() => mv.forEach(([w]) => { w.classList.remove('mv'); w.style.transform = ''; }));
+  });
+}
+function rdSetReads(o) { RD.reads = Object.assign({}, o || {}); RD.have = true; rdRender(); }
+function rdHideUi() {
+  const t = document.getElementById('tread'); if (!t) return;
+  t.classList.toggle('on', RD.hide); t.setAttribute('aria-checked', String(RD.hide));
+}
+function rdHideSet(v) { RD.hide = !!v; try { localStorage.setItem('hush_hideread_v1', RD.hide ? '1' : '0'); } catch (_) {} rdHideUi(); rdRender(); }
+function rdHideToggle() {
+  const want = !RD.hide, prev = RD.hide; rdHideSet(want);
+  if (!socket || !socket.connected) { rdHideSet(prev); return toast('连上服务器后再改'); }
+  let done = false;
+  const to = setTimeout(() => { if (done) return; done = true; rdHideSet(prev); toast('服务器暂时不支持这个开关'); }, 5000);
+  socket.emit('read:hide', want, r => { if (done) return; done = true; clearTimeout(to); if (r && r.ok) rdHideSet(r.hideRead); else { rdHideSet(prev); toast((r && r.error) || '保存失败'); } });
+}
+function readInit() {
+  const box = document.getElementById('msgs'); if (!box || !socket) return;
+  if (!RD.io) {
+    RD.io = new IntersectionObserver(es => es.forEach(e => {
+      if (e.isIntersecting && e.intersectionRatio >= 0.5) { if (!RD.vis.has(e.target)) RD.vis.set(e.target, rdActive() ? Date.now() : 0); }
+      else RD.vis.delete(e.target);   // 快速滑过：没停满 1 秒就出去了，计时作废
+    }), { root: box, threshold: [0, 0.5, 1] });
+    RD.mo = new MutationObserver(() => { RD.rows = null; rdObserve(); rdRender(); });   // 只盯 #msgs 的直接子节点：新消息、翻历史、撤回替换
+    RD.mo.observe(box, { childList: true });
+    const poke = () => { RD.act = Date.now(); };
+    ['mousemove', 'mousedown', 'keydown', 'wheel', 'touchstart'].forEach(ev => addEventListener(ev, poke, { passive: true, capture: true }));
+    addEventListener('visibilitychange', () => rdCheck()); addEventListener('focus', () => rdCheck()); addEventListener('blur', () => rdCheck());
+    RD.tick = setInterval(rdCheck, 250);
+    rdHideUi();
+  }
+  rdObserve();
+  if (socket._rd) return;   // 同一个 socket 只挂一次（start() 换新 socket 时才重新挂）
+  socket._rd = 1;
+  socket.on('reads', rdSetReads);
+  socket.on('resync', o => { if (o && o.reads) rdSetReads(o.reads); });
+  socket.on('read:update', u => {
+    if (!u || !u.name) return;
+    if (+u.id > 0) RD.reads[u.name] = +u.id; else delete RD.reads[u.name];   // id:0 = 对方开了隐藏，撤掉他的头像
+    if (RD.have || +u.id > 0) { RD.have = true; rdRender(); }
+  });
+  socket.on('me', u => { if (u && 'hideRead' in u) rdHideSet(u.hideRead); });   // 以服务器为准，本机只是缓存
+  socket.on('profile', () => rdRender());
 }
 </script>
 </body>

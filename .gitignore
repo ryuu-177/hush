@@ -11,3 +11,4 @@ cert.pem
 desktop/
 *.exe
 turn.json
+logs/

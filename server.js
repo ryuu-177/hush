@@ -127,12 +127,16 @@ CREATE TABLE IF NOT EXISTS settings(k TEXT PRIMARY KEY, v TEXT);
 // v0.10 升级：歌单里可以放网易云的歌（不占个人音乐仓库）。music_id 写成 'ne:<歌曲id>'，歌名等信息直接存在歌单里
 for (const [c, d] of [['src', 'TEXT'], ['ntitle', 'TEXT'], ['nartist', 'TEXT'], ['ncover', 'TEXT'], ['ndur', 'REAL'], ['nvip', 'INTEGER DEFAULT 0']]) addCol('playlist', c, d);
 
+// v0.21.3：已读回执。每人只记“读到第几条”（只增不减）；hide_read=1 的人不广播、也看不到别人的
+db.exec('CREATE TABLE IF NOT EXISTS reads(user_id INTEGER PRIMARY KEY, last INTEGER NOT NULL DEFAULT 0, ts INTEGER)');
+addCol('users', 'hide_read', 'INTEGER DEFAULT 0');
+
 // ---------- 等级规则：升到第 N+1 级需要 20 * N² 经验 ----------
 const XP_MESSAGE = 2;      // 发消息（每 5 秒最多算一次）
 const XP_DAILY = 20;       // 每天首次登录
 const level = xp => Math.floor(Math.sqrt(xp / 20)) + 1;
 const profile = u => ({ name: u.name, nick: u.nick || u.name, avatar: u.avatar || '', color: u.color || '', bio: u.bio || '', bg: u.bg || '', level: level(u.xp) });
-const info = u => { const L = level(u.xp); return { ...profile(u), xp: u.xp, from: 20 * (L - 1) ** 2, to: 20 * L ** 2, admin: !!u.is_admin }; };
+const info = u => { const L = level(u.xp); return { ...profile(u), xp: u.xp, from: 20 * (L - 1) ** 2, to: 20 * L ** 2, admin: !!u.is_admin, hideRead: !!u.hide_read }; };
 
 // ---------- 个人资料校验：去掉控制字符，尖括号换成全角，杜绝 XSS ----------
 const clean = (v, max) => [...String(v ?? '').replace(/[\u0000-\u001f\u007f\u200b-\u200f\u2028-\u202e]/g, ' ').replace(/</g, '＜').replace(/>/g, '＞').trim()].slice(0, max).join('');
@@ -684,7 +688,10 @@ const getSet = (k, d) => { const r = db.prepare('SELECT v FROM settings WHERE k=
 const setSet = (k, v) => db.prepare('INSERT INTO settings(k,v) VALUES(?,?) ON CONFLICT(k) DO UPDATE SET v=excluded.v').run(k, String(v));
 if (!getSet('sign_secret')) setSet('sign_secret', crypto.randomBytes(32).toString('hex'));
 const SIGN_SECRET = getSet('sign_secret');
-const groupSettings = () => ({ music: getSet('music_on', '0') === '1', skip: getSet('music_skip', '0') === '1', per: Math.min(3, Math.max(1, parseInt(getSet('music_per', '2')) || 2)) });
+const MAX_PER = 5;   // 每人同时点歌的上限（v0.21.3 从 3 提到 5）
+// v0.21.3：默认改成每人 5 首。只有从来没存过这个值时才写 5，管理员手动改过（包括改小）的一律不动。
+if (getSet('music_per') == null) setSet('music_per', '5');
+const groupSettings = () => ({ music: getSet('music_on', '0') === '1', skip: getSet('music_skip', '0') === '1', per: Math.min(MAX_PER, Math.max(1, parseInt(getSet('music_per', '5')) || 5)) });
 
 // ----- 播放地址：<audio> 不能带请求头，所以给一个有时效的签名网址（不是登录令牌） -----
 const sign = (id, uid, exp) => crypto.createHmac('sha256', SIGN_SECRET).update(id + '.' + uid + '.' + exp).digest('base64url');
@@ -852,7 +859,7 @@ app.put('/api/group', (req, res) => {
   const b = req.body || {};
   if (typeof b.music === 'boolean') setSet('music_on', b.music ? 1 : 0);
   if (typeof b.skip === 'boolean') setSet('music_skip', b.skip ? 1 : 0);
-  if ([1, 2, 3].includes(b.per)) setSet('music_per', b.per);
+  if (Number.isInteger(b.per) && b.per >= 1 && b.per <= MAX_PER) setSet('music_per', b.per);
   if (groupSettings().music) plStart(); else plStop();
   pushMusic();
   res.json(groupSettings());
@@ -1356,6 +1363,21 @@ app.post('/api/logout', (req, res) => {
 // ---------- 实时聊天 ----------
 const server = http.createServer(app);
 const io = new Server(server);
+// v0.21.3：连接日志（断线排查用）。logs/conn.log，超过 1MB 轮转成 conn.log.1，只留两份
+const CONN_LOG = path.join(__dirname, 'logs', 'conn.log');
+try { fs.mkdirSync(path.dirname(CONN_LOG), { recursive: true }); } catch (_) {}
+function connLog(ev, socket, extra) {
+  try {
+    if (fs.existsSync(CONN_LOG) && fs.statSync(CONN_LOG).size > 1024 * 1024) fs.renameSync(CONN_LOG, CONN_LOG + '.1');
+    const h = socket.handshake, u = userById.get(socket.userId);
+    const ip = h.headers['cf-connecting-ip'] || h.address || '';
+    fs.appendFileSync(CONN_LOG, [new Date().toISOString(), ev, u ? u.name : '?', ip, h.headers['cf-ipcountry'] || '', socket.id, extra || ''].join('\t') + '\n');
+  } catch (_) {}
+}
+// v0.21.3：语音断线宽限。意外断线后先不把人移出语音房 / 不挂断通话，VOICE_GRACE_MS 内重连就无缝接回
+const VOICE_GRACE_MS = Number(process.env.VOICE_GRACE_MS) || 20000;
+const roomGrace = new Map();   // 用户 id -> 计时器
+const callGrace = new Map();   // 用户 id -> 计时器
 const online = new Map();   // socket.id -> 用户名
 const onlineIds = new Map();   // socket.id -> 用户 id
 const lastXp = new Map();   // 用户 id -> 上次得经验的时间
@@ -1384,12 +1406,14 @@ function endCall(uid, reason) {
   const c = calls.get(uid); if (!c) return;
   const p = calls.get(c.peer);
   clearTimeout(c.timer); calls.delete(uid); calls.delete(c.peer);
+  for (const id of [uid, c.peer]) { clearTimeout(callGrace.get(id)); callGrace.delete(id); }
   toSide(c, uid, 'call:end', { reason });
   if (p) toSide(p, c.peer, 'call:end', { reason });
 }
 const pushRoom = () => io.emit('room', { max: ROOM_MAX, members: [...room.keys()].map(id => profile(userById.get(id))) });
 function leaveRoom(uid, sid) {
   if (room.get(uid) !== sid) return;
+  clearTimeout(roomGrace.get(uid)); roomGrace.delete(uid);
   room.delete(uid);
   const name = userById.get(uid).name;
   for (const s of room.values()) io.to(s).emit('room:left', { name });
@@ -1434,8 +1458,52 @@ function leaveLive(sid, vid, L) {
   io.to(L.sock).emit('live:count', L.viewers.size);
 }
 
+// ---------- v0.21.3 已读回执 ----------
+const READ_MS = Number(process.env.READ_MS) || 1000;   // 每人最多每秒广播一次，期间的多次上报合并成最新一条
+const readSet = db.prepare('INSERT INTO reads(user_id,last,ts) VALUES(?,?,?) ON CONFLICT(user_id) DO UPDATE SET last=MAX(last,excluded.last), ts=excluded.ts');
+const readOf = db.prepare('SELECT last FROM reads WHERE user_id=?');
+const maxMsgId = db.prepare('SELECT MAX(id) n FROM messages');
+const msgExists = db.prepare('SELECT 1 FROM messages WHERE id=?');
+const readPend = new Map();   // 用户 id -> { t: 计时器, at: 上次广播时间, id: 待广播的编号 }
+// 给某个用户看的 reads：自己开了隐藏 → 空；否则所有没隐藏的成员（不含自己）
+const readsFor = uid => {
+  const u = userById.get(uid); if (!u || u.hide_read) return {};
+  const o = {};
+  for (const r of db.prepare('SELECT u.name, r.last FROM reads r JOIN users u ON u.id=r.user_id WHERE COALESCE(u.hide_read,0)=0 AND r.user_id<>? AND r.last>0').all(uid)) o[r.name] = r.last;
+  return o;
+};
+// 发给除了本人、以及开了隐藏的人之外的所有在线 socket
+const readCast = (uid, ev, d) => {
+  const hidden = new Map();
+  for (const [sid, id] of onlineIds) {
+    if (id === uid) continue;
+    if (!hidden.has(id)) hidden.set(id, !!(userById.get(id) || {}).hide_read);
+    if (!hidden.get(id)) io.to(sid).emit(ev, d);
+  }
+};
+function readFlush(uid) {
+  const p = readPend.get(uid); if (!p) return;
+  p.t = null; p.at = Date.now();
+  const u = userById.get(uid); if (!u || u.hide_read || p.id == null) { p.id = null; return; }
+  readCast(uid, 'read:update', { name: u.name, id: p.id }); p.id = null;
+}
+function readMark(uid, raw) {
+  const id = Number(typeof raw === 'object' && raw ? raw.id : raw);
+  if (!Number.isInteger(id) || id <= 0) return;
+  if (id > (maxMsgId.get().n || 0) || !msgExists.get(id)) return;   // 必须是真实存在的消息
+  const cur = (readOf.get(uid) || {}).last || 0;
+  if (id <= cur) return;                                              // 只增不减
+  readSet.run(uid, id, Date.now());
+  const p = readPend.get(uid) || { t: null, at: 0, id: null }; readPend.set(uid, p);
+  p.id = id;
+  if (p.t) return;
+  const wait = p.at + READ_MS - Date.now();
+  if (wait <= 0) readFlush(uid); else p.t = setTimeout(() => readFlush(uid), wait);
+}
+
 io.on('connection', socket => {
   const me = userById.get(socket.userId);
+  connLog('connect', socket, 'since=' + (parseInt(socket.handshake.auth.since) || 0));
   online.set(socket.id, me.name); onlineIds.set(socket.id, me.id);
   socket.emit('me', info(me));
   socket.emit('ver', VERSION);   // v0.8：页面版本和服务器不一致时，提示刷新
@@ -1445,13 +1513,23 @@ io.on('connection', socket => {
   const missed = since ? msgSel('m.id>? ORDER BY m.id ASC LIMIT 301').all(since) : null;
   if (missed && missed.length <= 300) {
     const recalledIds = db.prepare('SELECT id FROM messages WHERE recalled=1 AND id<=? AND id>?').all(since, since - 500).map(r => r.id);
-    socket.emit('resync', { messages: missed.map(msgOut), recalled: recalledIds });
+    socket.emit('resync', { messages: missed.map(msgOut), recalled: recalledIds, reads: readsFor(me.id) });
   } else {
     const rows = msgSel('1 ORDER BY m.id DESC LIMIT 50').all().reverse();
     socket.emit('history', rows.map(msgOut));
   }
+  socket.emit('reads', readsFor(me.id));   // v0.21.3：history 是数组，加字段会破坏旧客户端，所以紧跟着单独发一条
   pushOnline();
 
+  socket.on('read', id => readMark(me.id, id));
+  socket.on('read:hide', (on, cb) => {   // v0.21.3：隐藏已读。开：别人那里撤掉我的头像；关：重新广播我读到的位置
+    on = !!(on && typeof on === 'object' ? on.on : on);
+    db.prepare('UPDATE users SET hide_read=? WHERE id=?').run(on ? 1 : 0, me.id);
+    const u = userById.get(me.id), last = (readOf.get(me.id) || {}).last || 0;
+    readCast(me.id, 'read:update', { name: u.name, id: on ? 0 : last });
+    for (const sid of socketsOf(me.id)) { io.to(sid).emit('me', info(u)); io.to(sid).emit('reads', readsFor(me.id)); }
+    ack(cb, { ok: true, hideRead: on });
+  });
   socket.on('msg', m => {
     const o = typeof m === 'string' ? { text: m } : (m && typeof m === 'object' ? m : {});
     const text = (typeof o.text === 'string' ? o.text : '').trim().slice(0, 500);   // 原样保存，前端只用 textContent 显示
@@ -1523,13 +1601,38 @@ io.on('connection', socket => {
     socket.emit('call:start', { ...profile(userById.get(c.peer)), caller: false });
     io.to(p.sock).emit('call:start', { ...profile(userById.get(uid)), caller: true });
   });
+  // v0.21.3：通话中断线、宽限期内重连：接回通话。keep=对方的连接还通着，就不重建
+  socket.on('call:resume', (o, cb) => {
+    const c = calls.get(uid), p = c && calls.get(c.peer);
+    if (!c || !p || c.state !== 'active' || !c.sock || c.sock === socket.id) return ack(cb, { gone: true });
+    const old = c.sock;
+    clearTimeout(callGrace.get(uid)); callGrace.delete(uid);
+    c.sock = socket.id;
+    io.sockets.sockets.get(old)?.disconnect(true);
+    const keep = !!(o && o.keep);
+    io.to(p.sock).emit('call:resumed', { name: me.name, keep });
+    connLog('call-resume', socket);
+    ack(cb, { ok: true, peer: userById.get(c.peer).name, keep });
+  });
   socket.on('call:hangup', () => {
     const c = calls.get(uid);
     if (c && (c.sock === socket.id || !c.sock)) endCall(uid, c.sock ? 'hangup' : 'declined');
   });
 
   // ----- 语音房（多人，网状连接） -----
-  socket.on('room:join', () => {
+  socket.on('room:join', o => {
+    // v0.21.3：断线重连后接回原来的位置（宽限期内，或者服务器还没发现旧连接已断）。其他人看不到“离开 / 加入”
+    if (o && o.resume && room.has(uid) && room.get(uid) !== socket.id) {
+      const old = room.get(uid), keep = new Set(Array.isArray(o.keep) ? o.keep.map(String) : []);
+      clearTimeout(roomGrace.get(uid)); roomGrace.delete(uid);
+      room.set(uid, socket.id);
+      io.sockets.sockets.get(old)?.disconnect(true);   // 旧连接其实已经死了，只是服务器还没超时
+      const peers = [];
+      for (const [id, s] of room) if (id !== uid) { const n = userById.get(id).name; peers.push({ ...profile(userById.get(id)), keep: keep.has(n) }); io.to(s).emit('room:rejoined', { name: me.name, keep: keep.has(n) }); }
+      connLog('room-resume', socket);
+      socket.emit('room:peers', peers);
+      return pushRoom();
+    }
     if (room.has(uid)) return socket.emit('room:error', '你已经在语音房里了（可能在另一个窗口）');
     if (calls.has(uid)) return socket.emit('room:error', '请先挂断当前通话');
     if (room.size >= ROOM_MAX) return socket.emit('room:error', '语音房已满（最多 ' + ROOM_MAX + ' 人）');
@@ -1632,12 +1735,20 @@ io.on('connection', socket => {
     plNext(cur.qid); ack(cb, { ok: true });
   });
 
-  socket.on('disconnect', () => {
+  socket.on('disconnect', reason => {
+    connLog('disconnect', socket, reason);
     { const c = PL.cur; if (c && c.ne && c.ne.tries.has(socket.id)) { c.ne.tries.delete(socket.id); c.ne.fails.delete(socket.id); c.ne.oks.delete(socket.id); if (!neOkNow(c) && c.ne.fails.size && neAllFailed(c)) neCheck(c); } }
     online.delete(socket.id); onlineIds.delete(socket.id); pushOnline();
     const c = calls.get(uid);
-    if (c && (c.sock === socket.id || (!c.sock && !socketsOf(uid).length))) endCall(uid, c.state === 'active' ? 'hangup' : 'offline');
-    leaveRoom(uid, socket.id);
+    const dropped = reason !== 'client namespace disconnect' && reason !== 'server namespace disconnect';   // 主动退出 / 被踢：立刻结束
+    if (c && c.state === 'active' && c.sock === socket.id && dropped) {
+      clearTimeout(callGrace.get(uid));
+      callGrace.set(uid, setTimeout(() => { callGrace.delete(uid); const k = calls.get(uid); if (k && k.sock === socket.id) endCall(uid, 'offline'); }, VOICE_GRACE_MS));
+    } else if (c && (c.sock === socket.id || (!c.sock && !socketsOf(uid).length))) endCall(uid, c.state === 'active' ? 'hangup' : 'offline');
+    if (room.get(uid) === socket.id && dropped) {
+      clearTimeout(roomGrace.get(uid));
+      roomGrace.set(uid, setTimeout(() => { roomGrace.delete(uid); leaveRoom(uid, socket.id); }, VOICE_GRACE_MS));
+    } else leaveRoom(uid, socket.id);
     if (lives.get(uid)?.sock === socket.id) endLive(uid, true);   // 断线：多等一会儿，重连后继续共享就不发“结束”
     for (const L of lives.values()) leaveLive(socket.id, uid, L);
   });
