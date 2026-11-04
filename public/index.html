@@ -2192,7 +2192,7 @@ html[data-cbg="dots"] .lqg-prev{background-image:radial-gradient(circle at 1px 1
 @media(prefers-reduced-motion:no-preference){html:not([data-ubg="off"]) .m.ubg.ubg-run:not(.ubg-run-a){animation-name:lqfd}}
 @keyframes lqfd{from{opacity:0}to{opacity:1}}
 /* 一组共用一张图：尺寸和位置由 ubgGroup() 按整组算好写在行上（--ubg-bs / --ubg-bp），单条保持 cover */
-.m.ubg.ubg-run::after{background-size:var(--ubg-bs,cover);background-position:var(--ubg-bp,center)}
+html:not([data-ubgv]) .m.ubg.ubg-run::after{background-size:var(--ubg-bs,cover);background-position:var(--ubg-bp,center)}
 /* 自己的消息默认按内容收宽（align-self:flex-end），一组里各行宽度不同，背景左缘会出台阶。
    成组时整行拉满，row-reverse 下内容仍贴右；单条不动 */
 html:not([data-ubg="off"]) .m.own.ubg.ubg-run{align-self:stretch}
@@ -2272,11 +2272,56 @@ html[data-bgclear="clear"] .m.ubg::before,html:not([data-bgclear]) .m.ubg::befor
   -webkit-mask-image:linear-gradient(90deg,transparent 0%,transparent 10%,#000 40%,#000 50%,transparent 100%);
   mask-image:linear-gradient(90deg,transparent 0%,transparent 10%,#000 40%,#000 50%,transparent 100%)}
 .m.own.ubg::after{-webkit-mask-image:linear-gradient(270deg,transparent 0%,transparent 10%,#000 40%,#000 50%,transparent 100%);mask-image:linear-gradient(270deg,transparent 0%,transparent 10%,#000 40%,#000 50%,transparent 100%)}
-.m.ubg.ubg-run::before{background-size:var(--ubg-bs,cover);background-position:var(--ubg-bp,center)}
+html:not([data-ubgv]) .m.ubg.ubg-run::before{background-size:var(--ubg-bs,cover);background-position:var(--ubg-bp,center)}
 .m.ubg:hover::before{transform:scaleX(1.065)}
 @media(prefers-reduced-motion:reduce){html .m.ubg:hover::before{transform:scaleX(1.05)}}
 .m.ubg:not(.ubgok)::before{opacity:0!important}
 html[data-ubg="off"] .m.ubg::before{content:none!important}
+/* v0.23 候选：窄幅贴边。图不再铺满气泡，只露出靠头像那一侧的窄条（像电影胶片的边），渐隐落在窄条自己身上，
+   上面盖一层同色薄纱让它融进界面。整组共用一张图、同一段：整组总高由 ubgGroup 写进 --ubg-h，背景按组高等比缩放，
+   每行只用自己的组内纵向偏移 --ubg-y 去截，组内增删消息也不会接缝。不设 data-ubgv 就是旧版；关档仍走 content:none。 */
+html[data-ubgv]{--ubg-sw:36px;--ubg-fw:48px;--ubg-tt:34%;--ubg-tint:color-mix(in srgb,var(--ef-bg1) var(--ubg-tt),transparent)}
+html[data-ubgv="v2"]{--ubg-sw:58px;--ubg-fw:60px;--ubg-tt:52%}
+html{--ubg-sf:saturate(1.12)}
+html[data-bgclear="std"]{--ubg-sf:blur(2px) saturate(1.12)}
+html[data-bgclear="soft"]{--ubg-sf:blur(6px) saturate(1.12)}
+html[data-ubgv] .m.ubg::before{
+  left:0;right:0;
+  background-image:linear-gradient(90deg,var(--ubg-tint),var(--ubg-tint)),var(--ubg,none);
+  background-size:100% 100%,var(--ubg-bw,cover) var(--ubg-bh,100%);
+  background-position:0 0,0 calc(-1*var(--ubg-y,0px));
+  filter:var(--ubg-sf);transform:none;
+  -webkit-mask-image:linear-gradient(90deg,#000 0,#000 var(--ubg-sw),transparent calc(var(--ubg-sw) + var(--ubg-fw)));
+  mask-image:linear-gradient(90deg,#000 0,#000 var(--ubg-sw),transparent calc(var(--ubg-sw) + var(--ubg-fw)))}
+html[data-ubgv] .m.own.ubg::before{
+  background-image:linear-gradient(270deg,var(--ubg-tint),var(--ubg-tint)),var(--ubg,none);
+  background-position:0 0,100% calc(-1*var(--ubg-y,0px));
+  -webkit-mask-image:linear-gradient(270deg,#000 0,#000 var(--ubg-sw),transparent calc(var(--ubg-sw) + var(--ubg-fw)));
+  mask-image:linear-gradient(270deg,#000 0,#000 var(--ubg-sw),transparent calc(var(--ubg-sw) + var(--ubg-fw)))}
+/* v2：整组后面只铺一条。用一个独立的 absolute 层挂在整组第一行上，竖向铺满整组，
+   行自己不再画背景（::before content:none），所以根本没有拼接这件事，也少一层 filter。
+   这一层不参与点击（pointer-events:none），z-index 压在所有行下面。 */
+/* 修复 2：图层横向原来是 50%（居中），图宽小于行宽时窄条那一段根本没有图、只剩薄纱；改为贴头像一侧（别人 0、自己 100%），薄纱层固定 0 0 不跟着纵向偏移。
+   修复 1：旧版那层很宽的柔化底（::after，blur 14px、渐隐到 50%）在窄条模式下必须关掉，否则图仍铺满半个气泡宽度，窄条等于没做 */
+html[data-ubgv] .m.ubg::after{content:none!important}
+html[data-ubgv="v2"] .m.ubg::before{content:none!important}
+html[data-ubgv="v2"] .ubg-band{position:absolute;z-index:-1;pointer-events:none;
+  top:calc(-1*(var(--ubg-pad) + 4px));left:-10px;right:auto;width:calc(var(--ubg-sw) + var(--ubg-fw) + 24px);height:var(--ubg-bh,0px);
+  -webkit-clip-path:inset(var(--ubg-pad) 0 var(--ubg-pad) 0 round var(--ubg-r));
+  clip-path:inset(var(--ubg-pad) 0 var(--ubg-pad) 0 round var(--ubg-r));
+  background-image:linear-gradient(90deg,var(--ubg-tint),var(--ubg-tint)),var(--ubg,none);
+  background-repeat:no-repeat;background-size:100% 100%,var(--ubg-bw,cover) var(--ubg-bh,100%);
+  background-position:0 0,0 0;filter:var(--ubg-sf);opacity:var(--ubg-o,.62);transition:opacity .4s ease;
+  -webkit-mask-image:linear-gradient(90deg,#000 0,#000 var(--ubg-sw),transparent calc(var(--ubg-sw) + var(--ubg-fw)));
+  mask-image:linear-gradient(90deg,#000 0,#000 var(--ubg-sw),transparent calc(var(--ubg-sw) + var(--ubg-fw)))}
+html[data-ubgv="v2"] .m.own.ubg>.ubg-band{
+  left:auto;right:-10px;
+  background-position:0 0,100% 0;
+  -webkit-mask-image:linear-gradient(270deg,#000 0,#000 var(--ubg-sw),transparent calc(var(--ubg-sw) + var(--ubg-fw)));
+  mask-image:linear-gradient(270deg,#000 0,#000 var(--ubg-sw),transparent calc(var(--ubg-sw) + var(--ubg-fw)))}
+@media(max-width:640px){html[data-ubgv]{--ubg-sw:28px;--ubg-fw:28px}html[data-ubgv="v2"]{--ubg-sw:40px;--ubg-fw:32px}}
+/* 窄条不做横向拉伸：一拉就位移，hover 直接不动 */
+html[data-ubgv] .m.ubg:hover::before{transform:none}
 /* 背景少糊以后图上细节更多：可读性靠加厚气泡底色保证，不靠模糊（繁忙图实测三档、两主题都 ≥4.5） */
 html:not([data-ubg="off"]):not([data-bgx]) .m.ubg .b:not(.bimg):not(.stk){background:color-mix(in srgb,var(--ef-bg2) calc(72% + var(--ubg-o,.62)*14%),transparent)!important}
 html:not([data-ubg="off"]):not([data-bgx]) .m.own.ubg .b:not(.bimg):not(.stk){background:color-mix(in srgb,color-mix(in srgb,var(--ef-ac) 20%,var(--ef-bg2)) calc(74% + var(--ubg-o,.62)*14%),transparent)!important}
@@ -2285,6 +2330,10 @@ html[data-theme="light"]:not([data-ubg="off"]):not([data-bgx]) .m.own.ubg .b:not
 /* 深色名字行衬底加厚一档：清晰档下头像那侧图最清楚，浓档时名字行最低只有 4.18 */
 html[data-theme="dark"]:not([data-ubg="off"]):not([data-bgx]) .m.ubg.ubgok>.c>.h{background:color-mix(in srgb,#0b0d0c calc(52% + var(--ubg-o,.62)*38%),transparent);box-shadow:0 0 0 4px color-mix(in srgb,#0b0d0c calc(52% + var(--ubg-o,.62)*38%),transparent)}
 @media(prefers-color-scheme:dark){html:not([data-theme]):not([data-ubg="off"]):not([data-bgx]) .m.ubg.ubgok>.c>.h{background:color-mix(in srgb,#0b0d0c calc(52% + var(--ubg-o,.62)*38%),transparent);box-shadow:0 0 0 4px color-mix(in srgb,#0b0d0c calc(52% + var(--ubg-o,.62)*38%),transparent)}}
+/* perf27：深色下自己气泡顶部的玻璃高光（::before 径向渐变 + 顶部 1px 内高光）太亮，窄屏时正好压在第一行字上（420px 深色 3.94）。
+   只在窄条模式（data-ubgv）且有背景图的行上减半，关档和旧版都不变 */
+html[data-ubgv][data-theme="dark"]:not([data-ubg="off"]) .m.own.ubg.ubgok .b:not(.bimg):not(.stk)::before{opacity:.375}
+@media(prefers-color-scheme:dark){html[data-ubgv]:not([data-theme]):not([data-ubg="off"]) .m.own.ubg.ubgok .b:not(.bimg):not(.stk)::before{opacity:.375}}
 /* v0.22：已读小头像。挂在气泡外侧下角，绝对定位：不改行高，不影响 ubgGroup 的测量 */
 .m .b .rr{position:absolute;bottom:-4px;left:calc(100% + 6px);display:flex;align-items:center;flex-direction:row;z-index:2;line-height:0;user-select:none;-webkit-user-select:none;cursor:default;white-space:nowrap;transition:transform .32s cubic-bezier(.2,.8,.2,1),opacity .2s}
 .m.own .b .rr{left:auto;right:calc(100% + 6px);flex-direction:row-reverse}
@@ -2320,7 +2369,7 @@ html .np::after{width:calc(100% - 20px)}
 </head>
 <body>
 <div class="ef-bg" aria-hidden="true"></div>
-<script>(function(){var v="glow";try{v=localStorage.getItem("hush_cbg_v1")||"glow"}catch(e){}if(!/^(plain|mist|dots|glow|bp)$/.test(v))v="glow";document.documentElement.setAttribute("data-cbg",v);var g="mid";try{g=localStorage.getItem("hush_ubg_v1")||"mid"}catch(e){}if(!/^(off|lo|mid|hi)$/.test(g))g="mid";document.documentElement.setAttribute("data-ubg",g);var c="clear";try{c=localStorage.getItem("hush_bgclear_v1")||"clear"}catch(e){}if(!/^(soft|std|clear)$/.test(c))c="clear";document.documentElement.setAttribute("data-bgclear",c)})()</script>
+<script>(function(){var v="glow";try{v=localStorage.getItem("hush_cbg_v1")||"glow"}catch(e){}if(!/^(plain|mist|dots|glow|bp)$/.test(v))v="glow";document.documentElement.setAttribute("data-cbg",v);var g="mid";try{g=localStorage.getItem("hush_ubg_v1")||"mid"}catch(e){}if(!/^(off|lo|mid|hi)$/.test(g))g="mid";document.documentElement.setAttribute("data-ubg",g);var c="clear";try{c=localStorage.getItem("hush_bgclear_v1")||"clear"}catch(e){}if(!/^(soft|std|clear)$/.test(c))c="clear";document.documentElement.setAttribute("data-bgclear",c);var u="";try{u=localStorage.getItem("hush_ubgv_v1")||""}catch(e){}if(/^(v1|v2)$/.test(u))document.documentElement.setAttribute("data-ubgv",u)})()</script>
 <main id="auth" hidden>
   <div class="ef-hero" aria-hidden="true">
     <div class="k">HUSH / PRIVATE CHANNEL · <b>EST. 2026</b></div>
@@ -2972,13 +3021,13 @@ function onIncoming(m) {
   bump(m); notify(m);   // v0.8：未读角标 + 系统通知（页面在后台时）
 }
 function applyRecall(m) {
-  document.querySelectorAll('[data-id="' + m.id + '"]').forEach(e => e.replaceWith(sysLine(m)));
+  document.querySelectorAll('[data-id="' + m.id + '"]').forEach(e => { ubgForget([e]); e.replaceWith(sysLine(m)); });
   document.querySelectorAll('.qt[data-ref="' + m.id + '"]').forEach(q => { q.textContent = ''; q.append(el('b', '', m.nick || m.name), '原消息已撤回'); });
   if (replyTo && replyTo.id === m.id) cancelReply();
   ubgGroup();   // 撤回中间一条后段落断开，首尾类名要重算，不然会缺角
 }
 function renderList(list, more) {
-  const box = $('#msgs'); box.innerHTML = '';
+  const box = $('#msgs'); ubgForget([...ubgROs]); box.innerHTML = '';
   if (more) box.append(moreBtn());
   list.forEach(m => { if (m.id > lastId && !windowMode) lastId = m.id; box.append(renderMsg(m)); });
   ubgGroup();
@@ -5986,9 +6035,19 @@ function ubgFill(d) {
 // 一有容器就会散架。判断条件：同一个发送者、都是纯文字、间隔 5 分钟以内。
 const UBG_RUN_GAP = 5 * 60 * 1000;
 const UBG_RUN_CLS = ['ubg-run', 'ubg-run-a', 'ubg-run-m', 'ubg-run-b'];
-const UBG_POS = ['--ubg-h', '--ubg-y', '--ubg-bs', '--ubg-bp'];
-function ubgPosClear(r) { if (!r._p) return; r._p = 0; UBG_POS.forEach(k => r.style.removeProperty(k)); }
+const UBG_POS = ['--ubg-h', '--ubg-y', '--ubg-bs', '--ubg-bp', '--ubg-bw', '--ubg-bh'];
+// perf27：v2 的窄条高度只在 ubgGroup() 里写，组内某行自己变高（晚到的图、字体）时不会重算，窄条会一直短一截。
+// 所以 v2 下对组内每一行挂同一个 ResizeObserver，回调只调 ubgGroup()（本身按 rAF 合并）。
+// 不会自激：ubgGroup 只改行上的 CSS 变量，窄条是 absolute，不撑行高，行尺寸不变就不会再回调。
+let ubgRO = null;
+const ubgROs = new Set();   // 正在被观察的行：删行前必须 unobserve，不然被删的行会一直挂在 observer 上
+function ubgObs(r) { if (r._ro || typeof ResizeObserver === 'undefined') return; if (!ubgRO) ubgRO = new ResizeObserver(() => ubgGroup()); ubgRO.observe(r); r._ro = 1; ubgROs.add(r); }
+function ubgUnobs(r) { if (!r._ro) return; r._ro = 0; ubgROs.delete(r); if (ubgRO) ubgRO.unobserve(r); }
+// 删行统一入口：撤回（replaceWith）、整表重绘（renderList 的 innerHTML=''：重连拉历史、跳到某条、回到最新）都先调它
+function ubgForget(rows) { if (!ubgROs.size) return; for (const r of rows) ubgUnobs(r); }
+function ubgPosClear(r) { ubgUnobs(r); if (r._bd) ubgBandDrop(r); if (!r._p) return; r._p = 0; UBG_POS.forEach(k => r.style.removeProperty(k)); }
 function ubgStrip() {   // 「关」档：把分组类名全撤掉，头像、名字、间距回到旧版
+  if (ubgRO) { ubgRO.disconnect(); ubgRO = null; ubgROs.forEach(r => { r._ro = 0; }); ubgROs.clear(); }
   document.querySelectorAll('#msgs .m').forEach(r => {
     ubgPosClear(r);
     if (!r._u) return;
@@ -6008,6 +6067,45 @@ function ubgAr(r) {
 // 一组共用一张图：先把所有组的几何一次读完，再统一写，避免读写交错反复触发布局。
 // 组框 = 首行顶上 4px 到末行底下 4px；行与行在间距中点对接，所以每行可见带的顶 = 行顶 − 半个间距。
 // 背景层（::after）比可见带上下各大 --ubg-pad，图按「组框 + 2×pad」铺满（cover），再按该行在组里的偏移上移。
+// v0.23 窄条：整组当一条胶片。先按组框算一个总高 --ubg-bh，图按这个高等比缩放（--ubg-bw），
+// 每行只写自己的组内纵向偏移 --ubg-y，CSS 里用 calc(-1*var(--ubg-y)) 去截自己那一段——同一组永远是同一张图的同一段，
+// 组内增删消息、单行重绘都不会错位出接缝。v2 只在整组第一行挂这一层，其余行不画。
+const ubgStripV2 = () => document.documentElement.getAttribute('data-ubgv') === 'v2';
+function ubgBandVar() {
+  const cs = getComputedStyle(document.documentElement);
+  const sw = parseFloat(cs.getPropertyValue('--ubg-sw')) || 52;
+  const fw = parseFloat(cs.getPropertyValue('--ubg-fw')) || 50;
+  return sw + fw + 28;   // 渐隐走完还要留一点余量，图太窄（竖图）时按这个下限放大，免得窄条中途断掉
+}
+// v2 的窄条节点：整组一条，挂在首行上，行自己不再画背景
+function ubgBandEl(r) {
+  let b = r._bd;
+  if (!b) { b = r._bd = document.createElement('i'); b.className = 'ubg-band'; b.setAttribute('aria-hidden', 'true'); }
+  return b;
+}
+function ubgBandDrop(r) { if (r._bd && r._bd.parentNode) r._bd.parentNode.removeChild(r._bd); r._bd = 0; }
+function ubgBand(run, tops, hs, ar, g, minW) {
+  const pad = 26, n = run.length, g0 = tops[0] - 4;
+  const H = tops[n - 1] + hs[n - 1] + 4 - g0, BH = H + 2 * pad;
+  const bw = Math.max(BH * ar, minW), v2 = ubgStripV2();
+  const set = (r, y) => {
+    r._p = 1;
+    r.style.setProperty('--ubg-y', y.toFixed(1) + 'px');   // 组内偏移，正数向下；CSS 里取负去截图上更下面一段
+    r.style.setProperty('--ubg-bh', BH.toFixed(1) + 'px');  // 整组高度（含上下 pad），背景按这个高度等比缩放
+    r.style.setProperty('--ubg-bw', bw.toFixed(1) + 'px');
+  };
+  if (v2) {
+    // 一层铺满整组：行不画，只有首行挂这个节点，所以不存在拼接
+    for (let i = 0; i < n; i++) set(run[i], 0);
+    const a = run[0], b = ubgBandEl(a);
+    if (a.firstChild !== b) a.insertBefore(b, a.firstChild);
+    for (let i = 1; i < n; i++) ubgBandDrop(run[i]);
+    for (let i = 0; i < n; i++) ubgObs(run[i]);
+  } else {
+    for (let i = 0; i < n; i++) ubgUnobs(run[i]);
+    for (let i = 0; i < n; i++) set(run[i], (i ? tops[i] - g / 2 : tops[0] - 4) - g0);
+  }
+}
 function ubgPlace(groups, g) {
   const geo = groups.map(run => {
     const ar = ubgAr(run[0]);
@@ -6015,8 +6113,10 @@ function ubgPlace(groups, g) {
     return { run, ar, tops, hs, w };
   });
   const pad = 26;
+  const strip = document.documentElement.hasAttribute('data-ubgv') ? ubgBandVar() : 0;
   geo.forEach(({ run, ar, tops, hs, w }) => {
     if (!ar) { run.forEach(ubgPosClear); return; }      // 图比例还没拿到：先按单行 cover，加载完会再排
+    if (strip) { ubgBand(run, tops, hs, ar, g, strip); return; }
     const n = run.length, g0 = tops[0] - 4, H = tops[n - 1] + hs[n - 1] + 4 - g0, BH = H + 2 * pad;
     const sc = Math.max(w / ar, BH), bh = sc, bw = sc * ar, bx = (w - bw) / 2;
     for (let i = 0; i < n; i++) {
@@ -6042,7 +6142,8 @@ function ubgGroup() {
     const run = [], groups = [];
     const flush = () => {
       const n = run.length;
-      if (n > 1) groups.push(run.slice()); else if (n) ubgPosClear(run[0]);
+      const strip = !!run[0] && document.documentElement.hasAttribute('data-ubgv');
+      if (n > 1 || (n && strip)) groups.push(run.slice()); else if (n) ubgPosClear(run[0]);
       for (let i = 0; i < n; i++) {
         const r = run[i], a = n > 1 && i === 0, b = n > 1 && i === n - 1, m = n > 1 && i > 0 && i < n - 1;
         if (r._u !== n) {
